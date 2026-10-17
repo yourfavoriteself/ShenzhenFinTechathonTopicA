@@ -309,9 +309,9 @@ class MandateService:
             elif action != Action.BROWSE and allowed[domain] == OriginMode.READ:
                 v.append(f"domain {domain} is read-only for this task")
         p = m.payment
+        if p is not None and (payee is not None or action in MONEY_ACTIONS) and payee not in p.allowed_payees:
+            v.append("payee not allowed")
         if p is not None and (amount is not None or action in MONEY_ACTIONS):
-            if payee not in p.allowed_payees:
-                v.append("payee not allowed")
             if amount is None or not (p.amount_range.min <= amount <= p.amount_range.max):
                 v.append("amount outside allowed range")
             if p.budget and amount is not None and st.spent + amount > p.budget.total:

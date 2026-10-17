@@ -1,0 +1,120 @@
+"""The Guardian kernel: the only component that can move money.
+
+Agents call it with signed requests; it resolves provenance, runs the decision pipeline, renders
+confirmation cards, turns the client's signed "Yes" into a mandate and executes through single-use
+grants. Everything it decides goes to the signed journal.
+"""
+
+from __future__ import annotations
+
+from typing import Any
+
+from .clock import SimClock
+from .crypto import KeyPair
+from .intent import Intent, IntentProposal, ProvenanceStore
+from .journal import Journal
+from .mandate import MandateError, MandateService
+from .passport import AuthError, Passport, PassportRegistry, SignedRequest
+from .pipeline import Decision, Outcome, PendingConfirmation, Pipeline, StepResult, Verdict
+from .ports import Directory, Executor, Funds, InMemoryDirectory, InMemoryFunds
+from .provenance import Labeled
+from .trust import TrustLedger
+
+
+class ConfirmationError(Exception):
+    pass
+
+
+class Kernel:
+    def __init__(self, *, clock: SimClock | None = None, seed: str | None = "demo",
+                 directory: Directory | None = None, funds: Funds | None = None,
+                 executor: Executor | None = None, elevated_protection: bool = False):
+        self.clock = clock or SimClock()
+        self.key = KeyPair.from_seed(f"{seed}:kernel") if seed else KeyPair()
+        self.journal = Journal(KeyPair.from_seed(f"{seed}:journal") if seed else KeyPair(), self.clock)
+        self.mandates = MandateService(self.key, self.clock)
+        self.passports = PassportRegistry(self.key, self.clock)
+        self.trust = TrustLedger(self.clock, elevated_protection)
+        self.provenance = ProvenanceStore()
+        self.directory: Directory = directory or InMemoryDirectory()
+        self.funds: Funds = funds or InMemoryFunds()
+        self.executor = executor
+        self.pipeline = Pipeline(self)
+        self.pending: dict[str, PendingConfirmation] = {}
+        self.halted: str | None = None
+
+    # ------------------------------------------------------------------ agents
+
+    def submit(self, req: SignedRequest, presented: Passport | None = None) -> Decision:
+        """Entry point for agents: authenticate (KYA), resolve provenance, run the pipeline."""
+        try:
+            passport = self.passports.authenticate(req, presented)
+        except AuthError as e:
+            self.journal.append("kernel", "auth.rejected", {"passport": req.passport_id, "reason": str(e)},
+                                passport_id=req.passport_id)
+            return Decision(outcome=Outcome.DENIED, intent_id="-", verdict=Verdict.DENY, risk=2,
+                            reasons=[f"agent authentication failed: {e}"],
+                            steps=[StepResult(step="agent", verdict=Verdict.DENY, reasons=[str(e)])])
+        proposal = IntentProposal.model_validate(req.body["intent"])
+        intent = self.resolve(proposal, passport)
+        self.journal.append("agent", "intent.proposed", intent.summary(), passport_id=passport.id)
+        return self.pipeline.run(intent, passport)
+
+    def resolve(self, proposal: IntentProposal, passport: Passport) -> Intent:
+        fields = {name: self.provenance.resolve(claim) for name in ("payee", "amount", "funding_source", "domain")
+                  if (claim := getattr(proposal, name)) is not None}
+        return Intent(client_id=passport.client_id, task_id=passport.task_id, proposed_by=passport.id,
+                      action=proposal.action, mandate_id=proposal.mandate_id, memo=proposal.memo,
+                      references=proposal.references, **fields)
+
+    def bank_value(self, ref: str, value: Any, source: str) -> str:
+        """Publish a bank-trusted value to agents under a reference they can cite."""
+        from .provenance import bank
+        return self.provenance.put(ref, bank(value, source))
+
+    def publish(self, ref: str, value: Labeled) -> str:
+        return self.provenance.put(ref, value)
+
+    # ------------------------------------------------------------------ client
+
+    def confirm(self, pending_id: str, device_alg: str, device_key: str, device_sig: str, *,
+                standing: bool = False, typed_amount: int | None = None) -> Decision:
+        """The client pressed "Yes" on a card; the device signed the hash of the chosen mandate."""
+        pending = self.pending.get(pending_id)
+        if pending is None:
+            raise ConfirmationError("unknown or already handled confirmation")
+        mandate = pending.standing if standing else pending.once
+        if mandate is None:
+            raise ConfirmationError("no standing option was offered on this card")
+        if pending.card.type_amount and typed_amount != pending.intent.val("amount"):
+            raise ConfirmationError("typed amount does not match")
+        try:
+            signed = self.mandates.issue(mandate, device_alg, device_key, device_sig)
+        except MandateError as e:
+            self.journal.append("client", "confirmation.rejected", {"card": pending_id, "reason": str(e)})
+            raise ConfirmationError(str(e)) from e
+        del self.pending[pending_id]
+        self.journal.append("client", "mandate.signed", {"card": pending_id, "mandate": signed.mandate.id,
+                                                         "hash": signed.mandate_hash, "standing": standing},
+                            stage=int(signed.mandate.stage))
+        intent = pending.intent.model_copy(update={"mandate_id": signed.mandate.id})
+        passport = self.passports.get(pending.passport_id)
+        return self.pipeline.run(intent, passport, confirmed=True)
+
+    def decline(self, pending_id: str) -> None:
+        if self.pending.pop(pending_id, None) is not None:
+            self.journal.append("client", "confirmation.declined", {"card": pending_id})
+
+    def revoke(self, mandate_id: str) -> list[str]:
+        revoked = self.mandates.revoke(mandate_id)
+        self.journal.append("client", "mandate.revoked", {"mandates": revoked})
+        return revoked
+
+    def halt(self, reason: str) -> None:
+        """Kill switch: every further action is denied until resumed."""
+        self.halted = reason
+        self.journal.append("operator", "kernel.halted", {"reason": reason})
+
+    def resume(self) -> None:
+        self.halted = None
+        self.journal.append("operator", "kernel.resumed", {})
