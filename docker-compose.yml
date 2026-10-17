@@ -1,0 +1,24 @@
+services:
+  db:
+    image: postgres:18.4-alpine
+    environment:
+      POSTGRES_USER: guardian
+      POSTGRES_PASSWORD: guardian
+      POSTGRES_DB: guardian
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U guardian"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+  app:
+    build: .
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      DATABASE_URL: postgresql://guardian:guardian@db:5432/guardian
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy

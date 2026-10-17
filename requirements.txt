@@ -1,0 +1,16 @@
+# Runtime dependencies (pinned; tested on Python 3.14.4)
+fastapi==0.136.1
+starlette==1.7.0
+uvicorn==0.47.0
+pydantic==2.13.4
+cryptography==50.0.2
+scikit-learn==1.8.0
+scipy==1.17.1
+numpy==2.4.6
+beautifulsoup4==4.14.3
+httpx==0.28.1
+anthropic==0.103.1
+psycopg==3.3.4
+psycopg-binary==3.3.4
+pypdf==6.11.0
+playwright==1.63.0
