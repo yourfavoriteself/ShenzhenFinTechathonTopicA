@@ -15,8 +15,11 @@ redistributed in this repository and keep their own licenses.
 | NumPy | 2.4.6 | BSD-3-Clause (with bundled MIT/Zlib/0BSD components) |
 | Beautiful Soup 4 | 4.14.3 | MIT |
 | HTTPX | 0.28.1 | BSD-3-Clause |
+| Anthropic Python SDK | 0.103.1 | MIT |
+| psycopg, psycopg-binary | 3.3.4 | LGPL-3.0 |
+| pypdf | 6.11.0 | BSD-3-Clause |
 | pytest (dev) | 9.0.3 | MIT |
-| Playwright for Python (dev, screenshots and video) | 1.63.0 | Apache-2.0 |
+| Playwright for Python (managed browser, screenshots, video) | 1.63.0 | Apache-2.0 |
 
 Documentation tooling (not required to run Guardian): pandoc (GPL-2.0-or-later), Mermaid (MIT), PptxGenJS (MIT), FFmpeg (LGPL/GPL).
 
