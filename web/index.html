@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Guardian</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<header>
+  <div class="brand"><span class="logo">G</span> Guardian <small>your money, your rules</small></div>
+  <div class="clock">
+    <span id="now">…</span>
+    <button class="ghost" data-advance="1" title="Demo time">+1 day</button>
+    <button class="ghost" data-advance="30" title="Demo time">+1 month</button>
+  </div>
+  <div class="device" id="device">device key: …</div>
+</header>
+<main>
+  <section class="chat">
+    <div id="feed" aria-live="polite"></div>
+    <div class="chips" id="chips"></div>
+    <form id="ask" autocomplete="off">
+      <input id="text" placeholder="Ask Guardian… e.g. Pay for Melodify" maxlength="500">
+      <button type="submit">Send</button>
+    </form>
+  </section>
+  <aside>
+    <nav>
+      <button data-tab="budget" class="active">Budget</button>
+      <button data-tab="permissions">Permissions</button>
+      <button data-tab="inbox">Inbox</button>
+      <button data-tab="journal">Journal</button>
+    </nav>
+    <div id="tab-budget" class="tab active"></div>
+    <div id="tab-permissions" class="tab"></div>
+    <div id="tab-inbox" class="tab"></div>
+    <div id="tab-journal" class="tab"></div>
+  </aside>
+</main>
+<script src="/static/app.js"></script>
+</body>
+</html>
