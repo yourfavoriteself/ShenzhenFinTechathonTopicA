@@ -32,7 +32,8 @@ def test_stub_mode_never_touches_providers(gw):
     g = gw("stub")
     g.register_stub("reader", lambda req: '{"category": "bills", "confidence": 1}')
     r = g.call("reader", "Classify.", "Mosenergo bill", schema=Answer)
-    assert r.parsed == {"category": "bills", "confidence": 1.0} and r.source == "stub" and r.cost_rub == 0
+    assert r.parsed == {"category": "bills", "confidence": 1.0} and r.source == "stub"
+    assert r.estimated and r.input_tokens > 0 and g.ledger.total_rub == 0
 
 
 def test_live_call_is_costed_and_persisted(gw, tmp_path):
@@ -108,7 +109,8 @@ def test_record_then_replay_without_keys(gw):
     r = gw("replay")
     r.providers["anthropic"] = lambda *a: pytest.fail("replay must not call the provider")
     again = r.call("reader", "Classify.", "Melodify 299", schema=Answer)
-    assert again.parsed == first.parsed and again.source == "replay" and again.cost_rub == 0
+    assert again.parsed == first.parsed and again.source == "replay" and again.cost_rub == first.cost_rub
+    assert r.ledger.total_rub == pytest.approx(first.cost_rub)
     with pytest.raises(ReplayMiss):
         r.call("reader", "Classify.", "something else", schema=Answer)
 

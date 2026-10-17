@@ -88,6 +88,8 @@ class LLMResult(BaseModel):
     cache_write_tokens: int = 0
     cost_rub: float = 0.0
     source: str
+    estimated: bool = False
+    task_id: str = "default"
     escalations: list[str] = []
 
 
@@ -163,6 +165,7 @@ class LLMGateway:
         self.ledger = SpendLedger(spend_path or Path(env.get("GUARDIAN_SPEND_FILE", "~/.guardian/spend.json")).expanduser(),
                                   budget_rub or float(env.get("GUARDIAN_TOKEN_BUDGET_RUB", "2000")))
         self.ladder = ladder or _ladder_from_env(DEFAULT_LADDER)
+        self.replay_fallback = env.get("GUARDIAN_REPLAY_FALLBACK", "stub") == "stub"
         self.guard = SecretGuard()
         self.stubs: dict[str, Responder] = {}
         self.providers: dict[str, Callable[[ModelSpec, dict[str, Any]], dict[str, Any]]] = {
@@ -188,6 +191,7 @@ class LLMGateway:
                 req = {"role": role, "level": lvl, "system": system, "user": user, "max_tokens": max_tokens,
                        "effort": effort}
                 res = self._raw(req, task_id)
+                res.task_id = task_id
                 if res.text == "" and res.source != "stub":
                     escalations.append(f"level {lvl}: empty or refused response")
                     continue
@@ -206,6 +210,12 @@ class LLMGateway:
                 res.parsed = parsed
                 return self._done(res, escalations)
         raise LLMFailure(f"{role}: no valid response up to level {MAX_LEVEL}: {escalations}")
+
+    def task_cost(self, task_id: str) -> dict[str, Any]:
+        rs = [r for r in self.log if r.task_id == task_id]
+        return {"calls": len(rs), "levels": sorted({r.level for r in rs}),
+                "input_tokens": sum(r.input_tokens for r in rs), "output_tokens": sum(r.output_tokens for r in rs),
+                "cost_rub": round(sum(r.cost_rub for r in rs), 4), "estimated": any(r.estimated for r in rs)}
 
     def report(self) -> dict[str, Any]:
         by_level: dict[int, dict[str, float]] = {}
@@ -229,18 +239,17 @@ class LLMGateway:
         spec = self.ladder[req["level"]]
         base = dict(role=req["role"], model=spec.model, level=req["level"])
         if self.mode == Mode.STUB:
-            responder = self.stubs.get(req["role"])
-            if responder is None:
-                raise LLMFailure(f"no stub registered for role {req['role']}")
-            return LLMResult(text=responder(req), source="stub", **base)
+            return self._stub(req, spec, base)
         key = obj_hash({"model": spec.model, "system": req["system"], "user": req["user"],
                         "max_tokens": req["max_tokens"], "effort": req["effort"]})
         path = self.runs_dir / f"{key}.json"
         if self.mode == Mode.REPLAY:
             if not path.exists():
+                if self.replay_fallback and req["role"] in self.stubs:
+                    return self._stub(req, spec, base, source="stub-fallback")
                 raise ReplayMiss(f"no recorded response for role {req['role']} at level {req['level']}")
             rec = json.loads(path.read_text())
-            return LLMResult(**{**rec, "source": "replay", "cost_rub": 0.0, "escalations": []})
+            return LLMResult(**{**rec, "source": "replay", "escalations": []})
         estimate = self._cost(spec, len(req["system"] + req["user"]) / 3, req["max_tokens"], 0, 0)
         self.ledger.reserve(task_id, estimate, self.task_budget_rub)
         out = self.providers[spec.provider](spec, req)
@@ -254,6 +263,16 @@ class LLMGateway:
             self.runs_dir.mkdir(parents=True, exist_ok=True)
             path.write_text(res.model_dump_json(indent=1))
         return res
+
+    def _stub(self, req: dict[str, Any], spec: ModelSpec, base: dict[str, Any], source: str = "stub") -> LLMResult:
+        """Deterministic responder; token counts are estimated (4 characters a token) and never charged."""
+        responder = self.stubs.get(req["role"])
+        if responder is None:
+            raise LLMFailure(f"no stub registered for role {req['role']}")
+        text = responder(req)
+        inp, out = len(req["system"] + req["user"]) // 4, len(text) // 4
+        return LLMResult(text=text, source=source, input_tokens=inp, output_tokens=out,
+                         cost_rub=round(self._cost(spec, inp, out, 0, 0), 4), estimated=True, **base)
 
     def _cost(self, spec: ModelSpec, inp: float, out: float, cache_read: float, cache_write: float) -> float:
         usd = (inp * spec.in_usd + cache_read * spec.in_usd * CACHE_READ_FACTOR
