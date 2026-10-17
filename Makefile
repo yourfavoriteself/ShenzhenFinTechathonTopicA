@@ -1,6 +1,6 @@
 PY ?= python3
 
-.PHONY: install test run replay live
+.PHONY: install test run replay live evidence
 
 install:
 	$(PY) -m pip install -r requirements-dev.txt
@@ -14,3 +14,6 @@ run replay:
 
 live:
 	GUARDIAN_LLM_MODE=live $(PY) -m uvicorn guardian.api:app --port 8000
+
+evidence:
+	$(PY) -m scripts.budget_report --out evidence/budget_report.json

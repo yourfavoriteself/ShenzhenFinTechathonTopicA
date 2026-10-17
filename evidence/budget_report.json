@@ -1,0 +1,61 @@
+{
+ "world": {
+  "seed": 22,
+  "transactions": 1156,
+  "as_of": "2026-10-17T10:00:00+03:00"
+ },
+ "leaks": {
+  "planted": 5,
+  "found": 5,
+  "extra": 0,
+  "monthly_total": "847 ₽",
+  "yearly_total": "10 164 ₽",
+  "calc": "StreamBox 399 ₽ + TuneWave 249 ₽ + PixelPlay 199 ₽ = 847 ₽ a month"
+ },
+ "double_charge": {
+  "planted": 1,
+  "found": 1
+ },
+ "budget_forecast": {
+  "train": [
+   "2025-10",
+   "2025-11",
+   "2025-12",
+   "2026-01",
+   "2026-02",
+   "2026-03",
+   "2026-04",
+   "2026-05",
+   "2026-06"
+  ],
+  "test": [
+   "2026-07",
+   "2026-08",
+   "2026-09"
+  ],
+  "mape_by_envelope_pct": {
+   "env_bills": 4.3,
+   "env_subs": 1.3,
+   "env_food": 19.6,
+   "env_transport": 35.6,
+   "env_fun": 45.6,
+   "env_shopping": 35.9,
+   "env_health": 49.0
+  },
+  "overall_wape_pct": 27.3
+ },
+ "cash_gaps": {
+  "probes": 18,
+  "predicted": [
+   [
+    "2026-08-17",
+    "2026-08-20"
+   ]
+  ],
+  "actual": [
+   "2026-08-20"
+  ],
+  "caught_in_time": 1,
+  "false_alarms": 0
+ }
+}
