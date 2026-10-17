@@ -33,7 +33,7 @@ ALWAYS_CANNOT = [
 ]
 
 _ACTION_TEXT = {
-    Action.PAY: "Pay", Action.TRANSFER_OWN: "Move to your account", Action.CANCEL_SUBSCRIPTION: "Cancel subscription",
+    Action.PAY: "Pay", Action.TRANSFER_OWN: "Move money to", Action.CANCEL_SUBSCRIPTION: "Cancel subscription",
     Action.BLOCK_MERCHANT: "Block future charges", Action.DISPUTE: "Dispute charge", Action.BROWSE: "Browse",
 }
 
