@@ -185,6 +185,12 @@ class SandboxBank:
             return a.balance
         return None
 
+    def owns(self, client_id: str, token: str) -> bool:
+        for store in (self.accounts, self.envelopes, self.cards):
+            if (x := store.get(token)) is not None and x.client_id == client_id:
+                return True
+        return False
+
     def label(self, client_id: str, funding_source: str) -> str:
         if e := self.envelopes.get(funding_source):
             return f'envelope "{e.name}"'

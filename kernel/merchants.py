@@ -103,6 +103,10 @@ class ClientDirectory:
         self.data = data
 
     def payee(self, client_id: str, token: str) -> PayeeInfo | None:
+        owns = getattr(self.data, "owns", None)
+        if owns is not None and owns(client_id, token):
+            return PayeeInfo(token=token, name=self.data.label(client_id, token), kind="own", verified=True,
+                             known_to_client=True)
         m = self.merchants.get(token)
         paid = [t for t in self.data.transactions(client_id)
                 if t.counterparty == token and t.direction == Direction.DEBIT]
