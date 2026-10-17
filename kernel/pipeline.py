@@ -240,7 +240,7 @@ class Pipeline:
             if p.details_changed:
                 ask.append("payee details changed since the last payment")
                 high = True
-            if p.usual_amount and amt and amt > p.usual_amount * UNUSUAL_FACTOR:
+            if p.usual_amount and amt and i.action in MONEY_ACTIONS and amt > p.usual_amount * UNUSUAL_FACTOR:
                 ask.append("amount is well above the usual amount for this payee")
                 high = True
             dom = i.val("domain")

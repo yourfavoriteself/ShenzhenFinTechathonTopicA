@@ -10,6 +10,7 @@ from __future__ import annotations
 from typing import Any
 
 from .clock import SimClock
+from .critic import TaskInfo
 from .crypto import KeyPair
 from .intent import Intent, IntentProposal, ProvenanceStore
 from .journal import Journal
@@ -18,6 +19,7 @@ from .passport import AuthError, Passport, PassportRegistry, SignedRequest
 from .pipeline import Decision, Outcome, PendingConfirmation, Pipeline, StepResult, Verdict
 from .ports import Directory, Executor, Funds, InMemoryDirectory, InMemoryFunds
 from .provenance import Labeled
+from .suspicious_memory import SuspiciousMemory
 from .trust import TrustLedger
 
 
@@ -40,8 +42,22 @@ class Kernel:
         self.funds: Funds = funds or InMemoryFunds()
         self.executor = executor
         self.pipeline = Pipeline(self)
+        self.memory = SuspiciousMemory()
+        self.pipeline.risk_checks.append(self.memory.check)
+        self.tasks: dict[str, TaskInfo] = {}
         self.pending: dict[str, PendingConfirmation] = {}
         self.halted: str | None = None
+
+    # ------------------------------------------------------------------ tasks
+
+    def open_task(self, client_id: str, request: str, kind: str = "") -> TaskInfo:
+        """Record the client's own words for a task: provenance for values and the critic's only input text."""
+        from .mandate import new_id
+        task = TaskInfo(task_id=new_id("task"), client_id=client_id, request=request, kind=kind)
+        self.tasks[task.task_id] = task
+        self.provenance.put_client_message(task.task_id, request)
+        self.journal.append("client", "task.opened", {"task": task.task_id, "kind": kind})
+        return task
 
     # ------------------------------------------------------------------ agents
 

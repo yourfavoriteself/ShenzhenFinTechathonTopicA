@@ -88,4 +88,4 @@ def _mentions(text: str, value: Any) -> bool:
     t = re.sub(r"(?<=\d)[\s,](?=\d{3}\b)", "", text.lower())
     if isinstance(value, int):
         return value % 100 == 0 and re.search(rf"(?<![\d.]){value // 100}(?![\d])", t) is not None
-    return "".join(str(value).lower().split()) in "".join(t.split())
+    return "".join(str(value).lower().removeprefix("acct:").split()) in "".join(t.split())
