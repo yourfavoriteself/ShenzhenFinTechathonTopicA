@@ -1,0 +1,10 @@
+[project]
+name = "guardian"
+version = "0.2.0"
+description = "Guardian: an AI agent that executes money tasks inside client-signed, kernel-enforced mandates"
+requires-python = ">=3.12"
+license = "MIT"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q -p no:cacheprovider"

@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Secure AI Financial Guardian</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <header>
+    <div class="brand">
+      <div class="logo">G</div>
+      <div>
+        <div class="title">Secure AI Financial Guardian</div>
+        <div class="subtitle">Sandbox bank · fictional persona · <span id="llm-badge"></span></div>
+      </div>
+    </div>
+    <div class="controls">
+      <span class="clock" id="clock">–</span>
+      <button data-act="payday">Pay day (Oct 1)</button>
+      <button data-act="bills">Run due bills</button>
+      <button data-act="next_day">+1 day</button>
+      <button class="ghost" data-act="reset">Reset</button>
+    </div>
+  </header>
+  <div id="decoy-banner" class="decoy-banner hidden">
+    Coerced-session view: this is exactly what the attacker sees.
+    <span class="login">Owner login (normal PIN): <input id="login-pin" size="6" placeholder="PIN"> <button id="login-btn">Log in</button></span>
+  </div>
+  <nav id="tabs">
+    <button data-tab="overview" class="active">Overview</button>
+    <button data-tab="pay">Pay</button>
+    <button data-tab="shield">Scam Shield</button>
+    <button data-tab="shop">Agent Shopping</button>
+    <button data-tab="duress">Duress Mode</button>
+    <button data-tab="audit">Audit Log</button>
+    <button data-tab="redteam">Red Team</button>
+    <button data-tab="story">A Month of Mia</button>
+  </nav>
+  <main>
+    <section id="tab-overview" class="tab active">
+      <div class="cards" id="kpis"></div>
+      <h2>Purpose-bound envelopes</h2>
+      <p class="hint">Each envelope is a policy, not just a balance: who can be paid, for what, when, through which rail and up to how much. No AI output can change these rules.</p>
+      <div class="env-grid" id="envelopes"></div>
+      <div class="two-col wide-left">
+        <div>
+          <h2>Transactions</h2>
+          <div id="transactions"></div>
+        </div>
+        <div>
+          <h2>Waiting for you</h2>
+          <div id="pending"></div>
+          <h2>Notifications</h2>
+          <div id="outbox"></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="tab-pay" class="tab">
+      <div class="two-col">
+        <form id="pay-form" class="panel">
+          <h2>Send money</h2>
+          <div class="presets">
+            <button type="button" data-preset="grocery">Groceries $45</button>
+            <button type="button" data-preset="friend">Friend $120</button>
+            <button type="button" data-preset="tuition">Tuition $300</button>
+            <button type="button" data-preset="big">New payee $1,200</button>
+            <button type="button" data-preset="crypto">Crypto $400</button>
+          </div>
+          <label>Payee name <input name="payee_name" value="FreshMart Supermarket"></label>
+          <label>Account / PayID <input name="account" value="card-merchant:freshmart"></label>
+          <div class="row">
+            <label>Amount ($) <input name="amount" type="number" step="0.01" value="45.20"></label>
+            <label>Rail
+              <select name="rail">
+                <option value="card">card</option><option value="domestic_transfer">domestic transfer</option>
+                <option value="international_transfer">international transfer</option><option value="crypto">crypto</option>
+                <option value="gift_card">gift card</option><option value="internal">internal</option>
+              </select>
+            </label>
+          </div>
+          <div class="row">
+            <label>Category
+              <select name="category">
+                <option>groceries</option><option>restaurant</option><option>transport</option><option>rent</option>
+                <option>education</option><option>utilities</option><option>personal</option><option>electronics</option>
+                <option>investment</option><option>unknown</option>
+              </select>
+            </label>
+            <label>Country <input name="country" value="AU" size="3"></label>
+            <label>PIN (optional) <input name="pin" size="6" placeholder="1379"></label>
+          </div>
+          <label>Memo <input name="memo" value=""></label>
+          <button class="primary" type="submit">Send</button>
+          <p class="hint">Demo PINs: normal 1379 · duress 9731</p>
+        </form>
+        <div id="pay-result"></div>
+      </div>
+    </section>
+
+    <section id="tab-shield" class="tab">
+      <div class="two-col">
+        <div class="panel">
+          <h2>Incoming message</h2>
+          <div class="presets" id="msg-presets"></div>
+          <label>From <input id="msg-sender" value=""></label>
+          <label>Message <textarea id="msg-text" rows="7"></textarea></label>
+          <button class="primary" id="msg-analyze">Analyze with Guardian</button>
+          <button id="msg-bait" disabled>Bait this scammer</button>
+        </div>
+        <div id="msg-result"></div>
+      </div>
+      <div id="bait-result"></div>
+    </section>
+
+    <section id="tab-shop" class="tab">
+      <div class="two-col">
+        <div class="panel">
+          <h2>Signed intent mandate</h2>
+          <p class="hint">Mia tells a third-party shopping agent what she wants. Guardian signs the intent with her key (Ed25519). Any cart must fit inside it, and payment is possible only with a single-use token bound to one merchant and amount.</p>
+          <label>What to buy <input id="shop-desc" value="USB-C laptop charger, 65W"></label>
+          <div class="row">
+            <label>Keywords <input id="shop-kw" value="charger"></label>
+            <label>Max total ($) <input id="shop-max" type="number" value="60"></label>
+          </div>
+          <button class="primary" data-agent="honest">Run honest agent</button>
+          <button class="danger" data-agent="naive">Run hijacked agent</button>
+        </div>
+        <div id="shop-result"></div>
+      </div>
+    </section>
+
+    <section id="tab-duress" class="tab">
+      <div class="two-col">
+        <form id="duress-form" class="panel">
+          <h2>Coerced transfer</h2>
+          <p class="hint">Someone forces Mia to transfer money (a robbery, a fake "police officer" on a video call, a "virtual kidnapping"). She types her <b>duress PIN</b> instead of the normal one. The app behaves exactly as if the transfer succeeded, while the money is frozen inside the bank and trusted contacts get a silent alert.</p>
+          <label>Payee <input name="payee_name" value="J. Smith"></label>
+          <label>Account <input name="account" value="BSB 012-345 ACC 99887766"></label>
+          <div class="row">
+            <label>Amount ($) <input name="amount" type="number" value="800"></label>
+            <label>PIN <input name="pin" value="9731" size="6"></label>
+          </div>
+          <button class="primary" type="submit">Send</button>
+          <p class="hint">Demo PINs: normal 1379 · duress 9731</p>
+        </form>
+        <div id="duress-result"></div>
+      </div>
+    </section>
+
+    <section id="tab-audit" class="tab">
+      <div id="audit-status"></div>
+      <div class="presets">
+        <button data-tamper="edit">Tamper: edit an entry</button>
+        <button data-tamper="delete">Tamper: delete an entry</button>
+        <button data-tamper="reorder">Tamper: swap two entries</button>
+      </div>
+      <div id="tamper-result"></div>
+      <div id="audit-table"></div>
+    </section>
+
+    <section id="tab-redteam" class="tab">
+      <p class="hint">21 scripted attacks and 8 legitimate controls, each on a fresh sandbox bank, compared with an unguarded autonomous agent and with static bank rules (block &gt; $1,000, crypto and gift cards).</p>
+      <button class="primary" id="rt-run">Run red-team suite</button>
+      <div id="rt-result"></div>
+    </section>
+
+    <section id="tab-story" class="tab">
+      <p class="hint">The full scripted month used for the demo video and the execution evidence: every step runs through the real pipeline.</p>
+      <button class="primary" id="story-run">Run the month</button>
+      <div id="story-result"></div>
+    </section>
+  </main>
+  <script src="/static/app.js"></script>
+</body>
+</html>

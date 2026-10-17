@@ -1,0 +1,193 @@
+{
+  "_note": "All accounts, wallets, phone numbers and domains are fictional. IBANs and wallet addresses have valid checksums so the validators can be demonstrated; phone numbers are from the Australian ACMA range reserved for fiction; domains use the reserved .example TLD.",
+  "scenarios": [
+    {
+      "id": "consulate_impersonation",
+      "title": "Fake consulate / police investigation",
+      "sender": "Consular Protection Office",
+      "channel": "phone call + messaging app",
+      "typology": "Government impersonation targeting international students (often escalates to 'virtual kidnapping')",
+      "opening": "Hello Mia, this is the Consular Protection Office. Your passport was used to open bank accounts in a money laundering investigation. A warrant may be issued for your arrest and your visa can be cancelled. To prove your funds are clean you must transfer a security deposit of AUD 2,400 today to the supervised safe account IBAN GB78 MULE 4044 1273 9205 81. Do not tell anyone, this investigation is confidential. Stay on this call.",
+      "category": "government_fee",
+      "pressure": [
+        "This is very serious. If the deposit is not received within one hour the police will come to your address.",
+        "Remember, you cannot tell your family or the university. The case is confidential.",
+        "Inspector Daniels is waiting for your confirmation. Hurry up.",
+        "Why is it taking so long? Every minute makes your case worse."
+      ],
+      "reveals": [
+        {
+          "triggers": [
+            "account",
+            "details",
+            "where",
+            "send it",
+            "iban",
+            "how do i pay"
+          ],
+          "message": "Send it to the supervised account: IBAN GB78 MULE 4044 1273 9205 81, reference CASE-7781. Do it now."
+        },
+        {
+          "triggers": [
+            "rejected",
+            "failed",
+            "didn't go",
+            "did not go",
+            "another account",
+            "other account"
+          ],
+          "message": "Then use the backup account of the inspection department: IBAN LT97 7044 0600 0831 5520."
+        },
+        {
+          "triggers": [
+            "bitcoin",
+            "crypto",
+            "wallet"
+          ],
+          "message": "Crypto is accepted for urgent cases. Wallet: bc1qgpma2x56kf7hl794ju05xjtx49sv2plyxpgc4q"
+        },
+        {
+          "triggers": [
+            "call",
+            "number",
+            "officer",
+            "inspector",
+            "speak"
+          ],
+          "message": "Contact Inspector Daniels directly on +61 491 570 156 or Telegram @case_officer_daniels."
+        },
+        {
+          "triggers": [
+            "link",
+            "letter",
+            "document",
+            "official",
+            "proof"
+          ],
+          "message": "Your case file is here, log in with your passport number: https://consular-case-portal.example/verify"
+        }
+      ]
+    },
+    {
+      "id": "rent_redirect",
+      "title": "Rent payment redirection (fake property manager)",
+      "sender": "Greenway Property Management",
+      "channel": "email",
+      "typology": "Business email compromise / invoice redirection",
+      "opening": "Dear Mia, please note that Greenway Property Management has changed banks. From October, please pay your rent of $900.00 to our new PayID greenway.pm.accounts@mailbox.example. Payments to the old account will be returned. Please pay today to avoid a late fee. Kind regards, Accounts Team",
+      "category": "rent",
+      "pressure": [
+        "Hi Mia, just checking whether the rent has been sent to the new account? A $75 late fee applies tomorrow.",
+        "We have not received your payment yet. Please action it urgently.",
+        "Our office is very busy, please just make the payment as advised."
+      ],
+      "reveals": [
+        {
+          "triggers": [
+            "account",
+            "details",
+            "payid",
+            "where",
+            "how do i pay"
+          ],
+          "message": "The new PayID is greenway.pm.accounts@mailbox.example, reference your unit number."
+        },
+        {
+          "triggers": [
+            "rejected",
+            "failed",
+            "didn't go",
+            "did not go",
+            "another account",
+            "other account",
+            "doesn't work"
+          ],
+          "message": "Sorry, the bank is still updating. Please use our collections account rent-collections@payfast-mail.example instead."
+        },
+        {
+          "triggers": [
+            "call",
+            "number",
+            "phone",
+            "speak"
+          ],
+          "message": "You can reach our accounts officer on +61 491 570 157."
+        },
+        {
+          "triggers": [
+            "link",
+            "invoice",
+            "letter",
+            "document",
+            "proof"
+          ],
+          "message": "Here is the updated invoice: https://greenway-tenant-portal.example/invoice-oct"
+        }
+      ]
+    },
+    {
+      "id": "crypto_investment",
+      "title": "Student crypto investment club",
+      "sender": "Alex from Student Yield Club",
+      "channel": "messaging app",
+      "typology": "Investment scam / pig butchering",
+      "opening": "Hey Mia! I'm Alex, I run a student crypto club with guaranteed 3x returns in 30 days. Only 5 places left for international students. Start with $500 in Bitcoin to bc1qhh08rfs2tywm4lh07tl449d0hjc8jjcnas035t and I'll add you to the VIP group.",
+      "category": "investment",
+      "pressure": [
+        "Places are going fast, two people joined in the last hour!",
+        "My students made 300% last month, here are the screenshots.",
+        "Don't overthink it, it's a once in a lifetime opportunity."
+      ],
+      "reveals": [
+        {
+          "triggers": [
+            "wallet",
+            "address",
+            "where",
+            "send",
+            "how do i pay"
+          ],
+          "message": "Send the BTC to bc1qhh08rfs2tywm4lh07tl449d0hjc8jjcnas035t, then message me the transaction ID."
+        },
+        {
+          "triggers": [
+            "ethereum",
+            "usdt",
+            "eth",
+            "rejected",
+            "failed",
+            "another"
+          ],
+          "message": "No problem, you can send USDT on Ethereum to 0x9bc0e49c9bf30efc828ab46ff51b2f8d67ff4fa0."
+        },
+        {
+          "triggers": [
+            "call",
+            "number",
+            "group",
+            "contact",
+            "speak"
+          ],
+          "message": "Join the VIP group via Telegram @yield_club_mentor."
+        },
+        {
+          "triggers": [
+            "link",
+            "website",
+            "platform",
+            "proof",
+            "dashboard"
+          ],
+          "message": "Track your profits on our platform: https://student-yield-club.example/dashboard"
+        }
+      ]
+    }
+  ],
+  "legit_examples": [
+    {
+      "id": "friend_pizza",
+      "sender": "Tom (classmate)",
+      "text": "Hey Mia, it's Tom. You owe me $24 for the pizza on Friday, my PayID is tom.lee@uni-mail.example. No rush!"
+    }
+  ]
+}
