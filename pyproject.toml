@@ -7,4 +7,5 @@ license = "MIT"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-addopts = "-q -p no:cacheprovider"
+addopts = "-q -p no:cacheprovider --import-mode=importlib"
+pythonpath = ["."]
