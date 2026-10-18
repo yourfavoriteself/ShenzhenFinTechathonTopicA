@@ -162,18 +162,18 @@
     "levels": [
      1
     ],
-    "input_tokens": 82,
-    "output_tokens": 18,
-    "cost_rub": 0.0172,
+    "input_tokens": 81,
+    "output_tokens": 17,
+    "cost_rub": 0.0166,
     "big_model_calls": 0
    }
   ],
   "calls": 7,
   "big_model_calls": 0,
-  "tokens": 1934,
-  "cost_rub": 0.2702
+  "tokens": 1932,
+  "cost_rub": 0.2696
  },
- "saving_pct": 63.0,
+ "saving_pct": 63.1,
  "calls_by_level": {
   "2": 1,
   "1": 19
@@ -181,8 +181,8 @@
  "projection": {
   "clients": 1000000,
   "tasks_per_client_per_month": 7,
-  "rub_per_client_per_month": 0.2702,
-  "rub_per_month": 270200,
+  "rub_per_client_per_month": 0.2696,
+  "rub_per_month": 269600,
   "assumption": "every client runs the same seven tasks each month, as in the second month; level-0 work (rules, templates, kernel code) costs no tokens"
  },
  "note": "Token counts on real prompts with stub answers, priced at the gateway's list prices; a live run replaces this estimate."
