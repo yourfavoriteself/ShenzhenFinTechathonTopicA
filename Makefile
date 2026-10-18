@@ -28,6 +28,7 @@ evidence:
 	$(PY) -m scripts.risk_graph_report --out evidence/risk_graph.json
 	GUARDIAN_LLM_MODE=stub $(PY) -m scripts.redteam_report --out evidence/redteam.json
 	GUARDIAN_LLM_MODE=stub $(PY) -m scripts.eval_report --out evidence/eval_report.json
+	GUARDIAN_LLM_MODE=stub $(PY) -m scripts.cost_report --out evidence/costs.json
 
 # Needs Foundry (forge, cast, anvil). Local devnet by default; --network sepolia with GUARDIAN_ANCHOR_RPC and ~/.sepolia_key
 anchor:

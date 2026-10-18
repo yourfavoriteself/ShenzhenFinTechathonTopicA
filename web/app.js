@@ -410,7 +410,12 @@ function renderSections(x) {
     h("div", {class: "meta"}, `Mode: ${c.mode}. ${c.note}`),
     Object.keys(c.by_level).length ? table(Object.entries(c.by_level).map(([k, v]) => ({k, ...v})),
       [["k", "Level"], ["calls", "Calls"], ["input_tokens", "In"], ["output_tokens", "Out"], ["cost_rub", "₽ (est.)"]]) : null,
-    c.live ? h("div", {}, h("h4", {}, "Measured live runs"), h("pre", {class: "meta"}, JSON.stringify(c.live.summary || c.live, null, 1))) : null);
+    c.months ? h("h4", {}, `One client's month: next month costs ${c.saving_pct}% less`) : null,
+    c.months ? table(c.months, [["month", "Month"], ["calls", "Model calls"], ["big_model_calls", "Big model"], ["tokens", "Tokens"], ["rub", "₽"]]) : null,
+    c.repeat ? table(c.repeat, [["task", "Task"], [(r) => `${r.first_rub} ₽ (L${r.first_levels.join(",") || "0"})`, "First"], [(r) => `${r.next_rub} ₽ (L${r.next_levels.join(",") || "0"})`, "Repeat"]]) : null,
+    c.projection ? h("div", {class: "kpis"}, kpi(`${c.projection.rub_per_month.toLocaleString("ru-RU")} ₽`, "a month for 1 000 000 clients (estimate)"),
+      kpi(`${c.projection.rub_per_client_per_month} ₽`, "per client per month")) : null,
+    c.projection ? h("div", {class: "meta"}, c.projection.assumption) : null);
 
   const s = x.security;
   const g = s.graph_model, an = s.anchors;

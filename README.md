@@ -31,7 +31,8 @@ All numbers come from `make evidence` and the test suite on the synthetic demo b
 | Spending forecast, held-out months Jul–Sep | WAPE 27.3 % overall; bills 4.3 %, subscriptions 1.3 % | `evidence/budget_report.json` |
 | Payee risk on the transfer graph (held-out synthetic graphs) | ROC-AUC 1.0, precision 0.993, recall 0.944, 0 false positives on employers, merchants and landlords | `evidence/risk_graph.json` |
 | Journal anchoring (local devnet) | 4 checkpoints; a rewritten-and-rehashed entry and a cut tail are both detected | `evidence/anchors.json` |
-| Automated tests | 323 passed; 9 PostgreSQL tests run with `make test-pg` | `make test` |
+| Model cost of one client's month (estimate on real prompts, stub answers) | first month 0.73 ₽, next month 0.27 ₽ (−63 %); a repeat payment uses no model; ≈ 270 000 ₽ a month per million clients | `evidence/costs.json` |
+| Automated tests | 324 passed; 9 PostgreSQL tests run with `make test-pg` | `make test` |
 
 The graph model is trained and tested on graphs from our own generator. Real bank data will score lower: the numbers show the pipeline works, not field accuracy.
 

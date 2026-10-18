@@ -148,13 +148,19 @@ def cost(svc: "GuardianService") -> dict[str, Any]:
     tpl = sum(t.uses for t in svc.templates.for_client(svc.client))
     tasks = sum(1 for e in svc.k.journal.entries if e.event == "task.opened")
     kernel_only = max(0, tasks - len({r.task_id for r in svc.gw.log}))
-    live = _evidence("live_costs.json")
+    est = _evidence("costs.json")
     return {"mode": rep["mode"], "spent_rub": rep["spent_total_rub"], "cap_rub": rep["cap_rub"],
             "by_level": rep["by_level"], "model_calls": calls,
             "share_level_0_1": round(100 * (cheap + kernel_only) / max(1, calls + kernel_only), 1),
-            "tasks": tasks, "tasks_without_any_model": kernel_only, "template_repeats": tpl, "live": live,
-            "note": "Stub mode counts calls and estimated tokens; rubles appear after live runs."
-            if live is None else "Live costs measured on the recorded runs."}
+            "tasks": tasks, "tasks_without_any_model": kernel_only, "template_repeats": tpl,
+            "months": est and [{"month": name, "calls": est[k]["calls"], "big_model_calls": est[k]["big_model_calls"],
+                                "tokens": est[k]["tokens"], "rub": est[k]["cost_rub"]}
+                               for name, k in (("first", "first_month"), ("next", "next_month"))],
+            "repeat": est and [{"task": a["task"], "first_rub": a["cost_rub"], "next_rub": b["cost_rub"],
+                                "first_levels": a["levels"], "next_levels": b["levels"]}
+                               for a, b in zip(est["first_month"]["tasks"], est["next_month"]["tasks"])],
+            "saving_pct": est and est["saving_pct"], "projection": est and est["projection"],
+            "note": (est or {}).get("note", "Run make evidence for the month estimate.")}
 
 
 def security(svc: "GuardianService") -> dict[str, Any]:
