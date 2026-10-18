@@ -24,6 +24,7 @@ from kernel.analytics import Usage, double_charges, leaks, recurring
 from kernel.cancellation import CancelDesk, Cancellation
 from kernel.cards import describe
 from kernel.core import ConfirmationError
+from kernel.counterfactual import CounterfactualCheck
 from kernel.critic import Critic, stub_responder as critic_stub
 from kernel.intervention import CallSignal, Duress, InterventionDesk
 from risk_graph.generator import generate as transfer_graph
@@ -97,6 +98,8 @@ class GuardianService:
         self.k.vault.listeners.append(self.gw.guard.register)
         self.critic = Critic(self.k, self.gw)
         self.k.pipeline.critic = self.critic
+        self.cf = CounterfactualCheck(self.k)
+        self.k.pipeline.counterfactual = self.cf
         self.desk = DocumentDesk(self.k, self.merchants, self.k.memory)
         self.templates = TemplateStore()
         self.portal = build_portal(self.world, deliver=self._deliver)
@@ -398,6 +401,7 @@ class GuardianService:
                                "I will not pay a payee I cannot verify.", task_id=task.task_id)
             return
         proposals, note = self.planner.plan(task.request, facts, task.task_id)
+        self.cf.register(task.task_id, lambda masked: self.planner.plan(masked, facts, task.task_id, level=1)[0])
         if not proposals:
             self._emit("text", note or "I could not plan this payment.", task_id=task.task_id)
             return
@@ -436,6 +440,11 @@ class GuardianService:
                 entry["usual_amount"] = {"value": info.usual_amount, "display": rub(info.usual_amount),
                                          "ref": self.k.bank_value(f"bank:usual:{info.token}", info.usual_amount,
                                                                   "median of your last payments")}
+            elif cof := next((x for x in self.bank.cards_on_file(self.client) if x.merchant == info.token and x.active),
+                             None):
+                entry["price"] = {"value": cof.amount, "display": rub(cof.amount),
+                                  "ref": self.k.bank_value(f"bank:price:{info.token}", cof.amount,
+                                                           "the merchant's price on your card on file")}
             entry["category_envelope"] = B.ENV_OF.get(c["category"])
             payees.append(entry)
         env_wanted = {p["category_envelope"] for p in payees}

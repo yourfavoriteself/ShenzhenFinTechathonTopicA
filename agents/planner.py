@@ -19,6 +19,7 @@ from .base import claim
 SYSTEM = """You are the planner of a personal finance assistant inside a bank.
 You receive the client's request and facts prepared by the bank's kernel. Every fact has a "ref".
 Choose the payee, amount and funding source by their refs. Never invent refs or values.
+For the amount use the usual amount; if there is none, the merchant's price.
 Prefer the client's budget envelope that matches the payee's category; otherwise the main card.
 If no payee fits the request, return no intents and say why in "note"."""
 
@@ -44,13 +45,15 @@ class Planner:
         self.gw = gateway
         self.last_level: int | None = None
 
-    def plan(self, request: str, facts: dict[str, Any], task_id: str) -> tuple[list[IntentProposal], str]:
+    def plan(self, request: str, facts: dict[str, Any], task_id: str,
+             level: int | None = None) -> tuple[list[IntentProposal], str]:
         payload = {"client_request": request, "client_message_ref": facts.get("client_message_ref"),
                    "facts": {k: v for k, v in facts.items() if k != "client_message_ref"}}
         res = self.gw.call("planner", SYSTEM, json.dumps(payload, ensure_ascii=False, sort_keys=True),
-                           level=self.LEVEL, task_id=task_id, schema=Plan, max_tokens=600, effort="medium",
+                           level=level or self.LEVEL, task_id=task_id, schema=Plan, max_tokens=600, effort="medium",
                            min_confidence=0.5)
-        self.last_level = res.level
+        if level is None:
+            self.last_level = res.level
         plan = Plan.model_validate(res.parsed)
         by_ref = _index(facts)
         out = []
@@ -91,8 +94,9 @@ def stub_responder(req: dict) -> str:
         return json.dumps({"intents": [], "note": "no payee in your history or the bank's directory matches"})
     srcs = p["facts"].get("funding_sources", [])
     src = next((s for s in srcs if s.get("matches_category")), srcs[0] if srcs else None)
+    amount = best.get("usual_amount") or best.get("price")
     return json.dumps({"intents": [{"action": "pay", "payee_ref": best["payee"]["ref"],
-                                    "amount_ref": best["usual_amount"]["ref"] if best.get("usual_amount") else None,
+                                    "amount_ref": amount["ref"] if amount else None,
                                     "funding_ref": src["source"]["ref"] if src else None,
                                     "memo": f"{best['name']} monthly payment"}],
                        "note": "", "confidence": 0.9})
