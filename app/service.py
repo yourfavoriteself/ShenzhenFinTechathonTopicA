@@ -85,6 +85,10 @@ class OptionMeta(BaseModel):
     used: bool = False
 
 
+
+def _n(count: int, word: str) -> str:
+    return f"{count} {word}{'' if count == 1 else 's'}"
+
 class GuardianService:
     def __init__(self, world: World | None = None, gateway: LLMGateway | None = None, *, seed: int = 22,
                  explain: bool = True):
@@ -527,7 +531,7 @@ class GuardianService:
                          "verdict": chk.verdict, "fields": [f.model_dump(mode="json") for f in chk.fields]})
         ok = sum(1 for _, c in checks if c.verdict == "verified")
         self._emit("bills", f"I read {len(bills)} bills: {ok} check out against the bank's records"
-                            f"{', ' + str(len(bills) - ok) + ' do not' if ok < len(bills) else ''}.",
+                            f"{', ' + str(len(bills) - ok) + (' does not' if len(bills) - ok == 1 else ' do not') if ok < len(bills) else ''}.",
                    data={"bills": rows}, task_id=task.task_id)
         for doc, chk in checks:
             if chk.verdict != "verified":
@@ -738,8 +742,10 @@ class GuardianService:
         boost = B.savings_to_goal(gp, extra, start, source)
         o = self._option("goal_boost", f'Add {rub(extra)} a month to "{gp.goal.name}"',
                          {"goal": gp.goal.id, "extra": extra, "source": source}, extra)
-        self._emit("boost", f'{source}: +{rub(extra)} a month. Put it into "{gp.goal.name}"? The goal would be reached '
-                            f"{boost.days_earlier} days earlier, on {boost.new_date:%d %b %Y}.",
+        when = (f"The goal would be reached {_n(boost.days_earlier, 'day')} earlier, on {boost.new_date:%d %b %Y}."
+                if boost.days_earlier > 0 else
+                f"The date stays {boost.new_date:%d %b %Y}, with a smaller transfer in the last month.")
+        self._emit("boost", f'{source}: +{rub(extra)} a month. Put it into "{gp.goal.name}"? {when}',
                    data={"calc": boost.calc, "options": [{"id": o.id, "title": o.title}]}, task_id=task_id)
 
     def _opt_goal_boost(self, o: OptionMeta):
@@ -755,8 +761,8 @@ class GuardianService:
         month = B.complete_months(txs, self.clock.now())[-1]
         r = B.month_review(month, txs, B.autobudget(txs, self.clock.now(), month=month), self._series())
         over = [x for x in r.rows if x.diff > 0]
-        draft = (f"In {month} you spent more than planned in {len(over)} envelopes"
-                 + (f"; {len(r.anomalies)} spending spikes" if r.anomalies else "") + ".")
+        draft = (f"In {month} you spent more than planned in {_n(len(over), 'envelope')}"
+                 + (f"; {_n(len(r.anomalies), 'spending spike')}" if r.anomalies else "") + ".")
         facts = {"month": month, "over": len(over), "spikes": len(r.anomalies)}
         text, rc = self._say(task, facts, draft)
         self._emit("review", text, data={
@@ -772,7 +778,7 @@ class GuardianService:
         f = q["forecast"]
         text = (f"Back-test on your own history: envelopes for {', '.join(f['test'])} planned from the nine months "
                 f"before were off by {f['overall_wape']}% overall. Cash gaps: {q['gaps']['caught_in_time']} of "
-                f"{len(q['gaps']['actual'])} predicted at least 3 days ahead, {q['gaps']['false_alarms']} false alarms.")
+                f"{len(q['gaps']['actual'])} predicted at least 3 days ahead, {_n(q['gaps']['false_alarms'], 'false alarm')}.")
         self._emit("quality", text, data=q, task_id=task.task_id)
 
     def quality(self) -> dict[str, Any]:

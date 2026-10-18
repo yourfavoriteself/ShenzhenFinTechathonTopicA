@@ -29,6 +29,7 @@ evidence:
 	GUARDIAN_LLM_MODE=stub $(PY) -m scripts.redteam_report --out evidence/redteam.json
 	GUARDIAN_LLM_MODE=stub $(PY) -m scripts.eval_report --out evidence/eval_report.json
 	GUARDIAN_LLM_MODE=stub $(PY) -m scripts.cost_report --out evidence/costs.json
+	GUARDIAN_LLM_MODE=stub $(PY) -m scripts.demo_run --out evidence
 
 # Needs Foundry (forge, cast, anvil). Local devnet by default; --network sepolia with GUARDIAN_ANCHOR_RPC and ~/.sepolia_key
 anchor:

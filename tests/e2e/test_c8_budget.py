@@ -63,7 +63,7 @@ def test_cancelled_subscription_speeds_up_the_goal(svc, client):
     svc.cancel_login(cid, *DEMO_LOGINS[("tok_streambox", "card_1234")])
     items = svc.cancel_code(cid, re.search(r"code: (\d+)", svc.portal.sms[-1].text).group(1))
     boost = of(items, "boost")[-1]
-    assert "+399 ₽ a month" in boost.text and "days earlier" in boost.text
+    assert "+399 ₽ a month" in boost.text and ("days earlier" in boost.text or "date stays" in boost.text)
     client.option([boost], "Add 399")
     assert svc.goals[0].monthly == 670_000 + 39_900
 

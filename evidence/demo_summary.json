@@ -1,0 +1,73 @@
+{
+ "mode": "stub",
+ "journal": {
+  "entries": 292,
+  "ok": true,
+  "head": "b2188f652b4dac9ec6d85e54592c910c8fb55ab8e69988fe9c73bf6a3cea8154",
+  "public_key": "oW/0FK+7YEeIXIur+DLYtdGlJs/5VpzWWioyCG0H8Ic="
+ },
+ "month": {
+  "saved_per_month": "548 ₽",
+  "saved_per_year": "6 576 ₽",
+  "refunded": "2 345.60 ₽",
+  "done": 10,
+  "notifications_only": 1,
+  "asked": 11,
+  "stopped": 2,
+  "cancelled": [
+   "StreamBox",
+   "CloudNest"
+  ],
+  "goals": [
+   {
+    "name": "vacation",
+    "target": "60 000 ₽",
+    "saved": "0 ₽",
+    "monthly": "7 099 ₽",
+    "date": "2027-06-25",
+    "pct": 0.0
+   }
+  ]
+ },
+ "cost": {
+  "model_calls": 28,
+  "by_level": {
+   "1": {
+    "calls": 27,
+    "input_tokens": 8247,
+    "output_tokens": 493,
+    "cost_rub": 1.0712000000000002
+   },
+   "2": {
+    "calls": 1,
+    "input_tokens": 803,
+    "output_tokens": 54,
+    "cost_rub": 0.3219
+   }
+  },
+  "share_level_0_1": 96.7
+ },
+ "security": {
+  "cases": 1,
+  "holds": [
+   {
+    "id": "hold_ca0df2d3ef3b",
+    "level": 4,
+    "status": "rejected",
+    "duress": false,
+    "release_at": null,
+    "amount": "350 000 ₽"
+   }
+  ],
+  "denied": 0
+ },
+ "stages": {
+  "stage 1": 6,
+  "stage 2": 2
+ },
+ "passports": {
+  "dispatcher": 10,
+  "planner": 1,
+  "reader": 1
+ }
+}
