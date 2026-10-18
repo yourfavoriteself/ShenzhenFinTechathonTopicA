@@ -1,6 +1,6 @@
 PY ?= python3
 
-.PHONY: install test test-pg run replay live stub evidence anchor
+.PHONY: install test test-pg run replay live stub evidence anchor docs video
 
 install:
 	$(PY) -m pip install -r requirements-dev.txt
@@ -34,3 +34,12 @@ evidence:
 # Needs Foundry (forge, cast, anvil). Local devnet by default; --network sepolia with GUARDIAN_ANCHOR_RPC and ~/.sepolia_key
 anchor:
 	GUARDIAN_LLM_MODE=stub $(PY) -m scripts.anchor_journal
+
+# Submission documents: PDFs (pandoc + Chromium) and the presentation (pptxgenjs)
+docs:
+	$(PY) docs/build.py docs/technical_documentation.md docs/security_report.src.md
+	node docs/deck.js
+
+# Demo video recorded from the UI (Playwright + ffmpeg); also refreshes the screenshots in docs/media
+video:
+	GUARDIAN_LLM_MODE=stub $(PY) -m scripts.record_demo --out docs/media

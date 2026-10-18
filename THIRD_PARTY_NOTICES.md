@@ -21,7 +21,7 @@ redistributed in this repository and keep their own licenses.
 | pytest (dev) | 9.0.3 | MIT |
 | Playwright for Python (managed browser, screenshots, video) | 1.63.0 | Apache-2.0 |
 
-Documentation tooling (not required to run Guardian): pandoc (GPL-2.0-or-later), Mermaid (MIT), PptxGenJS (MIT), FFmpeg (LGPL/GPL).
+Documentation tooling (not required to run Guardian): pandoc (GPL-2.0-or-later), Mermaid (MIT), PptxGenJS 4.0.1 (MIT), draw.io desktop (Apache-2.0), FFmpeg (LGPL/GPL).
 
-The architecture, firewall, duress and permission-tier diagrams in `docs/img` were drawn by the team with Mermaid.
+The architecture diagram in `docs/diagrams` was drawn by the team in draw.io; the README diagram uses Mermaid.
 All personas, organisations, accounts, phone numbers and web pages in `data/` and the tests are fictional.

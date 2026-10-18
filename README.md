@@ -32,9 +32,13 @@ All numbers come from `make evidence` and the test suite on the synthetic demo b
 | Payee risk on the transfer graph (held-out synthetic graphs) | ROC-AUC 1.0, precision 0.993, recall 0.944, 0 false positives on employers, merchants and landlords | `evidence/risk_graph.json` |
 | Journal anchoring (local devnet) | 4 checkpoints; a rewritten-and-rehashed entry and a cut tail are both detected | `evidence/anchors.json` |
 | Model cost of one client's month (estimate on real prompts, stub answers) | first month 0.73 ₽, next month 0.27 ₽ (−63 %); a repeat payment uses no model; ≈ 270 000 ₽ a month per million clients | `evidence/costs.json` |
-| Automated tests | 324 passed; 9 PostgreSQL tests run with `make test-pg` | `make test` |
+| Automated tests | 328 passed; 9 PostgreSQL tests run with `make test-pg` | `make test` |
 
 The graph model is trained and tested on graphs from our own generator. Real bank data will score lower: the numbers show the pipeline works, not field accuracy.
+
+## Submission materials
+
+[Technical documentation](docs/technical_documentation.pdf) · [Presentation](docs/presentation.pdf) ([pptx](docs/presentation.pptx)) · [Demo video, 3:27](docs/media/guardian_demo.mp4) · [Security report](docs/security_report.pdf) · [Execution evidence](evidence/README.md). Index: [`docs/README.md`](docs/README.md).
 
 ## What it does
 
