@@ -303,11 +303,12 @@ class Pipeline:
             payment = PaymentConstraints(allowed_payees=[payee], amount_range=AmountRange(max=amount or 0),
                                          agent_recurrence=Recurrence())
         end_of_tomorrow = datetime.combine((now + timedelta(days=1)).date(), time(23, 59), tzinfo=now.tzinfo)
+        exp = min(end_of_tomorrow, i.not_after) if i.not_after else end_of_tomorrow
         once = Mandate(client_id=i.client_id, actions=[i.action], payment=payment, allowed_origins=origins,
-                       funding_source=i.val("funding_source"), nbf=now, exp=end_of_tomorrow, single_use=True,
+                       funding_source=i.val("funding_source"), nbf=now, exp=exp, single_use=True,
                        stage=AutonomyStage.ASSISTED)
         standing = None
-        if (i.action in MONEY_ACTIONS and ctx.risk < Risk.HIGH and ctx.payee is not None
+        if (i.action in MONEY_ACTIONS and ctx.risk < Risk.HIGH and i.not_after is None and ctx.payee is not None
                 and ctx.payee.kind in STANDING_KINDS and amount):
             exp = datetime(now.year, 12, 31, 23, 59, tzinfo=now.tzinfo)
             if (exp - now).days < 30:

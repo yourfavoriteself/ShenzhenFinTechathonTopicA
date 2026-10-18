@@ -205,6 +205,7 @@ function render(it) {
     case "denied": return h("div", {class: "msg denied"}, "⛔ " + it.text, steps(d));
     case "error": return h("div", {class: "msg error"}, it.text);
     case "gap": return h("div", {class: "msg notice"}, "⚠ " + it.text, optionButtons(d.options));
+    case "trial": return h("div", {class: "msg notice"}, "⏰ " + it.text, optionButtons(d.options));
     case "options": return h("div", {class: "msg notice"}, it.text, optionButtons(d.options));
     case "budget": return h("div", {class: "msg"}, it.text,
       table(d.envelopes, [["name", "Envelope"], ["kind", "Type"], ["planned", "Planned"], ["average", "Average"]]),

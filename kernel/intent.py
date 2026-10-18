@@ -4,6 +4,7 @@ from; the kernel resolves the reference and assigns the provenance label itself.
 from __future__ import annotations
 
 import re
+from datetime import datetime
 from typing import Any
 
 from pydantic import BaseModel, Field
@@ -26,6 +27,7 @@ class IntentProposal(BaseModel):
     mandate_id: str | None = None
     memo: str = ""
     references: list[str] = []
+    not_after: datetime | None = None     # can only shorten the permission, never extend it
 
 
 class Intent(BaseModel):
@@ -41,6 +43,7 @@ class Intent(BaseModel):
     mandate_id: str | None = None
     memo: str = ""
     references: list[str] = []
+    not_after: datetime | None = None
 
     def fields(self) -> dict[str, Labeled]:
         return {k: v for k in ("payee", "amount", "funding_source", "domain") if (v := getattr(self, k)) is not None}

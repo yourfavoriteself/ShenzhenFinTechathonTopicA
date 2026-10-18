@@ -83,6 +83,7 @@ class Kernel:
                   if (claim := getattr(proposal, name)) is not None}
         return Intent(client_id=passport.client_id, task_id=passport.task_id, proposed_by=passport.id,
                       action=proposal.action, mandate_id=proposal.mandate_id, memo=proposal.memo,
+                      not_after=proposal.not_after,
                       references=proposal.references, **fields)
 
     def bank_value(self, ref: str, value: Any, source: str) -> str:
@@ -104,6 +105,10 @@ class Kernel:
         mandate = pending.standing if standing else pending.once
         if mandate is None:
             raise ConfirmationError("no standing option was offered on this card")
+        if mandate.exp <= self.clock.now():
+            self.pending.pop(pending_id, None)
+            self.journal.append("client", "confirmation.expired", {"card": pending_id})
+            raise ConfirmationError(f"this permission expired at {mandate.exp:%d %b %Y, %H:%M}; nothing was done")
         if pending.card.type_amount and typed_amount != pending.intent.val("amount"):
             raise ConfirmationError("typed amount does not match")
         try:

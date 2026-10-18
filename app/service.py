@@ -11,7 +11,7 @@ from __future__ import annotations
 import json
 import re
 import threading
-from datetime import date, datetime
+from datetime import date, datetime, time
 from typing import Any, Callable
 
 from pydantic import BaseModel, Field
@@ -105,6 +105,7 @@ class GuardianService:
         self.bill_checks: dict[str, DocCheck] = {}
         self.paid_docs: set[str] = set()
         self.plan: B.BudgetPlan | None = None
+        self.trials_asked: set[str] = set()
         for doc in self.inbox():
             self.desk.screen(self.client, doc)
         self._welcome()
@@ -231,6 +232,7 @@ class GuardianService:
             now = self.clock.now()
             self.k.journal.append("operator", "clock.advanced", {"days": days, "now": now.isoformat()})
             self._emit("notice", f"Demo time moved forward {days} days: it is now {now:%d %b %Y, %H:%M}.")
+            self._trial_watch()
             paid_in = [t for t in self.bank.transactions(self.client, since=t0) if t.category == Category.INCOME]
             if paid_in and self._envelopes():
                 self.apply_budget()
@@ -463,7 +465,32 @@ class GuardianService:
         return (f"{self._name(c.merchant)}, {rub(c.amount)} a month, card *{self.bank.cards[c.card_id].last4}, "
                 f"charged since {since}")
 
-    def _cancel_card(self, task, cof):
+    # ---------------------------------------------------------------- C7: trial ending
+
+    def _trial_watch(self):
+        """A day before a trial turns into a paid subscription: ask whether to keep it."""
+        today = self.clock.now().date()
+        for c in self.bank.cards_on_file(self.client):
+            if not (c.active and c.trial_until and c.id not in self.trials_asked
+                    and today <= c.trial_until and (c.next_date - today).days <= 1):
+                continue
+            self.trials_asked.add(c.id)
+            name, card = self._name(c.merchant), self.bank.cards[c.card_id].last4
+            keep = self._option("info", f"Keep {name}", {}, c.amount)
+            cancel = self._option("cancel_trial", f"Cancel {name} before the first charge", {"cof": c.id}, c.amount)
+            self._emit("trial", f"Your {name} free trial ends {c.trial_until:%d %b}. On {c.next_date:%d %b} it starts "
+                                f"charging {rub(c.amount)} a month to card *{card}. Keep it?",
+                       data={"options": [{"id": keep.id, "title": keep.title}, {"id": cancel.id, "title": cancel.title}],
+                             "merchant": name, "first_charge": c.next_date.isoformat(), "amount": rub(c.amount)})
+
+    def _opt_cancel_trial(self, o: OptionMeta):
+        cof = self.bank.cof[o.action["cof"]]
+        task = self.k.open_task(self.client, o.title, "cancel")
+        # The permission lives only until the first charge: after that, cancelling is a different decision.
+        until = datetime.combine(cof.next_date, time(8, 59), tzinfo=self.clock.now().tzinfo)
+        self._cancel_card(task, cof, not_after=until)
+
+    def _cancel_card(self, task, cof, not_after: datetime | None = None):
         m = self.merchants.get(cof.merchant)
         if m is None or not m.domain:
             o = self._option("block", f"Block future {self._name(cof.merchant)} charges", {"merchant": cof.merchant},
@@ -482,7 +509,7 @@ class GuardianService:
                                                                            "your cards")}),
             domain=claim({"value": m.domain, "ref": k.bank_value(f"bank:merchant:{m.token}:domain", m.domain,
                                                                 "merchant directory")}),
-            memo=summary)
+            memo=summary, not_after=not_after)
         s = session(k, self.gw, Role.DISPATCHER, 0, D.SYSTEM, self.client, task.task_id)
         d = propose(k, s, p)
         self._decision(d, CardMeta(pending_id=d.pending_id or "", task_id=task.task_id, kind="cancel"))
@@ -831,6 +858,7 @@ class GuardianService:
         fc = self._forecast()
         if fc.gaps:
             self._gap_item(fc)
+        self._trial_watch()
         flagged = [d for d in self.inbox() if self.desk.screened[d.id].events]
         if flagged:
             self._emit("notice", f"{len(flagged)} messages in your inbox look suspicious; I will not act on them "
