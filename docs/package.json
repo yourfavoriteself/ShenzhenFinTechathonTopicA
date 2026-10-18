@@ -1,0 +1,8 @@
+{
+  "name": "guardian-docs",
+  "private": true,
+  "description": "Builds the presentation: node deck.js",
+  "dependencies": {
+    "pptxgenjs": "4.0.1"
+  }
+}
