@@ -7,5 +7,5 @@ COPY . .
 ENV GUARDIAN_LLM_MODE=replay
 EXPOSE 8000
 # A broken image never ships: the test suite runs at build time.
-RUN python -m pytest
+RUN GUARDIAN_LLM_MODE=stub python -m pytest -q
 CMD ["uvicorn", "--factory", "app.web:create_web_app", "--host", "0.0.0.0", "--port", "8000"]

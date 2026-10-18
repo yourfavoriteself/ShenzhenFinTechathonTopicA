@@ -455,7 +455,7 @@ function renderSections(x) {
     table(k.code, [["requirement", "Requirement"], ["how", "Guardian"], ["where", "See"]]),
     h("h4", {}, "Operations by autonomy stage"),
     h("div", {}, Object.entries(k.stages).map(([s, n]) => `${s}: ${n}`).join(", ") || "none signed yet", ` · stage 3: ${k.stage_3}`),
-    h("h4", {}, "Visa Intelligent Commerce / AP2"),
+    h("h4", {}, "Mastercard Verifiable Intent / Google AP2"),
     table(k.vi_ap2, [["theirs", "Their concept"], ["ours", "Guardian"]]));
 }
 

@@ -48,13 +48,16 @@ CODE = [
      "security report (safety), ethics section in the documentation.", "Red-team"),
 ]
 
+# Mastercard Verifiable Intent constraint types and Google AP2 mandates → Guardian's mandate
 VI_AP2 = [
-    ("Intent mandate (AP2) / L2 intent (VI)", "Mandate: actions, allowed payees, amount range, period, money source, "
+    ("Intent mandate (AP2)", "Standing permission: actions, allowed payees, amount range, period, money source, "
      "expiry, signed by the client's device"),
-    ("Cart / payment mandate (AP2)", "One-time mandate per card; `payment.reference` = hash of the card shown"),
-    ("Constraint types (VI)", "allowed_payees, amount_range, agent_recurrence, budget, funding_source, domain"),
-    ("Delegation (VI L3)", "Child grants derived from a mandate, single use, held by one agent passport"),
-    ("Signatures", "Ed25519 or ECDSA P-256 device key (WebCrypto, non-extractable); kernel countersignature"),
+    ("Cart and payment mandates (AP2)", "One-time mandate per card; `payment.reference` = hash of the card shown"),
+    ("Constraint types (VI)", "allowed_payees, amount_range, budget, agent_recurrence, reference; our additions: "
+     "allowed_origins, funding_source"),
+    ("Delegation", "Child grants derived from a mandate, rights only narrow, single use, held by one agent passport"),
+    ("Signatures", "Ed25519 or ECDSA P-256 device key (WebCrypto, non-extractable) plus the kernel's countersignature; "
+     "JSON, no SD-JWT selective disclosure yet"),
 ]
 
 
