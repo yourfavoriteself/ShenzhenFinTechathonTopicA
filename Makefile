@@ -1,6 +1,6 @@
 PY ?= python3
 
-.PHONY: install test run replay live stub evidence
+.PHONY: install test test-pg run replay live stub evidence
 
 install:
 	$(PY) -m pip install -r requirements-dev.txt
@@ -8,6 +8,11 @@ install:
 
 test:
 	GUARDIAN_LLM_MODE=stub $(PY) -m pytest
+
+# PostgreSQL tests reset the public schema of the database they are given: use an empty one
+test-pg:
+	GUARDIAN_LLM_MODE=stub GUARDIAN_TEST_PG=$${GUARDIAN_TEST_PG:?set GUARDIAN_TEST_PG to an empty database} \
+		$(PY) -m pytest tests/integration
 
 run replay:
 	GUARDIAN_LLM_MODE=replay $(PY) -m uvicorn --factory app.web:create_web_app --port 8000

@@ -1,1 +1,0 @@
--- Migrations are applied in lexical order by kernel/db.py.

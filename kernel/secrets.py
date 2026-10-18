@@ -82,6 +82,10 @@ class Vault:
         return [{"name": e.name, "domain": e.domain, "remember": e.remember, "uses": e.uses}
                 for e in self._entries.values() if e.client_id == client_id]
 
+    def ciphertexts(self, client_id: str) -> list[SecretEntry]:
+        """Encrypted entries for persistence; the key never leaves this object."""
+        return [e.model_copy() for e in self._entries.values() if e.client_id == client_id]
+
     def fill(self, client_id: str, text: str, domain: str) -> str:
         """Substitute every reference in `text` for a field on `domain`."""
         def sub(m: re.Match) -> str:

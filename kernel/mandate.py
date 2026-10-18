@@ -258,6 +258,11 @@ class MandateService:
     def state(self, mandate_id: str) -> MandateState | None:
         return self._state.get(mandate_id)
 
+    def all(self, client_id: str) -> list[SignedMandate]:
+        """Every mandate the client signed on a device, including expired and revoked ones."""
+        return [st.signed for st in self._state.values()
+                if st.signed.mandate.client_id == client_id and st.signed.device_sig is not None]
+
     def verify_signed(self, signed: SignedMandate) -> list[str]:
         """Check a mandate as presented by an agent: any edit after signing breaks the hash."""
         v: list[str] = []

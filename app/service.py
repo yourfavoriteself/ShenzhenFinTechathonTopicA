@@ -9,6 +9,7 @@ kernel; models only classify, extract, plan by reference and word the answer.
 from __future__ import annotations
 
 import json
+import os
 import re
 import threading
 from datetime import date, datetime, time, timedelta
@@ -130,6 +131,9 @@ class GuardianService:
         self.goals: list[B.GoalPlan] = []
         self.goal_tasks: dict[str, str] = {}
         self.saved_monthly: list[dict] = []
+        self.db = None
+        if url := os.environ.get("DATABASE_URL"):
+            self.connect_db(url)
         for doc in self.inbox():
             self.desk.screen(self.client, doc)
         self._welcome()
@@ -231,6 +235,19 @@ class GuardianService:
             n = self.k.vault.forget(self.client, name)
             self.k.journal.append("client", "secret.forgotten", {"name": name, "count": n})
             return [self._emit("notice", "Saved sign-in removed from the bank vault." if n else "Nothing to remove.")]
+
+    def connect_db(self, url: str) -> list[str]:
+        """Write the journal and client data through to PostgreSQL (migrations run first)."""
+        from kernel.db import Database
+        self.db = Database(url)
+        applied = self.db.migrate()
+        self.db.attach(self.k, self.client, holds=lambda: self.guard.holds, cases=self._case_rows)
+        return applied
+
+    def _case_rows(self) -> list[dict]:
+        rows = [c.model_dump(mode="json") for c in self.desk.cases]
+        rows += [h.case | {"opened": h.created.isoformat(), "hold": h.id} for h in self.guard.holds.values() if h.case]
+        return rows
 
     # ---------------------------------------------------------------- C9 controls
 

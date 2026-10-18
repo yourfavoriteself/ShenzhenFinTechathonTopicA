@@ -48,6 +48,7 @@ class Journal:
         self._signer = signer
         self._clock = clock
         self.entries: list[JournalEntry] = []
+        self.listeners: list = []          # write-through sinks (Postgres); they get the signed entry
 
     @property
     def public_key(self) -> str:
@@ -62,6 +63,8 @@ class Journal:
         entry.hash = sha256_hex(canonical(entry.body()))
         entry.sig = self._signer.sign(entry.hash.encode())
         self.entries.append(entry)
+        for fn in self.listeners:
+            fn(entry)
         return entry
 
     def verify(self, entries: list[JournalEntry] | None = None,
