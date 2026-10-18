@@ -352,6 +352,111 @@ async function refresh() {
   fill($("#tab-journal"), 
     h("div", {class: j.ok ? "meta" : "alert"}, j.ok ? `Signed hash chain verified: ${j.checked} entries, head ${j.head}…` : "Journal verification FAILED"),
     ...j.entries.map((e) => h("div", {class: "jr"}, `#${e.seq} ${e.actor} ${e.event}${e.stage ? " · stage " + e.stage : ""}`)));
+  renderSections(await api("/api/sections"));
+}
+
+// ------------------------------------------------------------------ sections
+
+const kpi = (v, t) => h("div", {class: "kpi"}, h("b", {}, String(v)), h("span", {}, t));
+const kpis = (...k) => h("div", {class: "kpis"}, ...k);
+const empty = (t) => h("div", {class: "meta"}, t);
+const okmark = (b) => h("span", {class: b ? "ok-t" : "bad-t"}, b ? "✔" : "✖");
+
+function renderSections(x) {
+  const m = x.month;
+  fill($("#tab-month"),
+    h("div", {class: "meta"}, "What Guardian did for you, from the signed journal."),
+    kpis(kpi(m.saved_per_month, "saved per month"), kpi(m.saved_per_year, "saved per year"),
+      kpi(m.done, "actions done"), kpi(m.asked, "times you were asked"),
+      kpi(m.stopped, "stopped or held"), kpi(m.refunded, "refunds")),
+    m.cancelled.length ? h("div", {}, "Cancelled and verified with the merchant: " + m.cancelled.join(", ")) : null,
+    h("h4", {}, "Goals"),
+    m.goals.length ? table(m.goals, [["name", "Goal"], ["saved", "Saved"], ["target", "Target"], [(g) => g.pct + "%", "Done"], ["date", "On track for"]])
+      : empty("No goals yet. Ask: Save 60 000 for a vacation by July"));
+
+  const p = x.payments;
+  fill($("#tab-payments"),
+    h("h4", {}, "Subscriptions on your cards"),
+    table(p.subscriptions, [["name", "Service"], ["amount", "Amount"], ["card", "Card"], ["next", "Next charge"], ["status", "Status"]]),
+    h("h4", {}, "Bills"),
+    p.bills.length ? table(p.bills, [["subject", "Bill"], ["amount", "Amount"], ["verdict", "Check"], [(b) => b.paid ? "✔" : "", "Paid"]]) : empty("No bills in the inbox."),
+    h("h4", {}, "Payments made by agents"),
+    p.agent_payments.length ? table(p.agent_payments, [["date", "Date"], ["to", "To"], ["amount", "Amount"], ["from", "From"]]) : empty("None yet."));
+
+  const t = x.trust;
+  fill($("#tab-trust"),
+    h("div", {class: t.elevated_protection ? "alert" : "meta"}, t.elevated_protection ? "Elevated protection is on: every external payment needs your card." : t.rules),
+    table(t.levels, [[(l) => l.category.replace("_", " "), "Kind of task"], ["level", "Level"], ["streak", "Verified in a row"]]),
+    h("label", {class: "meta"}, h("input", {type: "checkbox", ...(t.elevated_protection ? {checked: ""} : {}),
+      onchange: (e) => run(api("/api/protection", {elevated: e.target.checked}))}), " elevated protection (elderly, minors)"),
+    h("h4", {}, "History"),
+    t.history.length ? table(t.history, [[(r) => r.at.slice(5, 16).replace("T", " "), "When"], ["category", "Kind"], ["event", "Event"], [(r) => `${r.from} → ${r.to}`, "Level"]]) : empty("No changes yet."));
+
+  const a = x.agents;
+  fill($("#tab-agents"),
+    kpis(kpi(a.passports, "agent passports issued"), kpi(a.counterfactual_runs, "counterfactual checks"),
+      kpi(a.critic.calls, "critic calls"), kpi(a.critic.cache_hits, "critic cache hits")),
+    h("div", {class: "meta"}, "Every agent works under a passport: role, model, level, instruction hash, one task, a short-lived session key."),
+    a.recent.length ? table(a.recent, [["role", "Role"], ["model", "Model"], ["level", "Lvl"], [(r) => r.task.slice(-6), "Task"], ["tokens", "Tokens"], [(r) => r.expires.slice(11, 16), "Expires"]]) : empty("No agents yet. Ask something in the chat."),
+    h("h4", {}, "Kernel decisions"),
+    a.decisions.length ? table(a.decisions, [["outcome", "Result"], ["action", "Action"], ["risk", "Risk"], [(d) => d.stage || "", "Stage"], [(d) => d.reasons.join("; "), "Why"]]) : empty("None yet."),
+    h("h4", {}, "What each role may call"),
+    table(Object.entries(a.roles).map(([r, e]) => ({r, e: e.join(", ")})), [["r", "Role"], ["e", "Endpoints"]]));
+
+  const c = x.cost;
+  fill($("#tab-cost"),
+    kpis(kpi(`${c.spent_rub} ₽`, `spent of ${c.cap_rub} ₽ cap`), kpi(c.share_level_0_1 + "%", "work on levels 0–1"),
+      kpi(c.tasks_without_any_model, `of ${c.tasks} tasks without any model`), kpi(c.template_repeats, "repeats from templates")),
+    h("div", {class: "meta"}, `Mode: ${c.mode}. ${c.note}`),
+    Object.keys(c.by_level).length ? table(Object.entries(c.by_level).map(([k, v]) => ({k, ...v})),
+      [["k", "Level"], ["calls", "Calls"], ["input_tokens", "In"], ["output_tokens", "Out"], ["cost_rub", "₽ (est.)"]]) : null,
+    c.live ? h("div", {}, h("h4", {}, "Measured live runs"), h("pre", {class: "meta"}, JSON.stringify(c.live.summary || c.live, null, 1))) : null);
+
+  const s = x.security;
+  const g = s.graph_model, an = s.anchors;
+  fill($("#tab-security"),
+    h("div", {class: s.journal.ok ? "meta" : "alert"}, `Journal: ${s.journal.ok ? "verified" : "FAILED"}, ${s.journal.entries} entries, head ${s.journal.head}…`),
+    kpis(kpi(s.cases.length, "fraud cases"), kpi(s.suspicious_events, "suspicious events remembered"),
+      kpi(s.holds.length, "payments held"), kpi(s.denied.length, "kernel denials")),
+    s.cases.length ? h("h4", {}, "Cases") : null,
+    ...s.cases.map((k) => h("div", {class: "doc"}, h("b", {}, k.title), h("ul", {}, k.indicators.map((i) => h("li", {}, i))), h("div", {class: "meta"}, k.recommendation))),
+    s.holds.length ? table(s.holds, [["id", "Hold"], ["amount", "Amount"], ["level", "Level"], ["status", "Status"]]) : null,
+    s.denied.length ? h("h4", {}, "Recent denials") : null,
+    s.denied.length ? table(s.denied, [["text", "What"], [(d) => d.reasons.join("; "), "Why"]]) : null,
+    Object.keys(s.provenance_labels).length ? h("div", {class: "meta"}, "Provenance of intent fields: " + Object.entries(s.provenance_labels).map(([k, v]) => `${k} ${v}`).join(", ")) : null,
+    g ? h("h4", {}, "Payee risk model (transfer graph)") : null,
+    g ? h("div", {class: "meta"}, `held-out graphs: ROC-AUC ${g.roc_auc}, precision ${g.precision}, recall ${g.recall}, false positives ${g.false_positive_rate}; synthetic data`) : null,
+    an ? h("h4", {}, "Journal anchoring") : null,
+    an ? h("div", {class: "meta"}, `${an.network}: ${an.anchors} checkpoints over ${an.journal_entries} entries, contract ${an.contract.slice(0, 12)}…`) : null,
+    an ? table(Object.entries(an.verification).map(([k, v]) => ({k: k.replaceAll("_", " "), ok: v.ok, why: v.why})),
+      [["k", "Journal copy"], [(v) => okmark(v.ok), "Matches"], ["why", "Why"]]) : null);
+
+  const r = x.redteam;
+  if (!r.available) fill($("#tab-redteam"), empty("Run: make evidence"));
+  else {
+    const ad = r.adaptive;
+    fill($("#tab-redteam"),
+      h("div", {class: "meta"}, r.note),
+      kpis(kpi(`${r.static.stopped}/${r.static.attacks}`, "static attacks stopped"),
+        kpi(`${r.retention.stopped}/${r.retention.attacks}`, "retention tricks stopped"),
+        kpi(`${ad.out_of_mandate}/${ad.attempts}`, "adaptive attempts out of mandate"),
+        kpi(r.static.without_kernel_lost, "would be lost without the kernel")),
+      r.eval ? h("div", {}, `Evaluation set: ${r.eval.functional.passed}/${r.eval.functional.tasks} tasks, ${r.eval.attacks.stopped}/${r.eval.attacks.attacks} attacks stopped.`) : null,
+      h("h4", {}, "Adaptive attacker"),
+      table(ad.goals, [["title", "Goal"], ["attempts", "Tries"], ["successes", "Out of mandate"], [(q) => h("span", {class: "curve"}, q.success_curve.join(" ")), "Per round"]]),
+      h("div", {class: "meta"}, `Without the kernel the same attacker reaches ${ad.without_kernel_goals_reached} of ${ad.goals.length} goals on the first try. Earlier prototype suite: ${r.legacy.stopped}/${r.legacy.total} prevented, ${r.legacy.bounded} bounded.`),
+      h("h4", {}, "Attacks"),
+      table(r.attacks, [["id", "#"], ["title", "Attack"], ["outcome", "Result"], [(q) => (q.stopped_by || []).join(", "), "Stopped by"], ["without_kernel_lost", "Without kernel"]]));
+  }
+
+  const k = x.compliance;
+  fill($("#tab-compliance"),
+    h("div", {class: "meta"}, "智能体支付应用自律公约 (Payment & Clearing Association of China, 2026) — what each requirement means here."),
+    table(k.code, [["requirement", "Requirement"], ["how", "Guardian"], ["where", "See"]]),
+    h("h4", {}, "Operations by autonomy stage"),
+    h("div", {}, Object.entries(k.stages).map(([s, n]) => `${s}: ${n}`).join(", ") || "none signed yet", ` · stage 3: ${k.stage_3}`),
+    h("h4", {}, "Visa Intelligent Commerce / AP2"),
+    table(k.vi_ap2, [["theirs", "Their concept"], ["ours", "Guardian"]]));
 }
 
 // ------------------------------------------------------------------ wiring

@@ -252,3 +252,52 @@ def test_ui_c9_safe_account_call_in_chromium(server, svc):
         browser.close()
     assert not errors, errors
     assert not [t for t in svc.bank.transactions(svc.client) if t.counterparty.startswith("acct:")]
+
+
+SECTIONS = [("Month for you", "times you were asked"), ("Payments", "Subscriptions on your cards"),
+            ("Budget", "Safe to spend today"), ("Permissions", "Pay Melodify up to"), ("Trust", "Verified in a row"),
+            ("Agents at work", "agent passports issued"), ("Cost", "work on levels 0–1"),
+            ("Security", "Suspected fake bill"), ("Red-team", "static attacks stopped"),
+            ("Compliance", "Know your agent"), ("Inbox", "Guardian screens every message"),
+            ("Journal", "Signed hash chain verified")]
+
+
+def test_api_sections(web, svc):
+    web.post("/api/chat", json={"text": "Pay my bills"})
+    s = web.get("/api/sections").json()
+    assert set(s) == {"month", "payments", "trust", "agents", "cost", "security", "redteam", "compliance"}
+    assert s["security"]["cases"] and s["security"]["journal"]["ok"]
+    assert s["agents"]["passports"] >= 1 and s["cost"]["tasks"] >= 1
+    assert len(s["compliance"]["code"]) == 11
+    assert {x["name"] for x in s["payments"]["subscriptions"]} >= {"Melodify", "PixelPlay"}
+
+
+def test_ui_sections_in_chromium(server, svc):
+    import os
+    pw = pytest.importorskip("playwright.sync_api")
+    shots = os.environ.get("GUARDIAN_SCREENSHOTS")
+    with pw.sync_playwright() as p:
+        try:
+            browser = p.chromium.launch()
+        except Exception as e:  # noqa: BLE001
+            pytest.skip(f"chromium not available: {e}")
+        page = browser.new_page(viewport={"width": 1400, "height": 900})
+        errors = []
+        page.on("pageerror", lambda e: errors.append(str(e)))
+        page.goto(server)
+        page.wait_for_selector("text=device key: Ed25519")
+        page.click("#chips >> text=Pay for Melodify")
+        melodify = page.locator(".card", has_text="Pay Melodify")
+        melodify.locator("input[type=checkbox]").check()
+        melodify.locator("text=Confirm").click()
+        page.wait_for_selector("text=Paid Melodify 299 ₽")
+        page.click("#chips >> text=Pay my bills")
+        page.wait_for_selector("text=It looks like a fake bill")
+        for i, (tab, text) in enumerate(SECTIONS):
+            page.click(f"aside nav >> text={tab}")
+            page.locator(f"#tab-{page.locator('aside nav button.active').get_attribute('data-tab')}",
+                         has_text=text).wait_for()
+            if shots:
+                page.locator("aside").screenshot(path=f"{shots}/section_{i:02d}_{tab.split()[0].lower()}.png")
+        browser.close()
+    assert not errors, errors

@@ -18,6 +18,7 @@ from pydantic import BaseModel, Field
 
 from kernel.api import create_app
 
+from .sections import all_sections
 from .service import GuardianService
 
 WEB = Path(__file__).resolve().parent.parent / "web"
@@ -91,6 +92,10 @@ def create_web_app(service: GuardianService | None = None) -> FastAPI:
     @app.get("/api/state")
     def state():
         return svc.state()
+
+    @app.get("/api/sections")
+    def sections():
+        return all_sections(svc)
 
     @app.get("/api/items")
     def items(since: int = 0):
