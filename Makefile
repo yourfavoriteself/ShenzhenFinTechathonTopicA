@@ -20,3 +20,4 @@ live:
 
 evidence:
 	$(PY) -m scripts.budget_report --out evidence/budget_report.json
+	$(PY) -m scripts.risk_graph_report --out evidence/risk_graph.json

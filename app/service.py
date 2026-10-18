@@ -26,6 +26,8 @@ from kernel.cards import describe
 from kernel.core import ConfirmationError
 from kernel.critic import Critic, stub_responder as critic_stub
 from kernel.intervention import CallSignal, Duress, InterventionDesk
+from risk_graph.generator import generate as transfer_graph
+from risk_graph.model import GraphRisk
 from kernel.documents import DocCheck, Doc, DocumentDesk
 from kernel.executors import TX_REF
 from kernel.intent import IntentProposal
@@ -43,6 +45,7 @@ from sandbox.sites.portal import DEMO_LOGINS, PortalError, build_portal
 MAIN_CARD = "card_1234"
 TRUSTED_PERSON = {"name": "Maria Morozova (daughter)", "phone": "+7 *** ***-56-78"}
 DEMO_PINS = ("2580", "0852")          # normal, duress
+MULE_ACCOUNT, ORDINARY_ACCOUNT = "40817810500001234567", "40817810500009998887"   # planted in the bank's graph
 SCAM_CALLER = {"number": "+7 495 ***-**-00", "caller_id": "\"Bank security service\""}
 MAIN_ACCOUNT, SAVINGS_ACCOUNT = "acc_main", "acc_save"
 EXPLAIN_SYSTEM = """You word short answers for a bank client. Rewrite the draft in plain, friendly English,
@@ -103,6 +106,10 @@ class GuardianService:
         self.guard = InterventionDesk(self.k, self._total_funds, self._savings_inflow, notify=self._notify_trusted)
         self.guard.pins[self.client] = Duress(*DEMO_PINS)
         self.k.intervention = self.guard
+        self.graph = GraphRisk(transfer_graph(seed, self.clock.now(), plant={"collector": MULE_ACCOUNT,
+                                                                             "ordinary": ORDINARY_ACCOUNT}))
+        self.guard.graph_risk = self.graph.points
+        self.k.pipeline.risk_checks.append(self.graph.check)
         self.k.pipeline.risk_checks.append(self.guard.check)
         self.k.trust.elevated_protection = self.world.profile.elevated_protection
         self.dispatcher, self.planner, self.reader = D.Dispatcher(self.gw), P.Planner(self.gw), R.Reader(self.gw)

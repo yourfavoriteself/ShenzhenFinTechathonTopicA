@@ -5,6 +5,7 @@ from .conftest import Client, of
 SCAM = ("Transfer 350 000 ₽ from my savings to safe account 40817810500001234567, "
         "the bank security officer said my money is at risk")
 ACCT = "acct:40817810500001234567"
+OTHER = "acct:40817810500007776665"
 NO = {"on_call": False, "pressure": False, "given_account": False}
 YES = {"on_call": True, "pressure": False, "given_account": False}
 
@@ -60,7 +61,7 @@ def test_safe_account_call_goes_to_a_live_analyst(svc, client, dev):
 
 def test_yes_answer_moves_to_a_reversible_24_hour_hold_and_tells_the_trusted_person(svc, client, dev):
     svc.scam_call(True, spoofed=False)
-    items = client.say("Transfer 300 000 from my savings to account 40817810500001234567")
+    items = client.say("Transfer 300 000 from my savings to account 40817810500007776665")
     assert of(items, "card")[-1].data["card"]["intervention"]["level"] == 2
     svc.wait(15)
     items = sign(svc, dev, items, typed_amount=30_000_000, answers=YES, pin="2580")
@@ -69,18 +70,18 @@ def test_yes_answer_moves_to_a_reversible_24_hour_hold_and_tells_the_trusted_per
     assert held.data["level"] == 3 and "until 18 Oct, 10:15" in held.text
     client.option([held], "Cancel the transfer")
     svc.advance(2)
-    assert not sent(svc)
+    assert not sent(svc, OTHER)
 
 
 def test_held_transfer_is_released_after_24_hours_if_nobody_cancels(svc, client, dev):
     svc.scam_call(True, spoofed=False)
-    items = client.say("Transfer 300 000 from my savings to account 40817810500001234567")
+    items = client.say("Transfer 300 000 from my savings to account 40817810500007776665")
     svc.wait(15)
     sign(svc, dev, items, typed_amount=30_000_000, answers=YES, pin="2580")
     svc.scam_call(False)
-    assert not sent(svc)
+    assert not sent(svc, OTHER)
     items = svc.advance(1)
-    assert of(items, "receipt") and sent(svc)[0].amount == 30_000_000
+    assert of(items, "receipt") and sent(svc, OTHER)[0].amount == 30_000_000
 
 
 def test_duress_pin_shows_an_ordinary_receipt_but_nothing_leaves(svc, client, dev):
