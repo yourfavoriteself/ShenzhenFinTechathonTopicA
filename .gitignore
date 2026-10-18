@@ -13,3 +13,5 @@ chain/out/
 chain/cache/
 docs/.build.css
 docs/*.html
+docs/media/.raw/
+docs/node_modules/
