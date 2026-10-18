@@ -53,7 +53,16 @@ RULES: list[tuple[str, str]] = [
     (r"\b(permissions?|what can you do|allowed|разрешени|что ты можешь)", "permissions"),
     (r"^\s*(pay( for)?|оплати|заплати( за)?)\s+\S", "pay"),
     (r"^\s*(help|hi|hello|привет|помощь)\b", "help"),
+    # Chinese: no word boundaries, so the patterns are anchored on the verbs themselves
+    (r"(重复扣款|扣了两次|被扣两次)", "double_charges"),
+    (r"取消.*(订阅|会员)", "cancel"),
+    (r"(订阅.*(浪费|多余|检查)|浪费)", "find_leaks"),
+    (r"(支付|缴纳|付).*(账单|水费|电费)", "pay_bills"),
+    (r"(预算|信封)", "budget"),
+    (r"^\s*(请)?(帮我)?(支付|付款|缴纳)\s*\S", "pay"),
+    (r"(你能做什么|帮助|你好)", "help"),
 ]
+_PAYEE_ZH = re.compile(r"^\s*(?:请)?(?:帮我)?(?:支付|付款|缴纳)\s*(?:一下)?\s*(.+?)\s*(?:的)?(?:订阅|会员)?\s*[。！!?？]*\s*$")
 _PAYEE = re.compile(r"^\s*(?:please\s+)?(?:pay(?:\s+for)?|оплати|заплати(?:\s+за)?)\s+(?:the\s+|my\s+)?(.+?)"
                     r"(?:\s+(?:again|subscription|подписку))?\s*[.!?]*\s*$", re.I)
 _CANCEL_PAYEE = re.compile(r"(?:[Cc]ancel|[Uu]nsubscribe from|[Оо]тмени(?:ть)?)\s+(?:my\s+)?(?:подписку\s+(?:на\s+)?)?"
@@ -66,7 +75,7 @@ def rule_route(text: str) -> Route | None:
     for pattern, kind in RULES:
         if re.search(pattern, low):
             r = Route(kind=kind)
-            if kind == "pay" and (m := _PAYEE.match(text)):
+            if kind == "pay" and (m := _PAYEE.match(text) or _PAYEE_ZH.match(text)):
                 r.payee_name = m.group(1).strip()
             if kind == "transfer":
                 if m := re.search(r"(?<!\d)(\d{10,20})(?!\d)", text):

@@ -26,3 +26,5 @@ live:
 evidence:
 	$(PY) -m scripts.budget_report --out evidence/budget_report.json
 	$(PY) -m scripts.risk_graph_report --out evidence/risk_graph.json
+	GUARDIAN_LLM_MODE=stub $(PY) -m scripts.redteam_report --out evidence/redteam.json
+	GUARDIAN_LLM_MODE=stub $(PY) -m scripts.eval_report --out evidence/eval_report.json
