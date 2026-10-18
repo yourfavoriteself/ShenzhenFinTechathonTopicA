@@ -25,6 +25,7 @@ from kernel.cancellation import CancelDesk, Cancellation
 from kernel.cards import describe
 from kernel.core import ConfirmationError
 from kernel.critic import Critic, stub_responder as critic_stub
+from kernel.intervention import CallSignal, Duress, InterventionDesk
 from kernel.documents import DocCheck, Doc, DocumentDesk
 from kernel.executors import TX_REF
 from kernel.intent import IntentProposal
@@ -40,6 +41,9 @@ from sandbox.bank.wiring import connect, open_envelopes
 from sandbox.sites.portal import DEMO_LOGINS, PortalError, build_portal
 
 MAIN_CARD = "card_1234"
+TRUSTED_PERSON = {"name": "Maria Morozova (daughter)", "phone": "+7 *** ***-56-78"}
+DEMO_PINS = ("2580", "0852")          # normal, duress
+SCAM_CALLER = {"number": "+7 495 ***-**-00", "caller_id": "\"Bank security service\""}
 MAIN_ACCOUNT, SAVINGS_ACCOUNT = "acc_main", "acc_save"
 EXPLAIN_SYSTEM = """You word short answers for a bank client. Rewrite the draft in plain, friendly English,
 at most three sentences. Use only numbers that appear in the facts; do not add advice about credit."""
@@ -95,6 +99,12 @@ class GuardianService:
         self.portal = build_portal(self.world, deliver=self._deliver)
         self.cancels = CancelDesk(self.k, self.merchants, self.portal, self.bank, self.inbox, errors=(PortalError,))
         self.k.executor.cancellations = self.cancels
+        self.alerts: list[dict] = []
+        self.guard = InterventionDesk(self.k, self._total_funds, self._savings_inflow, notify=self._notify_trusted)
+        self.guard.pins[self.client] = Duress(*DEMO_PINS)
+        self.k.intervention = self.guard
+        self.k.pipeline.risk_checks.append(self.guard.check)
+        self.k.trust.elevated_protection = self.world.profile.elevated_protection
         self.dispatcher, self.planner, self.reader = D.Dispatcher(self.gw), P.Planner(self.gw), R.Reader(self.gw)
         self.explain = explain
         self.items: list[Item] = []
@@ -134,12 +144,14 @@ class GuardianService:
             return self.items[start:]
 
     def confirm(self, pending_id: str, alg: str, key: str, sig: str, *, standing: bool = False,
-                typed_amount: int | None = None) -> list[Item]:
+                typed_amount: int | None = None, answers: dict[str, bool] | None = None,
+                pin: str | None = None) -> list[Item]:
         with self.lock:
             start = len(self.items)
             meta = self.cards.get(pending_id)
             try:
-                d = self.k.confirm(pending_id, alg, key, sig, standing=standing, typed_amount=typed_amount)
+                d = self.k.confirm(pending_id, alg, key, sig, standing=standing, typed_amount=typed_amount,
+                                   answers=answers, pin=pin)
             except ConfirmationError as e:
                 self._emit("error", f"Not confirmed: {e}", data={"pending_id": pending_id})
                 return self.items[start:]
@@ -210,6 +222,62 @@ class GuardianService:
             self.k.journal.append("client", "secret.forgotten", {"name": name, "count": n})
             return [self._emit("notice", "Saved sign-in removed from the bank vault." if n else "Nothing to remove.")]
 
+    # ---------------------------------------------------------------- C9 controls
+
+    def scam_call(self, active: bool, spoofed: bool = True) -> list[Item]:
+        """Demo: the telecom reports an ongoing call from an unknown number (or that it ended)."""
+        with self.lock:
+            if not active:
+                self.guard.call_ended(self.client)
+                return [self._emit("notice", "The call has ended.")]
+            self.guard.call_started(self.client, CallSignal(number=SCAM_CALLER["number"],
+                                                            caller_id=SCAM_CALLER["caller_id"],
+                                                            started=self.clock.now(), spoofed=spoofed))
+            return [self._emit("call", f"📞 Incoming call from {SCAM_CALLER['number']}, caller ID "
+                                       f"{SCAM_CALLER['caller_id']}. The call is in progress.",
+                               data={"spoofed": spoofed, "note": "signal from the mobile operator; the bank does not "
+                                                                 "hear the call"})]
+
+    def set_protection(self, elevated: bool) -> list[Item]:
+        with self.lock:
+            self.k.trust.elevated_protection = elevated
+            self.k.journal.append("client", "protection.changed", {"elevated": elevated})
+            return [self._emit("notice", "Elevated protection is on: payments to new recipients always need your "
+                                         "confirmation and scam checks start at the pause level." if elevated else
+                                         "Elevated protection is off.")]
+
+    def wait(self, minutes: int) -> list[Item]:
+        """Demo time in minutes (for the cooling-off pause)."""
+        with self.lock:
+            start = len(self.items)
+            self.bank.run_until(self.clock.now() + timedelta(minutes=minutes))
+            self._emit("notice", f"{minutes} minutes later: it is now {self.clock.now():%H:%M}.")
+            self._release_holds()
+            return self.items[start:]
+
+    def hold_cancel(self, hold_id: str) -> list[Item]:
+        with self.lock:
+            h = self.guard.holds.get(hold_id)
+            if h is None or h.status != "held":
+                return [self._emit("error", "This transfer is no longer on hold.")]
+            self.guard.cancel(hold_id, "client")
+            return [self._emit("notice", "The held transfer is cancelled. The money never left your account.",
+                               data={"hold": hold_id})]
+
+    def analyst_decide(self, hold_id: str, approve: bool, note: str = "") -> list[Item]:
+        """The bank's fraud analyst (a human) decides on a level-4 hold."""
+        with self.lock:
+            start = len(self.items)
+            h = self.guard.holds.get(hold_id)
+            if h is None or h.status != "held":
+                return [self._emit("error", "This transfer is no longer on hold.")]
+            self.guard.analyst(hold_id, approve, "demo-analyst", note)
+            if not approve:
+                self._emit("notice", "A bank analyst stopped the transfer after talking to you. The money stays in "
+                                     "your account.", data={"hold": hold_id})
+            self._release_holds()
+            return self.items[start:]
+
     def apply_budget(self) -> list[Item]:
         with self.lock:
             plan = self._plan()
@@ -235,6 +303,7 @@ class GuardianService:
                     if doc.id not in before:
                         self.desk.screen(self.client, doc)
                 self._trial_watch()
+                self._release_holds()
                 for inc in [t for t in self.bank.transactions(self.client, since=t0)
                             if t.category == Category.INCOME and t.account_id == MAIN_ACCOUNT]:
                     self._on_income(inc)
@@ -470,6 +539,70 @@ class GuardianService:
         since = c.started.strftime("%B" if c.started.year == self.clock.now().year else "%B %Y")
         return (f"{self._name(c.merchant)}, {rub(c.amount)} a month, card *{self.bank.cards[c.card_id].last4}, "
                 f"charged since {since}")
+
+    # ---------------------------------------------------------------- C9: transfer to an account number
+
+    def _on_transfer(self, task, route, level):
+        amount = _parse_rub(route.amount) if route.amount else None
+        if not route.account or not amount:
+            self._emit("text", "Tell me the amount and the full account number of the recipient.",
+                       task_id=task.task_id)
+            return
+        k, ref = self.k, f"client:{task.task_id}"
+        src = SAVINGS_ACCOUNT if re.search(r"saving|накоп|сбереж", task.request, re.I) else MAIN_ACCOUNT
+        p = IntentProposal(action=Action.PAY, payee=claim({"value": f"acct:{route.account}", "ref": ref}),
+                           amount=claim({"value": amount, "ref": ref}),
+                           funding_source=claim({"value": src, "ref": k.bank_value(
+                               f"bank:src:{src}", src, "your accounts")}),
+                           memo="transfer requested in chat")
+        s = session(k, self.gw, Role.DISPATCHER, level, D.SYSTEM, self.client, task.task_id)
+        d = propose(k, s, p)
+        self._decision(d, CardMeta(pending_id=d.pending_id or "", task_id=task.task_id, kind="transfer"))
+
+    def _held(self, d: Decision, meta: CardMeta | None):
+        h = self.guard.holds[d.hold["id"]]
+        amount, to = rub(h.intent.val("amount")), self._name(h.intent.val("payee"))
+        task_id = meta.task_id if meta else None
+        if h.duress:
+            # what anyone looking at the screen sees: an ordinary receipt
+            self._emit("receipt", f"Sent {amount} to {to} from Current account.", data={"reference": h.id},
+                       task_id=task_id)
+            return
+        if h.level == 3:
+            o = self._option("hold_cancel", "Cancel the transfer", {"hold": h.id}, 0)
+            self._emit("held", f"The transfer of {amount} to {to} is on hold until {h.release_at:%d %b, %H:%M}. "
+                               f"You can cancel it any time before that. We let your trusted person "
+                               f"{TRUSTED_PERSON['name']} know.",
+                       data={"hold": h.id, "level": h.level, "options": [{"id": o.id, "title": o.title}]},
+                       task_id=task_id)
+            return
+        self._emit("held", f"The transfer of {amount} to {to} waits for a bank analyst. A person from the bank will "
+                           "call you on the number they have on file; do not trust incoming calls about it.",
+                   data={"hold": h.id, "level": h.level, "case": h.case}, task_id=task_id)
+
+    def _opt_hold_cancel(self, o: OptionMeta):
+        self.hold_cancel(o.action["hold"])
+
+    def _release_holds(self):
+        for h in self.guard.due():
+            d = self.guard.release(h)
+            self._decision(d, CardMeta(pending_id="", task_id=h.intent.task_id, kind="transfer"), confirmed=True)
+
+    def _notify_trusted(self, client_id: str, text: str, silent: bool):
+        a = {"ts": self.clock.now().isoformat(), "to": TRUSTED_PERSON["name"], "phone": TRUSTED_PERSON["phone"],
+             "text": text, "silent": silent}
+        self.alerts.append(a)
+        self.k.journal.append("kernel", "trusted_person.notified", {"silent": silent})
+        if not silent:
+            self._emit("trusted", f"Message to {TRUSTED_PERSON['name']}: {text}", data=a)
+
+    def _total_funds(self, client_id: str) -> int:
+        return sum(a.balance for a in self.bank.accounts.values() if a.client_id == client_id)
+
+    def _savings_inflow(self, client_id: str) -> int:
+        since = self.clock.now() - timedelta(hours=24)
+        return sum(t.amount for t in self.bank.transactions(client_id, since=since)
+                   if t.account_id == MAIN_ACCOUNT and t.counterparty == SAVINGS_ACCOUNT and t.signed > 0)
 
     # ---------------------------------------------------------------- C8.7 goals, 8.4 salary, 8.8, 8.9, 8.10
 
@@ -907,6 +1040,9 @@ class GuardianService:
         cost = self.gw.task_cost(task_id) if task_id else None
         steps = [{"step": s.step, "verdict": int(s.verdict), "reasons": s.reasons} for s in d.steps]
         common = {"steps": steps, "cost": cost, "template": template_used, "stage": d.stage}
+        if d.outcome == Outcome.HELD:
+            self._held(d, meta)
+            return
         if d.outcome == Outcome.PENDING:
             assert meta is not None
             meta.pending_id = d.pending_id or ""
@@ -1026,6 +1162,8 @@ class GuardianService:
                                  "without telling you.", data={"docs": [d.id for d in flagged]})
 
     def _name(self, token: str) -> str:
+        if token.startswith("acct:"):
+            return f"account *{token[-4:]}"
         if m := self.merchants.get(token):
             return m.name
         if self.bank.owns(self.client, token):

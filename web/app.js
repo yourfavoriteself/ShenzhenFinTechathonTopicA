@@ -96,6 +96,28 @@ function renderCard(it) {
   const el = h("div", {class: `card risk-${c.risk}`, "data-pending": d.pending_id});
   el.append(h("h3", {}, c.title, h("span", {class: `badge r${c.risk}`}, `${risk} risk`)));
   if (d.summary) el.append(h("div", {class: "summary"}, d.summary));
+  const iv = c.intervention;
+  let answers = null, pin = null;
+  if (iv) {
+    const box = h("div", {class: "intervention"},
+      h("h4", {}, `⚠ Possible scam call · level ${iv.level}: ${iv.name}`),
+      h("p", {class: "explain"}, iv.explain),
+      h("ul", {}, iv.signals.map((x) => h("li", {}, x))),
+      iv.wait_until ? h("div", {class: "meta"}, `Pause: can be signed after ${iv.wait_until.slice(11, 16)}`) : null,
+      iv.after ? h("div", {class: "meta"}, iv.after) : null);
+    if (iv.questions) {
+      answers = {};
+      for (const [k, q] of Object.entries(iv.questions)) {
+        const name = `${d.pending_id}-${k}`;
+        const yesR = h("input", {type: "radio", name, value: "yes"}), noR = h("input", {type: "radio", name, value: "no"});
+        answers[k] = [yesR, noR];
+        box.append(h("div", {class: "q"}, h("span", {}, q), h("label", {}, yesR, "yes"), h("label", {}, noR, "no")));
+      }
+      pin = h("input", {type: "password", name: "pin", placeholder: "PIN", inputmode: "numeric", maxlength: "6"});
+      box.append(h("div", {class: "q"}, h("span", {}, "Your PIN"), pin));
+    }
+    el.append(box);
+  }
   const tbl = h("table", {class: "fields"});
   for (const f of c.fields) {
     tbl.append(h("tr", {class: f.changed ? "changed" : ""},
@@ -123,6 +145,7 @@ function renderCard(it) {
     c.hold_to_confirm ? h("span", {class: "bar"}) : null);
   const no = h("button", {class: "secondary", onclick: async () => { lock(); await run(api(`/api/cards/${d.pending_id}/decline`, {})); }}, "Decline");
   const lock = () => { yes.disabled = true; no.disabled = true; if (standing) standing.disabled = true; };
+  const unlock = () => { yes.disabled = false; no.disabled = false; if (standing) standing.disabled = false; };
   const go = async () => {
     lock();
     try {
@@ -130,10 +153,18 @@ function renderCard(it) {
       const hash = useStanding ? c.standing_mandate_hash : c.mandate_hash;
       const sig = await signMandate(hash);
       const body = {alg: device.alg, public_key: device.pub, sig, standing: useStanding};
-      if (typed) body.typed_amount = Math.round(parseFloat(typed.value.replace(/[^\d.,]/g, "").replace(",", ".")) * 100);
+      if (typed) body.typed_amount = Math.round(parseFloat(typed.value.replace(/[^\d.,]/g, "").replace(/\s/g, "").replace(",", ".")) * 100);
+      if (answers) {
+        const a = {};
+        for (const [k, [y, n]] of Object.entries(answers)) if (y.checked || n.checked) a[k] = y.checked;
+        if (Object.keys(a).length) body.answers = a;
+      }
+      if (pin && pin.value) body.pin = pin.value;
       status.textContent = "signed on this device";
-      await run(api(`/api/cards/${d.pending_id}/confirm`, body));
-    } catch (e) { status.textContent = e.message; }
+      const items = await api(`/api/cards/${d.pending_id}/confirm`, body);
+      add(items); refresh();
+      if (items.some((x) => x.type === "error" && x.data && x.data.pending_id === d.pending_id)) unlock();
+    } catch (e) { status.textContent = e.message; unlock(); }
   };
   if (c.hold_to_confirm) {
     let t = null;
@@ -205,6 +236,14 @@ function render(it) {
     case "denied": return h("div", {class: "msg denied"}, "⛔ " + it.text, steps(d));
     case "error": return h("div", {class: "msg error"}, it.text);
     case "gap": return h("div", {class: "msg notice"}, "⚠ " + it.text, optionButtons(d.options));
+    case "call": return h("div", {class: "msg phone"}, it.text, h("div", {class: "meta"}, d.note + (d.spoofed ? " · number looks spoofed" : "")),
+      h("div", {class: "opts"}, h("button", {class: "secondary", onclick: async (e) => { e.target.disabled = true; await run(api("/api/demo/call", {active: false})); }}, "Hang up")));
+    case "held": return h("div", {class: "msg notice"}, "⏸ " + it.text, optionButtons(d.options),
+      d.case ? h("div", {class: "meta"}, `Case ${d.case.id}: only a person at the bank may ${d.case.human_only.join(", ")}.`) : null,
+      d.case ? h("div", {class: "opts"},
+        h("button", {class: "secondary", onclick: async (e) => { e.target.disabled = true; await run(api(`/api/holds/${d.hold}/analyst`, {approve: false, note: "demo analyst"})); }}, "Analyst: stop it"),
+        h("button", {class: "secondary", onclick: async (e) => { e.target.disabled = true; await run(api(`/api/holds/${d.hold}/analyst`, {approve: true, note: "demo analyst"})); }}, "Analyst: release")) : null);
+    case "trusted": return h("div", {class: "msg phone"}, "📱 " + it.text, h("div", {class: "meta"}, `to ${d.phone}`));
     case "trial": return h("div", {class: "msg notice"}, "⏰ " + it.text, optionButtons(d.options));
     case "options": return h("div", {class: "msg notice"}, it.text, optionButtons(d.options));
     case "budget": return h("div", {class: "msg"}, it.text,
@@ -319,11 +358,14 @@ async function refresh() {
 
 const CHIPS = ["Pay for Melodify", "Cancel the 399 ₽ subscription", "Find leaks in my subscriptions", "Was I charged twice?", "Pay my bills",
   "Make me a budget", "How much can I spend today?", "Can I afford headphones for 15 000?",
-  "Save 60 000 for a vacation by July, don't touch the gym", "Month review", "How accurate is your forecast?", "What can you do?"];
+  "Save 60 000 for a vacation by July, don't touch the gym",
+  "Transfer 350 000 ₽ from my savings to safe account 40817810500001234567", "Month review", "How accurate is your forecast?", "What can you do?"];
 
 function init() {
   $("#chips").append(...CHIPS.map((t) => h("button", {type: "button", onclick: () => send(t)}, t)));
   $("#ask").addEventListener("submit", (e) => { e.preventDefault(); const t = $("#text").value.trim(); if (t) send(t); });
+  $("#wait15").addEventListener("click", () => run(api("/api/time/wait", {minutes: 15})));
+  $("#scamcall").addEventListener("click", () => run(api("/api/demo/call", {active: true, spoofed: true})));
   document.querySelectorAll("[data-advance]").forEach((b) => b.addEventListener("click",
     () => run(api("/api/time/advance", {days: +b.dataset.advance}))));
   document.querySelectorAll("aside nav button").forEach((b) => b.addEventListener("click", () => {

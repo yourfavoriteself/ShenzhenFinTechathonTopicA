@@ -9,6 +9,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from .cards import Risk
 from .clock import SimClock
 from .critic import TaskInfo
 from .crypto import KeyPair
@@ -48,6 +49,7 @@ class Kernel:
         self.pipeline.risk_checks.append(self.memory.check)
         self.tasks: dict[str, TaskInfo] = {}
         self.pending: dict[str, PendingConfirmation] = {}
+        self.intervention: Any = None
         self.halted: str | None = None
 
     # ------------------------------------------------------------------ tasks
@@ -97,7 +99,8 @@ class Kernel:
     # ------------------------------------------------------------------ client
 
     def confirm(self, pending_id: str, device_alg: str, device_key: str, device_sig: str, *,
-                standing: bool = False, typed_amount: int | None = None) -> Decision:
+                standing: bool = False, typed_amount: int | None = None, answers: dict[str, bool] | None = None,
+                pin: str | None = None) -> Decision:
         """The client pressed "Yes" on a card; the device signed the hash of the chosen mandate."""
         pending = self.pending.get(pending_id)
         if pending is None:
@@ -111,6 +114,13 @@ class Kernel:
             raise ConfirmationError(f"this permission expired at {mandate.exp:%d %b %Y, %H:%M}; nothing was done")
         if pending.card.type_amount and typed_amount != pending.intent.val("amount"):
             raise ConfirmationError("typed amount does not match")
+        held = None
+        if self.intervention is not None:
+            try:
+                held = self.intervention.before_sign(pending.intent, answers, pin)
+            except ValueError as e:
+                self.journal.append("client", "confirmation.rejected", {"card": pending_id, "reason": str(e)})
+                raise ConfirmationError(str(e)) from e
         try:
             signed = self.mandates.issue(mandate, device_alg, device_key, device_sig)
         except MandateError as e:
@@ -122,6 +132,11 @@ class Kernel:
                             stage=int(signed.mandate.stage))
         intent = pending.intent.model_copy(update={"mandate_id": signed.mandate.id})
         passport = self.passports.get(pending.passport_id)
+        if held is not None and held.level >= 3:
+            h = self.intervention.hold(held, intent, passport)
+            return Decision(outcome=Outcome.HELD, intent_id=intent.id, verdict=Verdict.ASK, risk=Risk.HIGH,
+                            reasons=[f"held: {h.status}"], hold=h.model_dump(mode="json", exclude={"intent"}),
+                            stage=int(signed.mandate.stage))
         return self.pipeline.run(intent, passport, confirmed=True)
 
     def decline(self, pending_id: str) -> None:

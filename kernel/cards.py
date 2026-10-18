@@ -66,6 +66,7 @@ class ConfirmationCard(BaseModel):
     standing_offer: str | None = None
     hold_to_confirm: bool = False
     type_amount: bool = False
+    intervention: dict | None = None
     mandate_hash: str = ""
     standing_mandate_hash: str | None = None
 
@@ -78,7 +79,7 @@ def describe(m: Mandate, payee_names: dict[str, str], funding_label: str) -> tup
     until = m.exp.strftime("%d %b %Y, %H:%M")
     for a in m.actions:
         if m.payment and a in (Action.PAY, Action.TRANSFER_OWN):
-            names = ", ".join(payee_names.get(p, p) for p in m.payment.allowed_payees)
+            names = ", ".join(payee_names.get(p, _show("payee", p, None, "")) for p in m.payment.allowed_payees)
             r = m.payment.agent_recurrence
             how = "once" if r.frequency == Frequency.ONCE else f"once a {r.frequency.value.removesuffix('ly')}"
             line = f"{_ACTION_TEXT[a]} {names} up to {rub(m.payment.amount_range.max)}, {how}, from {funding_label}"
@@ -115,7 +116,8 @@ def render(mandate: Mandate, intent: Intent, payee: PayeeInfo | None, funding_la
     if standing is not None:
         s_can, _ = describe(standing, names, funding_label)
         offer = "Next time, without asking: " + s_can[0][0].lower() + s_can[0][1:]
-    title = f"{_ACTION_TEXT[intent.action]} {payee.name if payee else intent.val('payee') or ''}".strip()
+    shown = payee.name if payee else _show("payee", intent.val("payee"), None, "") if intent.val("payee") else ""
+    title = f"{_ACTION_TEXT[intent.action]} {shown}".strip()
     return ConfirmationCard(title=title, risk=risk, fields=fields, can=can, cannot=cannot, reasons=reasons,
                             standing_offer=offer, hold_to_confirm=risk == Risk.HIGH,
                             type_amount=risk == Risk.HIGH and intent.amount is not None
@@ -129,4 +131,6 @@ def _show(name: str, value, payee: PayeeInfo | None, funding_label: str) -> str:
         return payee.name
     if name == "funding_source":
         return funding_label
+    if name == "payee" and str(value).startswith("acct:"):
+        return f"account *{str(value)[-4:]}"
     return str(value)

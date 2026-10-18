@@ -91,3 +91,10 @@ button.ghost-dark { background: transparent; color: var(--accent); border: 1px d
 .msg.phone .meta { color: #9fb3c8; }
 details summary { cursor: pointer; color: var(--muted); font-size: 12px; }
 @media (max-width: 900px) { main { grid-template-columns: 1fr; height: auto; } .chat { height: 80vh; } }
+
+.intervention { border: 2px solid #c0392b; background: #fff4f2; border-radius: 8px; padding: 10px 12px; margin: 8px 0; }
+.intervention h4 { margin: 0 0 6px; color: #a93226; }
+.intervention .explain { font-weight: 600; margin: 4px 0 6px; }
+.intervention .q { display: flex; gap: 10px; align-items: center; margin: 6px 0; flex-wrap: wrap; }
+.intervention .q span { flex: 1 1 60%; }
+.intervention .q input[type=password] { width: 90px; }

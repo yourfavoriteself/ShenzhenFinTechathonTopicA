@@ -74,6 +74,9 @@ class ProvenanceStore:
         self._messages[msg_id] = text
         return f"client:{msg_id}"
 
+    def message(self, msg_id: str) -> str:
+        return self._messages.get(msg_id, "")
+
     def exists(self, ref: str) -> bool:
         return ref in self._values or (ref.startswith("client:") and ref[7:] in self._messages)
 

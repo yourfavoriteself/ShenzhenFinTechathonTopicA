@@ -38,6 +38,8 @@ class ConfirmBody(BaseModel):
     sig: str
     standing: bool = False
     typed_amount: int | None = None
+    answers: dict[str, bool] | None = None
+    pin: str | None = Field(default=None, pattern=r"^\d{4,6}$")
 
 
 class LoginBody(BaseModel):
@@ -56,6 +58,24 @@ class ForgetBody(BaseModel):
 
 class AdvanceBody(BaseModel):
     days: int
+
+
+class WaitBody(BaseModel):
+    minutes: int = Field(ge=1, le=180)
+
+
+class CallBody(BaseModel):
+    active: bool = True
+    spoofed: bool = True
+
+
+class ProtectionBody(BaseModel):
+    elevated: bool
+
+
+class AnalystBody(BaseModel):
+    approve: bool
+    note: str = Field(default="", max_length=300)
 
 
 def _dump(items) -> list[dict]:
@@ -93,7 +113,7 @@ def create_web_app(service: GuardianService | None = None) -> FastAPI:
     @app.post("/api/cards/{pending_id}/confirm")
     def confirm(pending_id: str, b: ConfirmBody):
         return _dump(svc.confirm(pending_id, b.alg, b.public_key, b.sig, standing=b.standing,
-                                 typed_amount=b.typed_amount))
+                                 typed_amount=b.typed_amount, answers=b.answers, pin=b.pin))
 
     @app.post("/api/cards/{pending_id}/decline")
     def decline(pending_id: str):
@@ -134,6 +154,29 @@ def create_web_app(service: GuardianService | None = None) -> FastAPI:
         if not 1 <= b.days <= 62:
             raise HTTPException(400, "1 to 62 days")
         return _dump(svc.advance(b.days))
+
+    @app.post("/api/time/wait")
+    def wait(b: WaitBody):
+        return _dump(svc.wait(b.minutes))
+
+    @app.post("/api/demo/call")
+    def call(b: CallBody):
+        return _dump(svc.scam_call(b.active, b.spoofed))
+
+    @app.post("/api/protection")
+    def protection(b: ProtectionBody):
+        return _dump(svc.set_protection(b.elevated))
+
+    @app.post("/api/holds/{hold_id}/cancel")
+    def hold_cancel(hold_id: str):
+        return _dump(svc.hold_cancel(hold_id))
+
+    @app.post("/api/holds/{hold_id}/analyst")
+    def analyst(hold_id: str, b: AnalystBody):
+        """Stands in for the bank's case-management screen: a human analyst decides."""
+        if hold_id not in svc.guard.holds:
+            raise HTTPException(404, "unknown hold")
+        return _dump(svc.analyst_decide(hold_id, b.approve, b.note))
 
     @app.get("/api/journal")
     def journal(limit: int = 40):

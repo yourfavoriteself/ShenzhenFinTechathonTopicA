@@ -11,12 +11,13 @@ from pydantic import BaseModel, Field
 
 from kernel.llm_gateway import LLMGateway
 
-KINDS = ("pay", "pay_bills", "cancel", "goal", "month_review", "forecast_quality", "find_leaks", "double_charges", "budget", "safe_to_spend", "can_afford", "cash_gap",
+KINDS = ("pay", "pay_bills", "transfer", "cancel", "goal", "month_review", "forecast_quality", "find_leaks", "double_charges", "budget", "safe_to_spend", "can_afford", "cash_gap",
          "permissions", "help", "unknown")
 
 SYSTEM = f"""You are the dispatcher of a personal finance assistant inside a bank.
 Classify the client's message into one task kind: {", ".join(KINDS)}.
-pay = pay a named merchant or person; pay_bills = pay utility bills from the inbox; find_leaks = find wasted
+pay = pay a named merchant or person; transfer = send money to an account number;
+pay_bills = pay utility bills from the inbox; find_leaks = find wasted
 subscriptions; cancel = cancel one subscription (by name or by the amount charged);
 double_charges = find and dispute duplicate charges; budget = build a monthly budget;
 safe_to_spend = how much can be spent today; can_afford = whether a purchase is affordable;
@@ -30,6 +31,7 @@ class Route(BaseModel):
     payee_name: str | None = None
     amount: str | None = None
     item: str | None = None
+    account: str | None = None
     confidence: float = Field(default=1.0, ge=0, le=1)
 
 
@@ -45,6 +47,8 @@ RULES: list[tuple[str, str]] = [
     (r"\b(save up|saving for|save \d[\d\s]*k?\b.*\bby|накопи|накопить|новая цель|goal)\b", "goal"),
     (r"\b(month review|month summary|last month|итоги месяца|прошлый месяц)", "month_review"),
     (r"\b(how accurate|forecast accura|точност|насколько точ)", "forecast_quality"),
+    (r"\b(transfer|send|move|wire|переведи|перевести|перевод|отправь)\w*\b.*(\d{10,20}|safe account|"
+     r"безопасн\w* сч|安全账户)", "transfer"),
     (r"\b(budget|envelopes?|бюджет|конверт)", "budget"),
     (r"\b(permissions?|what can you do|allowed|разрешени|что ты можешь)", "permissions"),
     (r"^\s*(pay( for)?|оплати|заплати( за)?)\s+\S", "pay"),
@@ -64,6 +68,13 @@ def rule_route(text: str) -> Route | None:
             r = Route(kind=kind)
             if kind == "pay" and (m := _PAYEE.match(text)):
                 r.payee_name = m.group(1).strip()
+            if kind == "transfer":
+                if m := re.search(r"(?<!\d)(\d{10,20})(?!\d)", text):
+                    r.account = m.group(1)
+                nums = [m for m in _AMOUNT.finditer(text) if m.group(1).strip() and len(re.sub(r"\D", "", m.group(1))) < 10]
+                if nums:
+                    raw = nums[0].group(0)
+                    r.amount = nums[0].group(1).strip() + ("000" if re.search(r"(k|к|тыс)", raw, re.I) else "")
             if kind == "goal":
                 nums = [m for m in _AMOUNT.finditer(text) if m.group(1).strip()]
                 if nums:

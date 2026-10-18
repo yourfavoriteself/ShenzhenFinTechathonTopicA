@@ -205,3 +205,50 @@ def test_ui_c8_goal_review_quality_in_chromium(server, svc):
             page.screenshot(path=f"{shots}/c8_2_review_quality.png", full_page=True)
         browser.close()
     assert not errors, errors
+
+
+def test_ui_c9_safe_account_call_in_chromium(server, svc):
+    import os
+    pw = pytest.importorskip("playwright.sync_api")
+    shots = os.environ.get("GUARDIAN_SCREENSHOTS")
+    with pw.sync_playwright() as p:
+        try:
+            browser = p.chromium.launch()
+        except Exception as e:  # noqa: BLE001
+            pytest.skip(f"chromium not available: {e}")
+        page = browser.new_page(viewport={"width": 1280, "height": 1000})
+        errors = []
+        page.on("pageerror", lambda e: errors.append(str(e)))
+        page.goto(server)
+        page.wait_for_selector("text=device key: Ed25519")
+        page.click("#scamcall")
+        page.wait_for_selector("text=The call is in progress")
+        page.click("#chips >> text=Transfer 350 000 ₽ from my savings")
+        card = page.locator(".card", has_text="Possible scam call")
+        card.wait_for()
+        card.locator("input[placeholder='type the amount to confirm']").fill("350000")
+        for q in ("on_call", "pressure", "given_account"):
+            card.locator(f"input[type=radio][value=no]").nth(("on_call", "pressure", "given_account").index(q)).check()
+        card.locator("input[name=pin]").fill("2580")
+
+        def hold():
+            card.locator(".hold").hover()
+            page.mouse.down()
+            page.wait_for_timeout(1700)
+            page.mouse.up()
+        hold()
+        page.wait_for_selector("text=can be signed after 10:15")
+        if shots:
+            card.scroll_into_view_if_needed()
+            page.screenshot(path=f"{shots}/c9_1_card.png")
+        page.click("#wait15")
+        page.wait_for_selector("text=15 minutes later")
+        hold()
+        page.wait_for_selector("text=waits for a bank analyst")
+        if shots:
+            page.screenshot(path=f"{shots}/c9_2_held.png", full_page=True)
+        page.click("text=Analyst: stop it")
+        page.wait_for_selector("text=The money stays in your account")
+        browser.close()
+    assert not errors, errors
+    assert not [t for t in svc.bank.transactions(svc.client) if t.counterparty.startswith("acct:")]

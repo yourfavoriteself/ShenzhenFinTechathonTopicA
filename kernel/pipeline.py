@@ -66,6 +66,7 @@ class Outcome(str):
     PENDING = "pending_confirmation"
     DENIED = "denied"
     FAILED = "failed"
+    HELD = "held"
 
 
 class Decision(BaseModel):
@@ -80,6 +81,7 @@ class Decision(BaseModel):
     receipt: Receipt | None = None
     notify_only: bool = False
     stage: int | None = None
+    hold: dict | None = None
 
 
 class PendingConfirmation(BaseModel):
@@ -282,6 +284,9 @@ class Pipeline:
         label = k.funds.label(i.client_id, i.val("funding_source")) if i.val("funding_source") else "-"
         previous = {"amount": ctx.payee.usual_amount} if ctx.payee and ctx.payee.usual_amount else None
         card = render(once, i, ctx.payee, label, ctx.risk, ctx.reasons, previous=previous, standing=standing)
+        a = k.intervention.assessments.get(i.id) if k.intervention else None
+        if a is not None and a.level:
+            card.intervention, card.type_amount, card.hold_to_confirm = a.card(), True, True
         ref = card.content_hash()
         for m in filter(None, (once, standing)):
             if m.payment:

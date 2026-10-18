@@ -135,6 +135,7 @@ _VERBS: list[tuple[str, set[str]]] = [
     (r"\b(gap|short|cover|rent|move|transfer|savings?|save|разрыв|не хватает|перевед|перенеси|накоп)",
      {"transfer_own", "block_merchant", "cancel_subscription"}),
     (r"\b(pay|bill|оплати|заплати|счет|счёт)", {"pay"}),
+    (r"\b(transfer|send|wire|переведи|перевести|отправь)\w*\b.*\d{10,20}", {"pay"}),
 ]
 _PER_YEAR = re.compile(r"\b(year|annual|годов)", re.I)
 
