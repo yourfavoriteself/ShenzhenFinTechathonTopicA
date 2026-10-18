@@ -183,6 +183,7 @@ class GuardianService:
                 self._emit("error", "This sign-in is no longer needed.")
                 return self.items[start:]
             self.cancels.store_credentials(c, login, password, remember)
+            c.error = None
             self._cancel_next(c)
             return self.items[start:]
 
@@ -493,7 +494,7 @@ class GuardianService:
         if c.status == "failed":
             self._emit("denied", f"I stopped before signing in: {c.error}", data=self._cx_data(c), task_id=c.task_id)
             return
-        if c.status == "login_needed" and self.cancels.has_credentials(c):
+        if c.status == "login_needed" and not c.error and self.cancels.has_credentials(c):
             self.cancels.sign_in(c.id)
         if c.status == "sms_needed":
             sms = self.portal.sms[-1]

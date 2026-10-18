@@ -9,3 +9,7 @@ Static files served by `app.web` (`uvicorn --factory app.web:create_web_app`), n
 - Cards follow the risk level: medium is one press, high is press-and-hold, and an amount from an
   unverified source must be typed in.
 - Chat items arrive over SSE (`/api/events`); all text is inserted as text, never as HTML.
+- Subscription cancellation (C2) uses a bank protected form, not a chat message: sign-in values go
+  straight to the kernel vault (one-time, or remembered for that domain and card), the SMS code is
+  typed by the client and used once. The form shows the kernel's domain check: official domain,
+  not a look-alike, certificate. Saved sign-ins are listed under Permissions and can be forgotten.

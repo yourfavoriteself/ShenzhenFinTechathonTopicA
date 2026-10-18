@@ -67,8 +67,9 @@ class Cancellation(BaseModel):
     finished: datetime | None = None
 
 
-def secret_names(domain: str) -> dict[str, str]:
-    s = domain_stem(domain)
+def secret_names(domain: str, card_id: str) -> dict[str, str]:
+    """One merchant account per card: StreamBox on two cards means two different sign-ins."""
+    s = f"{domain_stem(domain)}.{card_id}"
     return {"login": f"{s}.login", "password": f"{s}.password", "sms": f"{s}.sms"}
 
 
@@ -113,25 +114,25 @@ class CancelDesk:
         return c
 
     def has_credentials(self, c: Cancellation) -> bool:
-        n = secret_names(c.domain)
+        n = secret_names(c.domain, c.card_id)
         return self.k.vault.has(c.client_id, n["login"], c.domain) and \
             self.k.vault.has(c.client_id, n["password"], c.domain)
 
     def store_credentials(self, c: Cancellation, login: str, password: str, remember: bool) -> None:
         """Called from the bank's protected form: values go straight into the vault, bound to the domain."""
-        n = secret_names(c.domain)
+        n = secret_names(c.domain, c.card_id)
         self.k.vault.put(c.client_id, n["login"], c.domain, login, remember=remember)
         self.k.vault.put(c.client_id, n["password"], c.domain, password, remember=remember)
         self._journal(c, "credentials.stored", {"remember": remember, "refs": [ref(n["login"]), ref(n["password"])]})
 
     def store_code(self, c: Cancellation, code: str) -> None:
-        self.k.vault.put(c.client_id, secret_names(c.domain)["sms"], c.domain, code)
+        self.k.vault.put(c.client_id, secret_names(c.domain, c.card_id)["sms"], c.domain, code)
 
     def sign_in(self, cid: str) -> Cancellation:
         c = self.items[cid]
         if c.status not in ("login_needed", "sms_needed"):
             return c
-        n = secret_names(c.domain)
+        n = secret_names(c.domain, c.card_id)
         try:
             login = self.k.vault.fill(c.client_id, ref(n["login"]), c.domain)
             password = self.k.vault.fill(c.client_id, ref(n["password"]), c.domain)
@@ -154,7 +155,7 @@ class CancelDesk:
         if c.status != "sms_needed":
             return c
         try:
-            code = self.k.vault.fill(c.client_id, ref(secret_names(c.domain)["sms"]), c.domain)
+            code = self.k.vault.fill(c.client_id, ref(secret_names(c.domain, c.card_id)["sms"]), c.domain)
             session = self.portal.verify_sms(self._challenge[cid], code)
             acct = self.portal.account(session)
             last4 = str(acct.pop("card_number", ""))[-4:]

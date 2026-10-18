@@ -114,3 +114,64 @@ def test_ui_demo_path_in_chromium(server, svc):
         assert not errors
         browser.close()
     assert len(svc.mandates()) == 1
+
+
+def test_cancellation_endpoints_validate_input(web):
+    assert web.post("/api/cancellations/cxl_nope/login", json={"login": "a", "password": "b"}).status_code == 404
+    assert web.post("/api/cancellations/cxl_nope/code", json={"code": "12ab"}).status_code == 422
+    assert web.post("/api/cancellations/cxl_nope/code", json={"code": "1234"}).status_code == 404
+
+
+def test_ui_c2_cancel_with_protected_form_in_chromium(server, svc, tmp_path):
+    import os
+    import re
+    pw = pytest.importorskip("playwright.sync_api")
+    shots = os.environ.get("GUARDIAN_SCREENSHOTS")
+    with pw.sync_playwright() as p:
+        try:
+            browser = p.chromium.launch()
+        except Exception as e:  # noqa: BLE001
+            pytest.skip(f"chromium not available: {e}")
+        page = browser.new_page(viewport={"width": 1280, "height": 900})
+        errors = []
+        page.on("pageerror", lambda e: errors.append(str(e)))
+        page.goto(server)
+        page.wait_for_selector("text=device key: Ed25519")
+        page.click("#chips >> text=Cancel the 399 ₽ subscription")
+        page.click("text=StreamBox, 399 ₽ a month, card *1234, charged since March")
+        card = page.locator(".card", has_text="Cancel StreamBox, 399 ₽ a month, card *1234")
+        card.wait_for()
+        if shots:
+            page.screenshot(path=f"{shots}/c2_1_card.png")
+        bar = card.locator(".hold")
+        if bar.count():
+            bar.hover()
+            page.mouse.down()
+            page.wait_for_timeout(1700)
+            page.mouse.up()
+        else:
+            card.locator("text=Confirm").click()
+        form = page.locator(".secure", has_text="Sign-in needed on streambox.example")
+        form.wait_for()
+        page.wait_for_selector("text=blocked future StreamBox charges on card *1234")
+        if shots:
+            page.screenshot(path=f"{shots}/c2_2_protected_form.png")
+        form.locator("text=fill demo login").click()
+        form.locator("input[name=remember]").check()
+        form.locator("text=Sign in").click()
+        phone = page.locator(".msg.phone")
+        phone.wait_for()
+        code = re.search(r"code: (\d+)", phone.inner_text()).group(1)
+        code_form = page.locator(".secure", has_text="sent a code")
+        code_form.locator("input[name=code]").fill(code)
+        code_form.locator("text=Send code").click()
+        page.wait_for_selector("text=StreamBox is cancelled and the kernel verified it")
+        page.wait_for_selector("text=no next charge when the bank ran time forward")
+        if shots:
+            page.screenshot(path=f"{shots}/c2_3_verified.png")
+        page.click("nav >> text=Permissions")
+        page.wait_for_selector("text=streambox.card_1234.password · only on streambox.example")
+        if shots:
+            page.screenshot(path=f"{shots}/c2_4_vault.png")
+        assert not errors
+        browser.close()

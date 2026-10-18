@@ -15,7 +15,8 @@ def base_world():
 def fresh_world(base_world):
     def make() -> World:
         bank = base_world.bank.twin()
-        return base_world.model_copy(update={"bank": bank, "clock": bank.clock})
+        return base_world.model_copy(update={"bank": bank, "clock": bank.clock,
+                                            "documents": list(base_world.documents)})
     return make
 
 
