@@ -87,8 +87,9 @@ class HttpRails:
 
 
 class BankExecutor:
-    def __init__(self, rails: BankRails):
+    def __init__(self, rails: BankRails, cancellations: Any | None = None):
         self.rails = rails
+        self.cancellations = cancellations
 
     def execute(self, grant: Grant, intent: Intent) -> Receipt:
         c = intent.client_id
@@ -103,6 +104,13 @@ class BankExecutor:
                 case Action.BLOCK_MERCHANT:
                     r = self.rails.block_merchant(c, grant.payee, None)
                     return Receipt(ok=True, reference=f"block:{grant.payee}", details=r)
+                case Action.CANCEL_SUBSCRIPTION:
+                    if self.cancellations is None or not grant.domain or not grant.funding_source:
+                        return Receipt(ok=False, details={"error": "cancellation needs a card and the merchant's domain"})
+                    self.rails.block_merchant(c, grant.payee, grant.funding_source)
+                    cx = self.cancellations.open(grant, intent)
+                    return Receipt(ok=True, reference=f"cancel:{cx.id}",
+                                   details={"cancellation": cx.id, "blocked_card": grant.funding_source})
                 case Action.DISPUTE:
                     tx = next((x.removeprefix(TX_REF) for x in intent.references if x.startswith(TX_REF)), None)
                     if tx is None:
@@ -126,6 +134,8 @@ class StatementVerifier:
         if intent.action == Action.PAY:
             return any(t.id == receipt.reference and t.counterparty == intent.val("payee")
                        and t.amount == intent.val("amount") for t in self.data.transactions(intent.client_id))
+        if intent.action == Action.CANCEL_SUBSCRIPTION and self.bank is not None:
+            return self.bank.is_blocked(intent.client_id, intent.val("payee"), intent.val("funding_source"))
         if intent.action == Action.BLOCK_MERCHANT and self.bank is not None:
             return self.bank.is_blocked(intent.client_id, intent.val("payee"), None)
         if intent.action == Action.DISPUTE and self.bank is not None:

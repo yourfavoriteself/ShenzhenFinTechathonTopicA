@@ -171,6 +171,7 @@ class LLMGateway:
         self.providers: dict[str, Callable[[ModelSpec, dict[str, Any]], dict[str, Any]]] = {
             "anthropic": _call_anthropic, "openai_compat": _call_openai_compat}
         self.log: list[LLMResult] = []
+        self.sent: list[dict[str, Any]] = []   # every prompt that passed the guard, for leak audits
 
     def register_stub(self, role: str, responder: Responder) -> None:
         self.stubs[role] = responder
@@ -185,6 +186,7 @@ class LLMGateway:
             system = f"{system}\n\nReply with a single JSON object that matches this JSON schema, and nothing else:\n" \
                      f"{json.dumps(schema.model_json_schema(), sort_keys=True)}"
         self.guard.check(system + "\n" + user)
+        self.sent.append({"role": role, "task_id": task_id, "text": system + "\n" + user})
         escalations: list[str] = []
         for lvl in range(max(1, level), MAX_LEVEL + 1):
             for attempt in (1, 2):

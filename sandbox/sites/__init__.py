@@ -1,1 +1,1 @@
-"""Sandbox merchant sites (Melodify, StreamBox, CloudNest) and a phishing look-alike."""
+"""Sandbox merchant side: subscription accounts with sign-in, SMS codes and cancellation."""
