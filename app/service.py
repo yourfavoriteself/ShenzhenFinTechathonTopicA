@@ -18,9 +18,10 @@ from pydantic import BaseModel, Field
 
 from agents import dispatcher as D, planner as P, reader as R
 from agents.base import claim, propose, session
-from data.generator import World, build_world
+from data.generator import Document, World, build_world
 from kernel import budget as B
 from kernel.analytics import Usage, double_charges, leaks, recurring
+from kernel.cancellation import CancelDesk, Cancellation
 from kernel.cards import describe
 from kernel.core import ConfirmationError
 from kernel.critic import Critic, stub_responder as critic_stub
@@ -36,6 +37,7 @@ from kernel.refcheck import guarded
 from kernel.statements import Category
 from kernel.templates import Template, TemplateStore
 from sandbox.bank.wiring import connect, open_envelopes
+from sandbox.sites.portal import DEMO_LOGINS, PortalError, build_portal
 
 MAIN_CARD = "card_1234"
 MAIN_ACCOUNT, SAVINGS_ACCOUNT = "acc_main", "acc_save"
@@ -90,6 +92,9 @@ class GuardianService:
         self.k.pipeline.critic = self.critic
         self.desk = DocumentDesk(self.k, self.merchants, self.k.memory)
         self.templates = TemplateStore()
+        self.portal = build_portal(self.world, deliver=self._deliver)
+        self.cancels = CancelDesk(self.k, self.merchants, self.portal, self.bank, self.inbox, errors=(PortalError,))
+        self.k.executor.cancellations = self.cancels
         self.dispatcher, self.planner, self.reader = D.Dispatcher(self.gw), P.Planner(self.gw), R.Reader(self.gw)
         self.explain = explain
         self.items: list[Item] = []
@@ -169,6 +174,36 @@ class GuardianService:
             getattr(self, f"_opt_{o.kind}")(o)
             return self.items[start:]
 
+    def cancel_login(self, cid: str, login: str, password: str, remember: bool = False) -> list[Item]:
+        """The bank's protected sign-in form: values go to the vault, the kernel signs in on the verified domain."""
+        with self.lock:
+            start = len(self.items)
+            c = self.cancels.items.get(cid)
+            if c is None or c.status != "login_needed":
+                self._emit("error", "This sign-in is no longer needed.")
+                return self.items[start:]
+            self.cancels.store_credentials(c, login, password, remember)
+            self._cancel_next(c)
+            return self.items[start:]
+
+    def cancel_code(self, cid: str, code: str) -> list[Item]:
+        with self.lock:
+            start = len(self.items)
+            c = self.cancels.items.get(cid)
+            if c is None or c.status != "sms_needed":
+                self._emit("error", "No code is expected for this cancellation.")
+                return self.items[start:]
+            self.cancels.store_code(c, code)
+            self.cancels.complete(cid)
+            self._cancel_result(c)
+            return self.items[start:]
+
+    def forget_secret(self, name: str) -> list[Item]:
+        with self.lock:
+            n = self.k.vault.forget(self.client, name)
+            self.k.journal.append("client", "secret.forgotten", {"name": name, "count": n})
+            return [self._emit("notice", "Saved sign-in removed from the bank vault." if n else "Nothing to remove.")]
+
     def apply_budget(self) -> list[Item]:
         with self.lock:
             plan = self._plan()
@@ -227,6 +262,7 @@ class GuardianService:
                 "trust": {c.value: self.k.trust.level(c) for c in self.k.trust.categories},
                 "llm": self.gw.report(), "critic": {"calls": self.critic.calls, "cache_hits": self.critic.cache_hits},
                 "cases": len(self.desk.cases),
+                "vault": self.k.vault.describe(self.client),
             }
 
     def mandates(self) -> list[dict[str, Any]]:
@@ -401,6 +437,101 @@ class GuardianService:
     def _bills_source(self) -> str:
         return "env_bills" if "env_bills" in self.bank.envelopes else MAIN_ACCOUNT
 
+    # ---------------------------------------------------------------- C2: cancel a subscription
+
+    def _on_cancel(self, task, route, level):
+        amount, name = _parse_rub(route.amount), (route.payee_name or "").lower()
+        found = [c for c in self.bank.cards_on_file(self.client) if c.active
+                 and (amount is None or c.amount == amount) and (not name or self._name(c.merchant).lower() == name)]
+        if not found:
+            what = f" charging {rub(amount)}" if amount else (f" for {route.payee_name}" if name else "")
+            self._emit("text", f"I found no active subscription{what}.", task_id=task.task_id)
+            return
+        if len(found) == 1:
+            self._cancel_card(task, found[0])
+            return
+        rows = []
+        for c in found:
+            o = self._option("cancel_pick", self._cof_summary(c), {"cof": c.id, "task": task.task_id}, c.amount)
+            rows.append({"id": o.id, "title": o.title})
+        self._emit("options", f"{len(found)} subscriptions match. Which one should I cancel?",
+                   data={"options": rows}, task_id=task.task_id)
+
+    def _cof_summary(self, c) -> str:
+        since = c.started.strftime("%B" if c.started.year == self.clock.now().year else "%B %Y")
+        return (f"{self._name(c.merchant)}, {rub(c.amount)} a month, card *{self.bank.cards[c.card_id].last4}, "
+                f"charged since {since}")
+
+    def _cancel_card(self, task, cof):
+        m = self.merchants.get(cof.merchant)
+        if m is None or not m.domain:
+            o = self._option("block", f"Block future {self._name(cof.merchant)} charges", {"merchant": cof.merchant},
+                             cof.amount)
+            self._emit("options", f"{self._name(cof.merchant)} has no website on record; the bank can block its "
+                                  "charges instead.", data={"options": [{"id": o.id, "title": o.title}]},
+                       task_id=task.task_id)
+            return
+        k, summary = self.k, self._cof_summary(cof)
+        p = IntentProposal(
+            action=Action.CANCEL_SUBSCRIPTION,
+            payee=claim({"value": m.token, "ref": k.bank_value(f"bank:payee:{m.token}", m.token, "bank statement")}),
+            amount=claim({"value": cof.amount, "ref": k.bank_value(f"bank:cof:{cof.id}:amount", cof.amount,
+                                                                  "card-on-file record")}),
+            funding_source=claim({"value": cof.card_id, "ref": k.bank_value(f"bank:card:{cof.card_id}", cof.card_id,
+                                                                           "your cards")}),
+            domain=claim({"value": m.domain, "ref": k.bank_value(f"bank:merchant:{m.token}:domain", m.domain,
+                                                                "merchant directory")}),
+            memo=summary)
+        s = session(k, self.gw, Role.DISPATCHER, 0, D.SYSTEM, self.client, task.task_id)
+        d = propose(k, s, p)
+        self._decision(d, CardMeta(pending_id=d.pending_id or "", task_id=task.task_id, kind="cancel"))
+        if d.outcome == Outcome.PENDING:
+            self.items[-1].data["summary"] = f"Cancel {summary}?"
+
+    def _cancel_next(self, c: Cancellation):
+        """After the bank block: sign in with saved credentials, or ask for them in the protected form."""
+        if c.status == "failed":
+            self._emit("denied", f"I stopped before signing in: {c.error}", data=self._cx_data(c), task_id=c.task_id)
+            return
+        if c.status == "login_needed" and self.cancels.has_credentials(c):
+            self.cancels.sign_in(c.id)
+        if c.status == "sms_needed":
+            sms = self.portal.sms[-1]
+            self._emit("phone", f"SMS from {sms.sender}: {sms.text}", data={"to": sms.to}, task_id=c.task_id)
+            self._emit("code", f"{c.merchant_name} sent a code to {c.phone}. Type it here; it goes to the bank vault "
+                               "and is used once.", data=self._cx_data(c), task_id=c.task_id)
+            return
+        hint = next((v for (tok, card), v in DEMO_LOGINS.items() if tok == c.merchant and card == c.card_id), None)
+        self._emit("login", f"Sign-in needed on {c.domain}. " + ("✔ Domain verified by the bank."
+                                                                 if c.domain_check.ok else ""),
+                   data={**self._cx_data(c), "demo_hint": list(hint) if hint else None}, task_id=c.task_id)
+
+    def _cancel_result(self, c: Cancellation):
+        if c.status == "verified":
+            labels = {"merchant_card_on_file_removed": f"{c.merchant_name} removed card *{c.card_id[-4:]} from file",
+                      "confirmation_email_from_official_domain": f"confirmation email from {c.domain}",
+                      "no_next_charge_in_accelerated_time": "no next charge when the bank ran time forward"}
+            self._emit("receipt", f"{c.merchant_name} is cancelled and the kernel verified it.",
+                       data={**self._cx_data(c), "verified": [labels[k] for k, v in c.checks.items() if v]},
+                       task_id=c.task_id)
+        elif c.status == "sms_needed":
+            self._emit("code", f"{c.error}. Try the code again.", data=self._cx_data(c), task_id=c.task_id)
+        elif c.status == "login_needed":
+            self._cancel_next(c)
+        else:
+            self._emit("denied", f"Cancellation not confirmed: {c.error}. The bank block on card "
+                                 f"*{c.card_id[-4:]} stays in place.", data=self._cx_data(c), task_id=c.task_id)
+
+    def _cx_data(self, c: Cancellation) -> dict:
+        return {"cancellation": c.id, "merchant": c.merchant_name, "domain": c.domain, "card": f"*{c.card_id[-4:]}",
+                "status": c.status, "error": c.error, "checks": c.checks,
+                "domain_check": c.domain_check.model_dump(mode="json")}
+
+    def _deliver(self, doc: dict):
+        d = Document(**doc)
+        self.world.documents.append(d)
+        self.desk.screen(self.client, Doc(**d.model_dump()))
+
     # ---------------------------------------------------------------- C3: leaks
 
     def _on_find_leaks(self, task, route, level):
@@ -564,6 +695,10 @@ class GuardianService:
         d = propose(self.k, s, p)
         self._decision(d, CardMeta(pending_id=d.pending_id or "", task_id=task.task_id, kind="block"))
 
+    def _opt_cancel_pick(self, o: OptionMeta):
+        task = self.k.tasks[o.action["task"]]
+        self._cancel_card(task, self.bank.cof[o.action["cof"]])
+
     def _opt_move(self, o: OptionMeta):
         """Moving money between envelopes is the client's own action; agents can only suggest it."""
         a = o.action
@@ -617,6 +752,8 @@ class GuardianService:
         src = self.bank.label(self.client, s["funding_source"]) if s.get("funding_source") else ""
         what = {"pay": f"Paid {name} {amount} from {src}", "transfer_own": f"Moved {amount} to {name} from {src}",
                 "block_merchant": f"Future charges from {name} are blocked",
+                "cancel_subscription": f"The bank blocked future {name} charges on {src} right away, as insurance. "
+                                       f"Now cancelling on {s.get('domain')}",
                 "dispute": f"Dispute opened for {amount} at {name}; the bank decides within 3 days"}.get(
             s.get("action", ""), "Done")
         if d.notify_only:
@@ -636,6 +773,8 @@ class GuardianService:
                 created=self.clock.now(), mandate_id=mid or (existing.mandate_id if existing else None)))
         if meta.doc_id:
             self.paid_docs.add(meta.doc_id)
+        if meta.kind == "cancel" and d.receipt:
+            self._cancel_next(self.cancels.items[d.receipt.details["cancellation"]])
         if meta.kind == "gap":
             fc = self._forecast()
             self._emit("notice", "The cash gap is closed. " + (f"Lowest balance until payday: {rub(fc.min_balance)}."

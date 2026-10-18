@@ -78,5 +78,16 @@ aside nav button.active { color: var(--accent); box-shadow: inset 0 -2px 0 var(-
 .doc { border-bottom: 1px solid var(--line); padding: 6px 0; font-size: 13px; }
 .doc .flag { color: var(--bad); font-weight: 700; }
 .jr { font: 12px ui-monospace, monospace; border-bottom: 1px solid var(--line); padding: 3px 0; }
+.summary { font-weight: 600; margin: 0 0 6px; }
+.checks { list-style: none; padding: 0; margin: 6px 0; font-size: 13px; white-space: normal; }
+.checks li.ok { color: var(--ok); }
+.checks li.bad { color: var(--bad); font-weight: 600; }
+.secure { align-self: stretch; max-width: 620px; border: 2px solid #0f2236; border-radius: 14px; background: #f7fafd; padding: 12px 14px; }
+.secure-head { font-weight: 700; margin-bottom: 6px; }
+.secure-fields { display: flex; gap: 8px; flex-wrap: wrap; margin: 8px 0; }
+.secure-fields input { flex: 1; min-width: 160px; font: inherit; padding: 8px 10px; border: 1px solid #9fb3c8; border-radius: 8px; }
+button.ghost-dark { background: transparent; color: var(--accent); border: 1px dashed var(--accent); padding: 2px 8px; font-size: 12px; }
+.msg.phone { background: #1d2733; color: #fff; border-radius: 16px; }
+.msg.phone .meta { color: #9fb3c8; }
 details summary { cursor: pointer; color: var(--muted); font-size: 12px; }
 @media (max-width: 900px) { main { grid-template-columns: 1fr; height: auto; } .chat { height: 80vh; } }

@@ -95,6 +95,7 @@ function renderCard(it) {
   const risk = ["low", "medium", "high"][c.risk];
   const el = h("div", {class: `card risk-${c.risk}`, "data-pending": d.pending_id});
   el.append(h("h3", {}, c.title, h("span", {class: `badge r${c.risk}`}, `${risk} risk`)));
+  if (d.summary) el.append(h("div", {class: "summary"}, d.summary));
   const tbl = h("table", {class: "fields"});
   for (const f of c.fields) {
     tbl.append(h("tr", {class: f.changed ? "changed" : ""},
@@ -148,6 +149,43 @@ function renderCard(it) {
   return el;
 }
 
+function domainChecks(d) {
+  const dc = d.domain_check || {};
+  const row = (ok, text) => h("li", {class: ok ? "ok" : "bad"}, (ok ? "✔ " : "✖ ") + text);
+  return h("ul", {class: "checks"},
+    row(dc.matches, `${dc.domain} is the official domain of ${d.merchant} in the bank's directory`),
+    row(!dc.imitates, dc.imitates ? `imitates ${dc.imitates}` : "not a look-alike of another merchant"),
+    row(dc.certificate && dc.certificate.valid, dc.certificate ? `certificate for ${dc.certificate.subject}, issued by ${dc.certificate.issuer}` : "no valid certificate"));
+}
+
+function secureForm(it) {
+  const d = it.data;
+  const el = h("div", {class: "secure"});
+  el.append(h("div", {class: "secure-head"}, "🔒 Bank protected form", h("span", {class: "meta"}, " · the assistant never sees what you type")));
+  el.append(h("div", {}, it.text), domainChecks(d));
+  if (d.error) el.append(h("div", {class: "alert"}, d.error));
+  const status = h("span", {class: "meta"});
+  if (it.type === "login") {
+    const login = h("input", {placeholder: `login on ${d.domain}`, autocomplete: "off", name: "login"});
+    const pass = h("input", {type: "password", placeholder: "password", autocomplete: "off", name: "password"});
+    const remember = h("input", {type: "checkbox", name: "remember"});
+    const btn = h("button", {onclick: async () => {
+      btn.disabled = true;
+      await run(api(`/api/cancellations/${d.cancellation}/login`, {login: login.value, password: pass.value, remember: remember.checked}));
+    }}, "Sign in");
+    el.append(h("div", {class: "secure-fields"}, login, pass),
+      h("label", {class: "standing"}, remember, `Remember for ${d.domain} in the bank vault (otherwise used once)`),
+      h("div", {class: "actions"}, btn, status));
+    if (d.demo_hint) el.append(h("div", {class: "meta"}, "Demo account: ",
+      h("button", {class: "ghost-dark", onclick: () => { login.value = d.demo_hint[0]; pass.value = d.demo_hint[1]; }}, "fill demo login")));
+  } else {
+    const code = h("input", {placeholder: "code from SMS", inputmode: "numeric", autocomplete: "one-time-code", name: "code", maxlength: "8"});
+    const btn = h("button", {onclick: async () => { btn.disabled = true; await run(api(`/api/cancellations/${d.cancellation}/code`, {code: code.value})); }}, "Send code");
+    el.append(h("div", {class: "secure-fields"}, code), h("div", {class: "actions"}, btn, status));
+  }
+  return el;
+}
+
 function table(rows, cols) {
   return h("table", {}, h("tr", {}, cols.map(([, t]) => h("th", {}, t))),
     rows.map((r) => h("tr", {}, cols.map(([k]) => h("td", {}, typeof k === "function" ? k(r) : r[k])))));
@@ -159,7 +197,11 @@ function render(it) {
     case "user": return h("div", {class: "msg user"}, it.text);
     case "card": return renderCard(it);
     case "receipt": return h("div", {class: "msg receipt" + (d.notify_only ? " notify" : "")},
-      (d.notify_only ? "🔔 " : "✔ ") + it.text, h("div", {class: "meta"}, `ref ${d.reference || "-"}`), costLine(d), steps(d));
+      (d.notify_only ? "🔔 " : "✔ ") + it.text,
+      d.verified ? h("ul", {class: "checks"}, d.verified.map((x) => h("li", {class: "ok"}, "✔ " + x))) : null,
+      d.reference ? h("div", {class: "meta"}, `ref ${d.reference}`) : null, costLine(d), steps(d));
+    case "login": case "code": return secureForm(it);
+    case "phone": return h("div", {class: "msg phone"}, "📱 " + it.text, h("div", {class: "meta"}, `to ${d.to} · on your phone, not in the bank`));
     case "denied": return h("div", {class: "msg denied"}, "⛔ " + it.text, steps(d));
     case "error": return h("div", {class: "msg error"}, it.text);
     case "gap": return h("div", {class: "msg notice"}, "⚠ " + it.text, optionButtons(d.options));
@@ -241,6 +283,9 @@ async function refresh() {
       h("div", {class: "meta"}, `used ${m.uses} times, ${m.spent} · stage ${m.stage} · ${m.hash.slice(0, 12)}…`),
       h("button", {class: "danger", onclick: () => run(api(`/api/mandates/${m.id}/revoke`, {}))}, "Revoke")))
       : [h("p", {}, "None. Guardian asks you before every action.")]),
+    s.vault.length ? h("h4", {}, "Saved sign-ins (bank vault)") : null,
+    ...s.vault.map((v) => h("div", {class: "mandate"}, `${v.name} · only on ${v.domain} · used ${v.uses} times`,
+      h("button", {class: "danger", onclick: () => run(api("/api/vault/forget", {name: v.name}))}, "Forget"))),
     s.templates.length ? h("h4", {}, "Payment templates") : null,
     ...s.templates.map((t) => h("div", {class: "meta"}, `${t.payee}: ${t.amount}, used ${t.uses} times`)));
   fill($("#tab-inbox"), h("div", {class: "meta"}, "Guardian screens every message on arrival."),
@@ -254,7 +299,7 @@ async function refresh() {
 
 // ------------------------------------------------------------------ wiring
 
-const CHIPS = ["Pay for Melodify", "Find leaks in my subscriptions", "Was I charged twice?", "Pay my bills",
+const CHIPS = ["Pay for Melodify", "Cancel the 399 ₽ subscription", "Find leaks in my subscriptions", "Was I charged twice?", "Pay my bills",
   "Make me a budget", "How much can I spend today?", "Can I afford headphones for 15 000?", "What can you do?"];
 
 function init() {

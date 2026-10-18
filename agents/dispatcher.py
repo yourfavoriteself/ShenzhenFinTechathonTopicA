@@ -11,13 +11,14 @@ from pydantic import BaseModel, Field
 
 from kernel.llm_gateway import LLMGateway
 
-KINDS = ("pay", "pay_bills", "find_leaks", "double_charges", "budget", "safe_to_spend", "can_afford", "cash_gap",
+KINDS = ("pay", "pay_bills", "cancel", "find_leaks", "double_charges", "budget", "safe_to_spend", "can_afford", "cash_gap",
          "permissions", "help", "unknown")
 
 SYSTEM = f"""You are the dispatcher of a personal finance assistant inside a bank.
 Classify the client's message into one task kind: {", ".join(KINDS)}.
 pay = pay a named merchant or person; pay_bills = pay utility bills from the inbox; find_leaks = find wasted
-subscriptions; double_charges = find and dispute duplicate charges; budget = build a monthly budget;
+subscriptions; cancel = cancel one subscription (by name or by the amount charged);
+double_charges = find and dispute duplicate charges; budget = build a monthly budget;
 safe_to_spend = how much can be spent today; can_afford = whether a purchase is affordable;
 cash_gap = upcoming shortfall before payday; permissions = what the assistant is allowed to do.
 Copy the payee name and amount exactly as the client wrote them. You never act and never see bank data."""
@@ -33,6 +34,8 @@ class Route(BaseModel):
 
 RULES: list[tuple[str, str]] = [
     (r"\b(double|twice|duplicate|charged two|дважды|двойн|дубл)", "double_charges"),
+    (r"\b(cancel|unsubscribe|отмени|отпиши|отключи)\w*\b.*\b(subscri|membership|подписк|\d)|"
+     r"^\s*(cancel|unsubscribe from|отмени(ть)?)\s+(my\s+)?[\w-]+\s*[.!]*$", "cancel"),
     (r"\b(leak|waste|subscriptions?\b.*(audit|check|review)|unused|утечк|лишн\w* подписк|подписки)", "find_leaks"),
     (r"\b(pay|оплати|заплати)\b.*\b(bills?|utilit|счет|счёт|счета|коммунал)", "pay_bills"),
     (r"\b(can i afford|afford|могу ли я (себе )?позволить|хватит ли)", "can_afford"),
@@ -45,6 +48,8 @@ RULES: list[tuple[str, str]] = [
 ]
 _PAYEE = re.compile(r"^\s*(?:please\s+)?(?:pay(?:\s+for)?|оплати|заплати(?:\s+за)?)\s+(?:the\s+|my\s+)?(.+?)"
                     r"(?:\s+(?:again|subscription|подписку))?\s*[.!?]*\s*$", re.I)
+_CANCEL_PAYEE = re.compile(r"(?:[Cc]ancel|[Uu]nsubscribe from|[Оо]тмени(?:ть)?)\s+(?:my\s+)?(?:подписку\s+(?:на\s+)?)?"
+                           r"([A-Z][A-Za-z0-9]+)")
 _AMOUNT = re.compile(r"(\d[\d\s ]*(?:[.,]\d{1,2})?)\s*(?:k\b|к\b|тыс)?\s*(?:₽|rub|руб|r\b)?", re.I)
 
 
@@ -55,6 +60,11 @@ def rule_route(text: str) -> Route | None:
             r = Route(kind=kind)
             if kind == "pay" and (m := _PAYEE.match(text)):
                 r.payee_name = m.group(1).strip()
+            if kind == "cancel":
+                nums = [m for m in _AMOUNT.finditer(text) if m.group(1).strip()]
+                r.amount = nums[-1].group(1).strip() if nums else None
+                if m := _CANCEL_PAYEE.search(text):
+                    r.payee_name = m.group(1)
             if kind == "can_afford":
                 nums = [m for m in _AMOUNT.finditer(text) if m.group(1).strip()]
                 if nums:

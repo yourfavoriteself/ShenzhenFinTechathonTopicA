@@ -14,7 +14,7 @@ from pathlib import Path
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import FileResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from kernel.api import create_app
 
@@ -38,6 +38,20 @@ class ConfirmBody(BaseModel):
     sig: str
     standing: bool = False
     typed_amount: int | None = None
+
+
+class LoginBody(BaseModel):
+    login: str = Field(min_length=1, max_length=200)
+    password: str = Field(min_length=1, max_length=200)
+    remember: bool = False
+
+
+class CodeBody(BaseModel):
+    code: str = Field(min_length=3, max_length=8, pattern=r"^\s*\d+\s*$")
+
+
+class ForgetBody(BaseModel):
+    name: str = Field(max_length=100)
 
 
 class AdvanceBody(BaseModel):
@@ -98,6 +112,22 @@ def create_web_app(service: GuardianService | None = None) -> FastAPI:
         if svc.k.mandates.state(mandate_id) is None:
             raise HTTPException(404, "unknown permission")
         return _dump(svc.revoke(mandate_id))
+
+    @app.post("/api/cancellations/{cid}/login")
+    def cancel_login(cid: str, b: LoginBody):
+        if cid not in svc.cancels.items:
+            raise HTTPException(404, "unknown cancellation")
+        return _dump(svc.cancel_login(cid, b.login, b.password, b.remember))
+
+    @app.post("/api/cancellations/{cid}/code")
+    def cancel_code(cid: str, b: CodeBody):
+        if cid not in svc.cancels.items:
+            raise HTTPException(404, "unknown cancellation")
+        return _dump(svc.cancel_code(cid, b.code))
+
+    @app.post("/api/vault/forget")
+    def forget(b: ForgetBody):
+        return _dump(svc.forget_secret(b.name))
 
     @app.post("/api/time/advance")
     def advance(b: AdvanceBody):
