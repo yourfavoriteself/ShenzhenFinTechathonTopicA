@@ -39,7 +39,7 @@ The system is about 11 000 lines of Python, JavaScript and Solidity, with 3 350 
 All data is synthetic. A generator builds one client with twelve months of history (1 156 transactions; seed 22; "now" is 17 Oct 2026 10:00 MSK). Brands, people and domains (`.example`) are fictional.
 
 | # | Client says | What happens | Verified by |
-|---|---|---|---|
+|--|--------|------------------------|----------|
 | C1 | "Pay for Melodify" | The planner builds an intent from kernel facts. The card shows payee, amount and source, all *verified by the bank*. The client signs once and can allow it monthly. Next month the payment runs from a template with no model and only a notification | Bank statement |
 | C2 | "Cancel the 399 ₽ subscription" | Two subscriptions match, so the kernel asks which. After the signature the bank blocks future charges from that merchant on that card (insurance). The cancellation desk then signs in on the merchant's official domain: credentials come from the bank vault, the SMS code is typed by the client. It cancels through the merchant API | Three sources: merchant removed the card on file; confirmation e-mail from the official domain; no charge when the bank ran time forward |
 | C3 | "Find leaks in my subscriptions" | Unused, duplicate and price-raised subscriptions, each with the transactions it is based on: 847 ₽ a month, 10 164 ₽ a year | Kernel analytics, 5/5 planted leaks found |
@@ -99,7 +99,7 @@ Every step is journaled with the autonomy stage and the passport of the agent in
 Every step can only tighten the verdict (allow → ask → deny). LLM-based steps plug in like the others but can only say "no" or "ask the client".
 
 | Step | Checks | Typical reasons |
-|---|---|---|
+|----|----------------|----------|
 | Passport | Session signature, fresh nonce, role may call this endpoint, passport not expired, task matches | forged passport, wrong session key, replay, reader calling `propose_intent` |
 | Schema | Action and fields are well formed; amounts are integers in kopecks | amount must be a positive integer in kopecks |
 | Mandate | A signed mandate covers the action: payee in `allowed_payees`, amount in `amount_range`, budget and recurrence left, funding source, origin, not expired, not revoked | no mandate covers this action; already used this period |

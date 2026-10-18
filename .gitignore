@@ -11,3 +11,5 @@ __pycache__/
 node_modules/
 chain/out/
 chain/cache/
+docs/.build.css
+docs/*.html
