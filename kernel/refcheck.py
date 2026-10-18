@@ -13,11 +13,15 @@ from typing import Any, Iterable
 from pydantic import BaseModel
 
 NUMBER = re.compile(r"(?<![\w.])\d[\d  ]*(?:[.,]\d+)?")
+# the assistant never sells credit: a loan, instalments or an overdraft is not an answer to a cash gap
+CREDIT = re.compile(r"\b(loans?|credit(?!ed)|instal+ments?|pay later|overdraft|microloan|кредит\w*|займ\w*|заём|"
+                    r"рассрочк\w*|овердрафт\w*)\b", re.I)
 
 
 class RefCheck(BaseModel):
     ok: bool
     unknown: list[str] = []
+    credit_offer: bool = False
 
 
 def _norm(s: str) -> str:
@@ -63,4 +67,6 @@ def guarded(text: str | None, facts: Any, fallback: str) -> tuple[str, RefCheck]
     if not text:
         return fallback, RefCheck(ok=True)
     r = check(text, facts)
+    if CREDIT.search(text) and not CREDIT.search(" ".join(_flatten(facts))):
+        r = RefCheck(ok=False, unknown=r.unknown, credit_offer=True)
     return (text if r.ok else fallback), r
