@@ -1,0 +1,67 @@
+{
+ "network": "anvil local devnet (chain id 31337)",
+ "contract": "0x5FbDB2315678afecb367f032d93F642f64180aa3",
+ "deploy_tx": "0x5d54a286d02a3b2d3ca98a27590c8171b1ef082deec2db8f87b21809970ad4be",
+ "run_chain": "0x3b9165b762793e8d0ed1575a86b42c1f8584947369fd649058fe770ba1a802e2",
+ "journal_entries": 87,
+ "journal_public_key": "oW/0FK+7YEeIXIur+DLYtdGlJs/5VpzWWioyCG0H8Ic=",
+ "anchors": [
+  {
+   "after": "cash gap closed from savings",
+   "seq": 29,
+   "merkle_root": "7d7ebf7c28331dd18bb8b8b9afe83e98ff3d2c0c473215a80148681ced8f336c",
+   "head_hash": "163776a6f5c1319034f19e8a1712ca530afde3abafb43255f24f379d3f911fcb",
+   "tx": "0x4d1861bd2d1fd556ab7821480322bc0a464c8f6c734b2a5ab15535460919161f",
+   "block": 2,
+   "gas_used": 114095
+  },
+  {
+   "after": "Melodify paid, monthly permission signed",
+   "seq": 56,
+   "merkle_root": "19feb603eab5293f72e9d78df9399fbe3fd7b326191900111a72624b6078eccd",
+   "head_hash": "0070c3bf947538183d1b6c6479c5a93e065ef8d564c36d89188de0a53bef8faa",
+   "tx": "0x42bb864f12f1bb014fbb75a70c371a50c26e48ac472f2d848f6b65f4845bd8ae",
+   "block": 3,
+   "gas_used": 99489
+  },
+  {
+   "after": "subscription leaks found",
+   "seq": 57,
+   "merkle_root": "78e5bf19db81869679531b855d3e40dca5cfe0dbfbb3a852fbe47a039427d281",
+   "head_hash": "7bd50b5e6056cbea8caa3f3fda83f24b3ffe13a4cdaeaea5cdff9c902f8c91b8",
+   "tx": "0xb4fb2e819589eadcf6db306369bf9a41ea8ef64f9e0be8d5822fe186b45788a1",
+   "block": 4,
+   "gas_used": 99513
+  },
+  {
+   "after": "bills checked, fake bill flagged",
+   "seq": 86,
+   "merkle_root": "3bfb75f628090fa1450aaefdcf9bb1081cc2c50c28b017bbd753167f93d8ff9c",
+   "head_hash": "fb9c0d806442963d28ae5821350a17226e9d3a82e05b88822a4e0d2aab7c873a",
+   "tx": "0x988b13ab07fa15155985f4202295a8f475a5f55b67a987b3cad85286e44e854a",
+   "block": 5,
+   "gas_used": 99513
+  }
+ ],
+ "read_back": {
+  "merkle_root": "0x3bfb75f628090fa1450aaefdcf9bb1081cc2c50c28b017bbd753167f93d8ff9c",
+  "head_hash": "0xfb9c0d806442963d28ae5821350a17226e9d3a82e05b88822a4e0d2aab7c873a",
+  "seq": 86,
+  "at": 1792358905
+ },
+ "verification": {
+  "original": {
+   "ok": true,
+   "why": "entries 0..86 match the anchor"
+  },
+  "entry_rewritten_and_rehashed": {
+   "ok": false,
+   "why": "Merkle root differs from the anchored one: an entry was changed, removed or reordered"
+  },
+  "last_5_entries_cut": {
+   "ok": false,
+   "why": "journal copy ends at seq 81, the anchor covers seq 86"
+  }
+ },
+ "privacy": "only hashes, a sequence number and a run identifier are on chain"
+}
