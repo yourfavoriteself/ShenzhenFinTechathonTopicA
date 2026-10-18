@@ -85,6 +85,7 @@ class GuardianService:
         for role, fn in (("dispatcher", D.stub_responder), ("planner", P.stub_responder),
                          ("reader", R.stub_responder), ("critic", critic_stub), ("explainer", _explain_stub)):
             self.gw.register_stub(role, fn)
+        self.k.vault.listeners.append(self.gw.guard.register)
         self.critic = Critic(self.k, self.gw)
         self.k.pipeline.critic = self.critic
         self.desk = DocumentDesk(self.k, self.merchants, self.k.memory)

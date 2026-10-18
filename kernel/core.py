@@ -19,6 +19,7 @@ from .passport import AuthError, Passport, PassportRegistry, SignedRequest
 from .pipeline import Decision, Outcome, PendingConfirmation, Pipeline, StepResult, Verdict
 from .ports import Directory, Executor, Funds, InMemoryDirectory, InMemoryFunds
 from .provenance import Labeled
+from .secrets import Vault
 from .suspicious_memory import SuspiciousMemory
 from .trust import TrustLedger
 
@@ -42,6 +43,7 @@ class Kernel:
         self.funds: Funds = funds or InMemoryFunds()
         self.executor = executor
         self.pipeline = Pipeline(self)
+        self.vault = Vault(self.clock)
         self.memory = SuspiciousMemory()
         self.pipeline.risk_checks.append(self.memory.check)
         self.tasks: dict[str, TaskInfo] = {}
