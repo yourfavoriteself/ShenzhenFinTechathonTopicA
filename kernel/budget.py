@@ -820,6 +820,15 @@ class GapBacktest(BaseModel):
     false_alarms: int
 
 
+def probe_dates(txs: list[Tx], as_of: datetime, days: tuple[int, ...] = (5, 17)) -> list[datetime]:
+    """Backtest points: the 5th and 17th of every complete month after the first three (enough history)."""
+    out = []
+    for m in complete_months(txs, as_of)[3:]:
+        y, mo = map(int, m.split("-"))
+        out += [datetime(y, mo, d, 10, tzinfo=as_of.tzinfo) for d in days]
+    return out
+
+
 def backtest_cash_gaps(txs: list[Tx], cards_on_file: list, merchants, account_id: str, current_balance: int,
                        probes: list[datetime], actual_gaps: list[date], lead_days: int = 3) -> GapBacktest:
     """Re-run the payday forecast at past dates with only the data known then."""

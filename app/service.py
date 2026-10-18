@@ -11,7 +11,7 @@ from __future__ import annotations
 import json
 import re
 import threading
-from datetime import date, datetime, time
+from datetime import date, datetime, time, timedelta
 from typing import Any, Callable
 
 from pydantic import BaseModel, Field
@@ -106,6 +106,10 @@ class GuardianService:
         self.paid_docs: set[str] = set()
         self.plan: B.BudgetPlan | None = None
         self.trials_asked: set[str] = set()
+        self.goal_drafts: dict[str, B.GoalPlan] = {}
+        self.goals: list[B.GoalPlan] = []
+        self.goal_tasks: dict[str, str] = {}
+        self.saved_monthly: list[dict] = []
         for doc in self.inbox():
             self.desk.screen(self.client, doc)
         self._welcome()
@@ -223,20 +227,22 @@ class GuardianService:
         """Demo time: move the sandbox bank forward (salary, merchant charges, dispute decisions)."""
         with self.lock:
             start = len(self.items)
-            before, t0 = {d.id for d in self.inbox()}, self.clock.now()
-            self.bank.advance(days=days)
-            self.plan = None
-            for doc in self.inbox():
-                if doc.id not in before:
-                    self.desk.screen(self.client, doc)
+            for _ in range(days):
+                before, t0 = {d.id for d in self.inbox()}, self.clock.now()
+                self.bank.advance(days=1)
+                self.plan = None
+                for doc in self.inbox():
+                    if doc.id not in before:
+                        self.desk.screen(self.client, doc)
+                self._trial_watch()
+                for inc in [t for t in self.bank.transactions(self.client, since=t0)
+                            if t.category == Category.INCOME and t.account_id == MAIN_ACCOUNT]:
+                    self._on_income(inc)
             now = self.clock.now()
             self.k.journal.append("operator", "clock.advanced", {"days": days, "now": now.isoformat()})
-            self._emit("notice", f"Demo time moved forward {days} days: it is now {now:%d %b %Y, %H:%M}.")
-            self._trial_watch()
-            paid_in = [t for t in self.bank.transactions(self.client, since=t0) if t.category == Category.INCOME]
-            if paid_in and self._envelopes():
-                self.apply_budget()
-                self.items[-1].text = "Income arrived: " + self.items[-1].text[0].lower() + self.items[-1].text[1:]
+            self.items.insert(start, self._emit("notice", f"Demo time moved forward {days} days: it is now "
+                                                          f"{now:%d %b %Y, %H:%M}."))
+            self.items.pop()
             return self.items[start:]
 
     def state(self) -> dict[str, Any]:
@@ -465,6 +471,156 @@ class GuardianService:
         return (f"{self._name(c.merchant)}, {rub(c.amount)} a month, card *{self.bank.cards[c.card_id].last4}, "
                 f"charged since {since}")
 
+    # ---------------------------------------------------------------- C8.7 goals, 8.4 salary, 8.8, 8.9, 8.10
+
+    def _on_goal(self, task, route, level):
+        now = self.clock.now()
+        g = _parse_goal(task.request, now, _parse_rub(route.amount) if route.amount else None)
+        if g is None:
+            self._emit("text", "Tell me the sum and the month, for example: \"Save 60 000 for a vacation by July, "
+                               "don't touch the gym\".", task_id=task.task_id)
+            return
+        try:
+            gp = B.plan_goal(g, self.bank.transactions(self.client), now)
+        except ValueError as e:
+            self._emit("text", f"I cannot plan this goal: {e}.", task_id=task.task_id)
+            return
+        self.goal_drafts[task.task_id] = gp
+        keep = ", ".join(c.value for c in g.untouchable)
+        draft = (f'Goal "{g.name}": {rub(g.target)} by {g.deadline:%d %b %Y}, {rub(gp.monthly)} a month from '
+                 f"{gp.contributions} salaries. " + ("Bills stay covered in every month." if gp.feasible else
+                                                    "It does not fit without cutting bills, so I would not start it."))
+        facts = {"name": g.name, "target": rub(g.target), "monthly": rub(gp.monthly), "months": gp.contributions,
+                 "deadline": f"{g.deadline:%d %b %Y}", "projected": f"{gp.projected_date:%d %b %Y}"}
+        text, rc = self._say(task, facts, draft)
+        opts = []
+        if gp.feasible:
+            o = self._option("goal_accept", f"Save {rub(gp.monthly)} from each salary on the {g.day}th",
+                             {"task": task.task_id}, gp.monthly)
+            opts.append({"id": o.id, "title": o.title})
+        self._emit("goal", text, data={
+            "name": g.name, "target": rub(g.target), "deadline": g.deadline.isoformat(), "monthly": rub(gp.monthly),
+            "feasible": gp.feasible, "projected": gp.projected_date.isoformat(), "untouchable": keep,
+            "cuts": [{"name": B.ENV[k].name, "amount": rub(v)} for k, v in gp.cuts.items()],
+            "months": [{"month": m.month, "left": rub(m.left), "ok": m.ok} for m in gp.months],
+            "calc": gp.calc, "options": opts, "refcheck": rc}, task_id=task.task_id)
+
+    def _opt_goal_accept(self, o: OptionMeta):
+        gp = self.goal_drafts.pop(o.action["task"])
+        self.goals.append(gp)
+        self.goal_tasks[gp.goal.id] = o.action["task"]
+        self.k.journal.append("client", "goal.set", {"goal": gp.goal.id, "monthly": gp.monthly,
+                                                   "untouchable": [c.value for c in gp.goal.untouchable]})
+        self._emit("notice", f'Goal "{gp.goal.name}" is set. On payday ({gp.goal.day}th) I will ask you to sign the '
+                             f"transfer of {rub(gp.monthly)} to your savings account. You can sign it as a standing "
+                             "permission; it then runs without a card once the kernel's trust in transfers between "
+                             "your own accounts covers that amount.", data={"goal": gp.goal.id})
+
+    def _on_income(self, inc):
+        """8.4: a salary arrived. Envelopes are refilled by the plan; goal money moves under a signed permission."""
+        envs, now = self._envelopes(), inc.ts
+        goals = [B.GoalTransfer(goal_id=g.goal.id, name=g.goal.name, amount=g.monthly, day=g.goal.day)
+                 for g in self.goals if g.goal.saved < g.goal.target]
+        if not envs and not goals:
+            return
+        dist = B.distribute_salary(inc.amount, now, self._slots(), self._plan(), self._events(), envs, goals)
+        if envs:
+            for t in dist.transfers:
+                if t.dst in self.bank.envelopes and t.amount > 0:
+                    try:
+                        self.bank.transfer_own(self.client, MAIN_ACCOUNT, t.dst, t.amount, initiator="budget",
+                                               memo="salary split")
+                    except Exception:  # noqa: BLE001
+                        t.amount = 0
+        rows = [{"name": "Not allocated, stays on Current account" if t.kind == "savings" else t.name,
+                 "amount": rub(t.amount), "kind": t.kind,
+                 "planned": rub(t.planned) if t.planned != t.amount else ""} for t in dist.transfers
+                if t.amount and (envs or t.kind == "goal")]
+        self._emit("salary", f"Salary {rub(inc.amount)} arrived" + (" (less than usual)" if dist.reduced else "")
+                   + f". Split until {dist.period_end:%d %b}:", data={"rows": rows, "notes": dist.notes,
+                                                                     "reduced": dist.reduced})
+        for t in dist.transfers:
+            if t.kind == "goal" and t.amount > 0:
+                self._goal_transfer(next(g for g in self.goals if g.goal.id == t.dst), t.amount)
+
+    def _goal_transfer(self, gp: B.GoalPlan, amount: int):
+        task = self.k.tasks[self.goal_tasks[gp.goal.id]]
+        k = self.k
+        p = IntentProposal(
+            action=Action.TRANSFER_OWN,
+            payee=claim({"value": SAVINGS_ACCOUNT, "ref": k.bank_value(f"bank:own:{SAVINGS_ACCOUNT}", SAVINGS_ACCOUNT,
+                                                                       "your accounts")}),
+            amount=claim({"value": amount, "ref": k.bank_value(f"bank:goal:{gp.goal.id}:{self.clock.now():%Y%m}",
+                                                               amount, "kernel goal plan")}),
+            funding_source=claim({"value": MAIN_ACCOUNT, "ref": k.bank_value(f"bank:src:{MAIN_ACCOUNT}", MAIN_ACCOUNT,
+                                                                             "your accounts")}),
+            memo=f'goal "{gp.goal.name}"')
+        # a payday card waits for the client as long as its one-time permission would (end of tomorrow)
+        now = self.clock.now()
+        ttl = datetime.combine(now.date() + timedelta(days=2), time(0), tzinfo=now.tzinfo) - now
+        s = session(k, self.gw, Role.DISPATCHER, 0, D.SYSTEM, self.client, task.task_id, ttl=ttl)
+        d = propose(k, s, p)
+        self._decision(d, CardMeta(pending_id=d.pending_id or "", task_id=task.task_id, kind="goal",
+                                   template={"goal": gp.goal.id}))
+
+    def _goal_boost(self, extra: int, source: str, task_id: str | None):
+        """8.8: money freed by a cancellation can speed up the goal."""
+        if not self.goals:
+            return
+        gp = self.goals[0]
+        start = B.next_payday([s for s in self._slots() if s.day == gp.goal.day] or self._slots(), self.clock.now())
+        boost = B.savings_to_goal(gp, extra, start, source)
+        o = self._option("goal_boost", f'Add {rub(extra)} a month to "{gp.goal.name}"',
+                         {"goal": gp.goal.id, "extra": extra, "source": source}, extra)
+        self._emit("boost", f'{source}: +{rub(extra)} a month. Put it into "{gp.goal.name}"? The goal would be reached '
+                            f"{boost.days_earlier} days earlier, on {boost.new_date:%d %b %Y}.",
+                   data={"calc": boost.calc, "options": [{"id": o.id, "title": o.title}]}, task_id=task_id)
+
+    def _opt_goal_boost(self, o: OptionMeta):
+        gp = next(g for g in self.goals if g.goal.id == o.action["goal"])
+        gp.monthly += o.action["extra"]
+        self.saved_monthly.append({"source": o.action["source"], "monthly": o.action["extra"]})
+        self.k.journal.append("client", "goal.boosted", {"goal": gp.goal.id, "extra": o.action["extra"]})
+        self._emit("notice", f'"{gp.goal.name}" now gets {rub(gp.monthly)} a month. The next transfer will ask you '
+                             "again because the amount changed.")
+
+    def _on_month_review(self, task, route, level):
+        txs = self.bank.transactions(self.client)
+        month = B.complete_months(txs, self.clock.now())[-1]
+        r = B.month_review(month, txs, B.autobudget(txs, self.clock.now(), month=month), self._series())
+        over = [x for x in r.rows if x.diff > 0]
+        draft = (f"In {month} you spent more than planned in {len(over)} envelopes"
+                 + (f"; {len(r.anomalies)} spending spikes" if r.anomalies else "") + ".")
+        facts = {"month": month, "over": len(over), "spikes": len(r.anomalies)}
+        text, rc = self._say(task, facts, draft)
+        self._emit("review", text, data={
+            "month": month, "rows": [{"name": x.name, "planned": rub(round(x.planned, -2)),
+                                      "actual": rub(round(x.actual, -2)),
+                                      "diff": ("+" if x.diff > 0 else "") + rub(round(x.diff, -2))} for x in r.rows],
+            "anomalies": [a.note for a in r.anomalies], "price_changes": r.price_changes,
+            "suggestions": [{"name": B.ENV[k].name, "amount": rub(v)} for k, v in r.suggestions.items()],
+            "refcheck": rc}, task_id=task.task_id)
+
+    def _on_forecast_quality(self, task, route, level):
+        q = self.quality()
+        f = q["forecast"]
+        text = (f"Back-test on your own history: envelopes for {', '.join(f['test'])} planned from the nine months "
+                f"before were off by {f['overall_wape']}% overall. Cash gaps: {q['gaps']['caught_in_time']} of "
+                f"{len(q['gaps']['actual'])} predicted at least 3 days ahead, {q['gaps']['false_alarms']} false alarms.")
+        self._emit("quality", text, data=q, task_id=task.task_id)
+
+    def quality(self) -> dict[str, Any]:
+        """8.10: honest forecast quality on the synthetic history (no peeking at the future)."""
+        txs = self.bank.transactions(self.client)
+        now = self.clock.now()
+        f = B.evaluate_budget(txs, now)
+        probes = B.probe_dates(txs, now)
+        actual = [g.due for g in self.world.truth.cash_gaps]
+        g = B.backtest_cash_gaps(txs, self.bank.cards_on_file(self.client), self.merchants, MAIN_ACCOUNT,
+                                 self.bank.accounts[MAIN_ACCOUNT].balance, probes, actual)
+        return {"forecast": f.model_dump(mode="json", exclude={"detail"}), "gaps": g.model_dump(mode="json"),
+                "names": {k: B.ENV[k].name for k in f.mape}}
+
     # ---------------------------------------------------------------- C7: trial ending
 
     def _trial_watch(self):
@@ -542,6 +698,8 @@ class GuardianService:
             self._emit("receipt", f"{c.merchant_name} is cancelled and the kernel verified it.",
                        data={**self._cx_data(c), "verified": [labels[k] for k, v in c.checks.items() if v]},
                        task_id=c.task_id)
+            if c.amount:
+                self._goal_boost(c.amount, f"Cancelled {c.merchant_name}", c.task_id)
         elif c.status == "sms_needed":
             self._emit("code", f"{c.error}. Try the code again.", data=self._cx_data(c), task_id=c.task_id)
         elif c.status == "login_needed":
@@ -801,6 +959,9 @@ class GuardianService:
                 created=self.clock.now(), mandate_id=mid or (existing.mandate_id if existing else None)))
         if meta.doc_id:
             self.paid_docs.add(meta.doc_id)
+        if meta.kind == "goal" and meta.template and s.get("amount"):
+            gp = next(g for g in self.goals if g.goal.id == meta.template["goal"])
+            gp.goal.saved += s["amount"]
         if meta.kind == "cancel" and d.receipt:
             self._cancel_next(self.cancels.items[d.receipt.details["cancellation"]])
         if meta.kind == "gap":
@@ -955,6 +1116,30 @@ def _parse_rub(s: str | None) -> int | None:
         return kop(float(t))
     except ValueError:
         return None
+
+
+_MONTHS = {m: i for i, names in enumerate(
+    [("jan", "янв"), ("feb", "фев"), ("mar", "мар"), ("apr", "апр"), ("may", "ма[йя]"), ("jun", "июн"),
+     ("jul", "июл"), ("aug", "авг"), ("sep", "сен"), ("oct", "окт"), ("nov", "ноя"), ("dec", "дек")], 1) for m in names}
+_UNTOUCHABLE = {r"gym|sport|спортзал|фитнес|спорт": Category.SPORT, r"cafe|кафе|ресторан": Category.CAFES,
+                r"health|здоровь|аптек": Category.HEALTH, r"transport|транспорт|метро": Category.TRANSPORT}
+_GOAL_NAMES = {r"vacation|holiday|trip|отпуск|поездк": "vacation", r"car|машин": "car", r"laptop|ноутбук": "laptop"}
+
+
+def _parse_goal(text: str, now: datetime, amount: int | None) -> B.Goal | None:
+    """Sum, month and untouchable categories from the client's own words. Values only, never actions."""
+    low = text.lower()
+    if amount is None:
+        m = re.search(r"(\d(?:[\d\s ]*\d)?)(k\b|к\b|\s*тыс)?", low)
+        amount = kop(float(re.sub(r"\D", "", m.group(1))) * (1000 if m.group(2) else 1)) if m else None
+    month = next((i for pat, i in _MONTHS.items() if re.search(r"\b(by|to|к|до)\s+" + pat, low)), None)
+    if not amount or month is None:
+        return None
+    year = now.year + (month <= now.month)
+    keep = [c for pat, c in _UNTOUCHABLE.items() if re.search(pat, low) and
+            re.search(r"(don.?t|do not|not|не)\s+(touch|трогай|трогать)|untouch|неприкоснов", low)]
+    name = next((n for pat, n in _GOAL_NAMES.items() if re.search(pat, low)), "savings goal")
+    return B.Goal(id=new_id("goal"), name=name, target=amount, deadline=date(year, month, 1), untouchable=keep)
 
 
 def _explain_stub(req: dict) -> str:

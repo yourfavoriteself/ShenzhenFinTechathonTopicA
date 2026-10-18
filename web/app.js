@@ -229,6 +229,23 @@ function render(it) {
     case "case": return h("div", {class: "msg case"}, "⛔ " + it.text,
       h("ul", {}, (d.reasons || []).map((r) => h("li", {}, r))),
       d.case ? h("div", {class: "meta"}, `Case ${d.case.id} sent to the bank's fraud analysts. ${d.case.recommendation}`) : null);
+    case "goal": return h("div", {class: "msg"}, "🎯 " + it.text,
+      table(d.months, [["month", "Month"], ["left", "Left after bills, envelopes and goal"], [(r) => r.ok ? "✔" : "⚠", ""]]),
+      d.cuts.length ? h("div", {class: "meta"}, "From envelopes: " + d.cuts.map((c) => `${c.name} ${c.amount}`).join(", ")) : null,
+      h("div", {class: "meta"}, d.calc + (d.untouchable ? ` · not touched: ${d.untouchable}` : "")),
+      optionButtons(d.options));
+    case "salary": return h("div", {class: "msg"}, "💰 " + it.text,
+      table(d.rows, [["name", "Where"], ["amount", "Amount"], [(r) => r.planned ? `planned ${r.planned}` : "", ""]]),
+      (d.notes || []).length ? h("div", {class: "meta"}, d.notes.join("; ")) : null);
+    case "boost": return h("div", {class: "msg notice"}, "🎯 " + it.text, h("div", {class: "meta"}, d.calc), optionButtons(d.options));
+    case "review": return h("div", {class: "msg"}, it.text,
+      table(d.rows, [["name", "Envelope"], ["planned", "Planned"], ["actual", "Spent"], ["diff", "Difference"]]),
+      d.anomalies.length ? h("ul", {}, d.anomalies.map((a) => h("li", {}, "⚠ " + a))) : null,
+      d.price_changes.length ? h("div", {class: "meta"}, "Price changes: " + d.price_changes.join("; ")) : null,
+      d.suggestions.length ? h("div", {class: "meta"}, "Suggested next plan: " + d.suggestions.map((x) => `${x.name} ${x.amount}`).join(", ")) : null);
+    case "quality": return h("div", {class: "msg"}, it.text,
+      table(Object.entries(d.forecast.mape).map(([k, v]) => ({k: d.names[k] || k, v: v + "%"})), [["k", "Envelope"], ["v", "Average error"]]),
+      h("div", {class: "meta"}, `Trained on ${d.forecast.train[0]}…${d.forecast.train.at(-1)}, tested on ${d.forecast.test.join(", ")}; gap back-test at ${d.gaps.probes} past dates`));
     case "permissions": return h("div", {class: "msg"}, it.text,
       h("ul", {}, (d.mandates || []).map((m) => h("li", {}, m.can.join("; ")))));
     default: return h("div", {class: "msg " + it.type}, it.text,
@@ -301,7 +318,8 @@ async function refresh() {
 // ------------------------------------------------------------------ wiring
 
 const CHIPS = ["Pay for Melodify", "Cancel the 399 ₽ subscription", "Find leaks in my subscriptions", "Was I charged twice?", "Pay my bills",
-  "Make me a budget", "How much can I spend today?", "Can I afford headphones for 15 000?", "What can you do?"];
+  "Make me a budget", "How much can I spend today?", "Can I afford headphones for 15 000?",
+  "Save 60 000 for a vacation by July, don't touch the gym", "Month review", "How accurate is your forecast?", "What can you do?"];
 
 function init() {
   $("#chips").append(...CHIPS.map((t) => h("button", {type: "button", onclick: () => send(t)}, t)));

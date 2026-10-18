@@ -3,6 +3,7 @@ Agents never hold bank credentials, card numbers or signing keys."""
 
 from __future__ import annotations
 
+from datetime import timedelta
 from typing import Any
 
 from kernel.core import Kernel
@@ -15,9 +16,10 @@ RECIPE_VERSION = "stage3"
 
 
 def session(kernel: Kernel, gateway: LLMGateway, role: Role, level: int, instructions: str, client_id: str,
-            task_id: str) -> AgentSession:
+            task_id: str, ttl: timedelta = timedelta(hours=1)) -> AgentSession:
     model = gateway.ladder[level].model if level > 0 else "kernel-code"
-    return kernel.passports.issue(role, model, level, instructions, client_id, task_id, recipe_version=RECIPE_VERSION)
+    return kernel.passports.issue(role, model, level, instructions, client_id, task_id, recipe_version=RECIPE_VERSION,
+                                  ttl=ttl)
 
 
 def propose(kernel: Kernel, s: AgentSession, proposal: IntentProposal) -> Decision:

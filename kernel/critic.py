@@ -132,7 +132,7 @@ class Critic:
 _VERBS: list[tuple[str, set[str]]] = [
     (r"\b(cancel|unsubscribe|stop|block|отмени|отключи|запрети)", {"cancel_subscription", "block_merchant"}),
     (r"\b(dispute|refund|double|twice|charged two|оспор|дважды|двойн|верни)", {"dispute"}),
-    (r"\b(gap|short|cover|rent|move|transfer|savings|разрыв|не хватает|перевед|перенеси|накоплен)",
+    (r"\b(gap|short|cover|rent|move|transfer|savings?|save|разрыв|не хватает|перевед|перенеси|накоп)",
      {"transfer_own", "block_merchant", "cancel_subscription"}),
     (r"\b(pay|bill|оплати|заплати|счет|счёт)", {"pay"}),
 ]

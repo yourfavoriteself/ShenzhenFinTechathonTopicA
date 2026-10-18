@@ -7,7 +7,6 @@ from __future__ import annotations
 
 import argparse
 import json
-from datetime import datetime
 from pathlib import Path
 
 from data.generator import CLIENT, MAIN, build_world, export
@@ -26,8 +25,7 @@ def report(seed: int = 22) -> dict:
     found = {(x.kind, x.merchant) for x in lk.leaks}
     dc = double_charges(txs)
     q = B.evaluate_budget(txs, now)
-    tz = now.tzinfo
-    probes = [datetime(2026, m, d, 10, tzinfo=tz) for m in range(1, 10) for d in (5, 17)]
+    probes = B.probe_dates(txs, now)
     bt = B.backtest_cash_gaps(txs, b.cards_on_file(CLIENT), w.merchants, MAIN, b.accounts[MAIN].balance, probes,
                               [g.due for g in w.truth.cash_gaps])
     return {

@@ -175,3 +175,33 @@ def test_ui_c2_cancel_with_protected_form_in_chromium(server, svc, tmp_path):
             page.screenshot(path=f"{shots}/c2_4_vault.png")
         assert not errors
         browser.close()
+
+
+def test_ui_c8_goal_review_quality_in_chromium(server, svc):
+    import os
+    pw = pytest.importorskip("playwright.sync_api")
+    shots = os.environ.get("GUARDIAN_SCREENSHOTS")
+    with pw.sync_playwright() as p:
+        try:
+            browser = p.chromium.launch()
+        except Exception as e:  # noqa: BLE001
+            pytest.skip(f"chromium not available: {e}")
+        page = browser.new_page(viewport={"width": 1280, "height": 900})
+        errors = []
+        page.on("pageerror", lambda e: errors.append(str(e)))
+        page.goto(server)
+        page.wait_for_selector("text=device key: Ed25519")
+        page.click("#chips >> text=Save 60 000 for a vacation by July")
+        page.wait_for_selector("text=6 700 ₽ a month from 9 salaries")
+        page.click("text=Save 6 700 ₽ from each salary on the 25th")
+        page.wait_for_selector('text=Goal "vacation" is set')
+        if shots:
+            page.screenshot(path=f"{shots}/c8_1_goal.png", full_page=True)
+        page.click("#chips >> text=Month review")
+        page.wait_for_selector("text=transactions after 23:00")
+        page.click("#chips >> text=How accurate is your forecast?")
+        page.wait_for_selector("text=Average error")
+        if shots:
+            page.screenshot(path=f"{shots}/c8_2_review_quality.png", full_page=True)
+        browser.close()
+    assert not errors, errors
