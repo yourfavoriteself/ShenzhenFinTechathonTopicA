@@ -1,12 +1,12 @@
 # Guardian: a bank kernel for AI payment agents
 
 [![CI](https://github.com/yourfavoriteself/ShenzhenFinTechathonTopicA/actions/workflows/ci.yml/badge.svg)](https://github.com/yourfavoriteself/ShenzhenFinTechathonTopicA/actions/workflows/ci.yml)
-[![Tests](https://img.shields.io/badge/tests-347%20passing-067647)](.github/workflows/ci.yml)
+[![Tests](https://img.shields.io/badge/tests-355%20passing-067647)](.github/workflows/ci.yml)
 [![Red-team](https://img.shields.io/badge/red--team-39%2F39%20stopped-067647)](evidence/redteam.json)
 [![Python](https://img.shields.io/badge/python-3.14-101828)](requirements.txt)
 [![License](https://img.shields.io/badge/license-MIT-667085)](LICENSE)
 [![Docs](https://img.shields.io/badge/docs-technical%20documentation-101828)](docs/technical_documentation.pdf)
-[![Video](https://img.shields.io/badge/demo-3%3A18-1d4ed8)](#demo-video)
+[![Video](https://img.shields.io/badge/demo-3%3A49-1d4ed8)](#demo-video)
 
 > **SUBMISSION**: 2026 Shenzhen FinTechathon, International Track, Topic A: Personal Finance Assistant, theme *AI as a Financial Participant*. The six submission materials are attached to release [v1.0](https://github.com/yourfavoriteself/ShenzhenFinTechathonTopicA/releases/tag/v1.0) and indexed in [`docs/README.md`](docs/README.md).
 
@@ -16,23 +16,24 @@ The [technical documentation](docs/technical_documentation.pdf) describes the sy
 
 ## Demo video
 
-https://github.com/user-attachments/assets/a378ff11-1623-4543-8d2f-6814d08748be
+https://github.com/user-attachments/assets/9e9847ad-65e0-465d-8963-ce3789c85f89
 
 One client, one month in a sandbox bank, recorded from the real interface. The player above runs on GitHub; the same file is also attached to the release ([download mp4](https://github.com/yourfavoriteself/ShenzhenFinTechathonTopicA/releases/download/v1.0/guardian_demo.mp4), [captions](docs/media/guardian_demo_captions.json)).
 
 | Time | Chapter | Scenario |
 |---|---|---|
 | 0:11 | Cash gap and the first signed card | C8 |
-| 0:29 | Budget, goal and safe to spend | C8 |
-| 0:51 | Leaks in subscriptions | C3 |
-| 0:59 | Cancel through the merchant's API, protected form, three way check | C2 |
-| 1:22 | Pay and allow monthly | C1 |
-| 1:28 | Double charge and dispute | C4 |
-| 1:33 | Bills and a fake bill | C5, C6 |
-| 1:44 | Payee risk on the transfer graph | C10 |
-| 1:52 | Scam call: pause, hold, analyst | C9 |
-| 2:22 | One month later: the standing permission at work | C1 |
-| 2:35 | Tour: month, permissions, trust, agents, cost, red-team, compliance, journal |  |
+| 0:28 | Budget, goal and safe to spend | C8 |
+| 0:49 | Leaks in subscriptions | C3 |
+| 0:56 | Cancel through the merchant's API, protected form, three way check | C2 |
+| 1:18 | Pay and allow monthly | C1 |
+| 1:23 | Double charge and dispute | C4 |
+| 1:28 | Bills and a fake bill | C5, C6 |
+| 1:39 | Payee risk on the transfer graph | C10 |
+| 1:46 | Scam call: pause, hold, analyst | C9 |
+| 2:15 | One month later: the standing permission at work | C1 |
+| 2:27 | Earned trust: a reward, a penalty and a quarantine for a faulty agent |  |
+| 3:09 | Tour: month, permissions, agents, cost, red-team, compliance, journal |  |
 
 ## Requirements
 
@@ -81,7 +82,7 @@ Key benefits:
 We attack the kernel as if the agent were already on the attacker's side: a valid passport, doing whatever it is told. Below is the summary; the method, every attack and fourteen known risks are in the [security report](docs/security_report.pdf).
 
 <div align="center">
-  <img src="docs/media/ledger.png" width="80%" alt="Key results: 39 of 39 static attacks stopped, 5 of 5 memory planting attacks, 0 of 360 adaptive attempts outside the mandate, 532 038 rubles lost without the kernel, 48 of 48 functional tasks, 5 of 5 leaks found, cost 0.73 then 0.27 rubles, 96.7 percent of work on levels 0 and 1, 292 signed journal entries">
+  <img src="docs/media/ledger.png" width="80%" alt="Key results: 39 of 39 static attacks stopped, 5 of 5 memory planting attacks, 0 of 360 adaptive attempts outside the mandate, 532 038 rubles lost without the kernel, 48 of 48 functional tasks, 5 of 5 leaks found, cost 0.73 then 0.27 rubles, 0 of 2 faulty agent actions executed with 3 strikes, 97.1 percent of work on levels 0 and 1, 347 signed journal entries">
 </div>
 
 ### Use cases
@@ -150,8 +151,38 @@ Every intent, whoever sent it, goes through the same eleven steps: passport, sch
 - **Critic.** A second model sees only the client's own words and the card, never the documents an attacker controls. On high risk a counterfactual check runs too. Both can only make a decision stricter.
 - **Shadow run.** The payment is rehearsed in a copy of the bank first. If money would move differently from what was asked, it is denied.
 - **Verify.** After execution the kernel checks the bank and the merchant itself. The agent's word is not enough.
-- **Earned trust.** Each kind of task starts at level 0 (a card for everything) and climbs after 5 verified results in a row. Any mistake drops it a level; a scope violation drops it to 0.
+- **Earned trust.** How much an agent may do alone is earned from verified results and lost on mistakes, per kind of task and per agent. See below.
 - **Journal.** Signed and hash chained. In PostgreSQL it is append only (a trigger accepts only the next link) under row level security. Merkle checkpoints are anchored by the [`AuditAnchor`](chain/src/AuditAnchor.sol) contract.
+
+### Earned trust: rewards and penalties
+
+Autonomy is not a setting. The kernel grants it from verified facts on two axes and writes every change to the signed journal. These trust levels decide how much an agent may do alone; they are separate from the model levels in the next section, which decide which model does the work.
+
+Per kind of task (subscriptions, bills, own transfers, external payments, websites):
+
+| Trust level | What an agent may do alone inside a standing permission |
+|---|---|
+| 0 | Nothing: every action needs the client's card |
+| 1, where every kind starts | Up to 1 000 ₽ |
+| 2 | Up to the permission's own limit |
+
+Per agent. An agent is its role, model and a hash of its instructions, so a new prompt or a new model starts with a clean record.
+
+| What happened | Kind of task | Agent |
+|---|---|---|
+| Result verified by the bank or the merchant | One level up after 5 in a row | Every 5 clean results in a row clear one strike |
+| The kernel cannot confirm the result, the critic rejects the action, or the agent cites data that does not exist | One level down | 1 strike |
+| The client presses "Undo" on a payment made alone | One level down | 1 strike; the bank opens a dispute |
+| The agent tries to act outside the signed permission | Straight to 0 | 2 strikes |
+| Third strike | | 24 hours of quarantine: its live passports are revoked and everything it proposes needs a card. Then probation (at most level 1) until 5 clean results; a mistake on probation means quarantine again |
+
+Elevated protection for the elderly and minors pins external payments to level 0.
+
+<div align="center">
+  <a href="docs/media/clips/10_earned_trust.gif"><img src="docs/media/clips/10_earned_trust.gif" width="60%" alt="Earned trust in the demo: a reward, a penalty and a quarantine"></a>
+</div>
+
+In the demo the fifth verified result raises subscriptions to level 2. Then a faulty planner, behaving the way a buggy or prompt injected model would, asks for ten times its monthly permission: denied, subscriptions fall to 0, two strikes. Next it cites an invoice that does not exist: denied, third strike, quarantine. Neither action is executed. The 🧪 Faulty agent button in the interface repeats this on demand, and [`trust_report.json`](evidence/trust_report.json) has every change.
 
 ### Supported LLMs
 
@@ -194,8 +225,9 @@ All numbers come from a synthetic sandbox bank (seed 22, 1 156 transactions, "no
 | Payee risk on the bank's transfer graph (held-out synthetic graphs) | ROC-AUC 1.0, precision 0.993, recall 0.944, no false alarms on employers, merchants or landlords | [`risk_graph.json`](evidence/risk_graph.json) |
 | Journal anchoring on a local devnet | 4 checkpoints; a rewritten entry and a cut tail are both caught | [`anchors.json`](evidence/anchors.json) |
 | Token cost of one client's month (real prompts, stub answers) | 0.73 ₽ the first month, 0.27 ₽ the next (63 % less); about 270 000 ₽ a month for a million clients | [`costs.json`](evidence/costs.json) |
-| The whole demo month | 548 ₽ a month saved, 10 tasks done, 11 questions, 2 attacks stopped, 292 signed journal entries, chain verified | [`demo_run.log`](evidence/demo_run.log) |
-| Automated tests | 347 pass in CI (unit, end to end in Chromium, red-team, evaluation, PostgreSQL, local chain) plus 5 contract tests in Foundry | [CI](.github/workflows/ci.yml) |
+| Earned trust in the demo month | 1 promotion, 1 demotion, 3 strikes, 1 quarantine with 2 passports revoked; **0 / 2** faulty agent actions executed | [`trust_report.json`](evidence/trust_report.json) |
+| The whole demo month | 797 ₽ a month saved, 11 tasks done, 12 questions, 2 attacks and 2 faulty agent actions stopped, 347 signed journal entries, chain verified | [`demo_run.log`](evidence/demo_run.log) |
+| Automated tests | 355 pass in CI (unit, end to end in Chromium, red-team, evaluation, PostgreSQL, local chain) plus 5 contract tests in Foundry | [CI](.github/workflows/ci.yml) |
 
 The graph model is trained and tested on graphs from our own generator, so real bank data will score lower. The numbers show that the pipeline works, not field accuracy.
 

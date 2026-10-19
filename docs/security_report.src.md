@@ -83,9 +83,11 @@ and then executes through single-use grants. Models never decide "allow". They n
 |---|---|---|
 | 0 | Never: a card for everything | Start for elevated protection; after a scope violation |
 | 1 | Within a standing permission, up to 1 000 ₽, known payees | Default start; up after 5 verified results in a row |
-| 2 | Within a standing permission, up to its limit | Down one level on any kernel denial |
+| 2 | Within a standing permission, up to its limit | Down one level on a mistake |
 
-Trust is kept separately for subscriptions, bills, own transfers, external payments and websites. Only verified results count.
+A mistake is a result the bank could not confirm, an action the critic rejected, a reference to data that does not exist, or a payment the client reversed with "Undo". Denials that only protect the client (an empty envelope, a scam call) are not counted against the agent. Trust is kept separately for subscriptions, bills, own transfers, external payments and websites. Only verified results count.
+
+Each agent also has its own record, keyed by role, model and instruction hash. A mistake is one strike, a scope violation two. At three strikes the agent is quarantined for 24 hours: the kernel revokes its live passports and caps it at level 0, then keeps it on probation (at most level 1) until 5 verified results in a row; a mistake on probation quarantines it again. This bounds a compromised or degraded agent in time as well as in scope: after a few attempts it cannot act alone at all, whatever the trust of the task kind. In the demo a faulty planner is quarantined after two attempts and neither attempt executes (`evidence/trust_report.json`).
 
 ## 3.4 What each model sees
 
@@ -160,7 +162,7 @@ Outcomes: {{BY_OUTCOME}}.
 | K1 | The client signs a harmful card without reading (fatigue or pressure) | Medium / high | Calm cards with provenance badges and highlighted changes; few questions thanks to earned trust; amount typing, pause, questions and PIN under a scam call; 24-hour reversible hold | Behavioural research on card design in a pilot |
 | K2 | A social engineer convinces the client during a call the telecom does not report | Medium / high | Scam wording, new payee, share of savings, savings moved just before, graph score, suspicious memory still raise the ladder | Wider telecom integration; analyst callback for large first transfers |
 | K3 | Device compromise or theft of the device key | Low / high | Non-extractable WebCrypto key; mandates bounded in amount, payee and time; one-tap revoke from another channel | Passkeys with biometrics; device attestation |
-| K4 | Bug in the kernel (the trusted computing base) | Low / high | Small deterministic code; 347 tests; red-team on every build; the Docker image runs the suite at build time | External code audit; formal checks of mandate narrowing |
+| K4 | Bug in the kernel (the trusted computing base) | Low / high | Small deterministic code; 355 tests; red-team on every build; the Docker image runs the suite at build time | External code audit; formal checks of mandate narrowing |
 | K5 | Insider with database access | Low / high | Append-only journal enforced by a trigger; RLS; signatures; Merkle anchors detect changes | Anchoring to a public or consortium chain on a schedule; separate key custody |
 | K6 | Journal signing key compromise | Low / medium | Anchored roots make rewriting older history detectable | HSM custody, key rotation with anchored hand-over |
 | K7 | Model provider sees client text | Medium / medium | Structured facts only; no secrets, card or account numbers; secret guard fails closed | Self-hosted models for levels 0 and 1 |

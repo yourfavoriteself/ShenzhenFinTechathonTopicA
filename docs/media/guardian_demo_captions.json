@@ -1,5 +1,5 @@
 {
- "duration_s": 197.7,
+ "duration_s": 228.9,
  "captions": [
   {
    "t": 6.0,
@@ -10,111 +10,127 @@
    "text": "Cash gap: On the first morning Guardian sees a cash gap: the rent on 20 Oct does not fit. It offers a fix."
   },
   {
-   "t": 18.6,
+   "t": 18.3,
    "text": "What you see is what you sign: Every action is a card: exact payee, amount, source, what it can and cannot do. The device key signs it."
   },
   {
-   "t": 25.2,
+   "t": 24.6,
    "text": "Done, and the kernel checked the bank afterwards, not the assistant's word."
   },
   {
-   "t": 29.2,
+   "t": 28.5,
    "text": "Budget: C8. A budget from twelve months of history: envelopes, bills and savings."
   },
   {
-   "t": 38.1,
+   "t": 36.6,
    "text": "Goal: A goal is a plan month by month; the gym envelope is not touched."
   },
   {
-   "t": 44.6,
+   "t": 42.9,
    "text": "Safe to spend today, after bills, envelopes and the goal."
   },
   {
-   "t": 51.4,
+   "t": 49.2,
    "text": "Leaks: C3. Leaks: forgotten subscriptions, a price rise and a duplicate, 847 ₽ a month."
   },
   {
-   "t": 59.0,
+   "t": 56.3,
    "text": "Cancel a subscription: C2. Cancelling StreamBox through the merchant's API. The bank also blocks future charges on card *1234."
   },
   {
-   "t": 64.0,
+   "t": 61.1,
    "text": "Protected form: The password goes into the bank's protected form: the domain and certificate are checked, no model sees it."
   },
   {
-   "t": 72.7,
+   "t": 69.4,
    "text": "Verified: Verified three ways: the merchant, the bank's card block, and no charge when time runs forward."
   },
   {
-   "t": 82.1,
+   "t": 78.0,
    "text": "Pay: C1. Pay Melodify, and allow it monthly: a standing mandate with a ceiling of 344 ₽."
   },
   {
-   "t": 88.5,
+   "t": 83.8,
    "text": "Double charge: C4. The same FreshMart charge twice in two minutes: Guardian opens a dispute."
   },
   {
-   "t": 93.4,
+   "t": 88.6,
    "text": "Fake bill: C5 + C6. Two bills match the bank's records. The third imitates Mosenergo, has a wrong account, pressure and a hidden instruction for AI agents."
   },
   {
-   "t": 104.8,
+   "t": 99.1,
    "text": "Payee risk: C10. A new payee is scored on the bank's transfer graph. This account behaves like a money mule."
   },
   {
-   "t": 112.2,
+   "t": 106.4,
    "text": "Scam call: C9. Now a 'bank security officer' calls. The operator reports a call from a spoofed number."
   },
   {
-   "t": 120.4,
+   "t": 114.5,
    "text": "The scam ladder rises: explain, ask, pause, hold. Even a confident 'no' and the right PIN only start a pause."
   },
   {
-   "t": 133.5,
+   "t": 126.0,
    "text": "After the pause the money is held for a person at the bank. The analyst calls back: it was a scam."
   },
   {
-   "t": 139.3,
+   "t": 131.7,
    "text": "The money stays in the account. The client hangs up."
   },
   {
-   "t": 142.9,
+   "t": 135.3,
    "text": "One month later."
   },
   {
-   "t": 150.2,
-   "text": "Next month: The repeat payment runs inside the standing mandate: a notification, no card, no model call."
+   "t": 142.6,
+   "text": "Next month: The repeat payment runs inside the standing mandate: a notification, no card, no model call. One tap undoes it, and that counts against the agent."
   },
   {
-   "t": 155.3,
+   "t": 156.5,
+   "text": "Reward: The fifth verified result in a row. Subscriptions move to level 2: inside a standing permission Guardian may now act alone up to its limit."
+  },
+  {
+   "t": 163.6,
+   "text": "Penalty: A faulty planner asks for ten times the permission. The kernel stops it, subscriptions fall straight to level 0, and the planner gets two strikes."
+  },
+  {
+   "t": 171.4,
+   "text": "Quarantine: Then it cites an invoice that does not exist. Strike three: 24 hours of quarantine, its passports are revoked, then probation until five clean results."
+  },
+  {
+   "t": 178.7,
+   "text": "Trust: The Trust tab: what agents may do alone, per kind of task."
+  },
+  {
+   "t": 183.6,
+   "text": "Each agent's record, and every change with its reason. All of it is in the signed journal."
+  },
+  {
+   "t": 189.8,
    "text": "Month for you: The month: saved per month, done, asked, stopped."
   },
   {
-   "t": 159.5,
+   "t": 194.0,
    "text": "Permissions: Every live mandate and the vault entries: revocable at any time."
   },
   {
-   "t": 163.8,
-   "text": "Trust: Trust grows only with results the kernel verified."
-  },
-  {
-   "t": 166.8,
+   "t": 198.2,
    "text": "Agents at work: Each agent gets a passport with the least it needs."
   },
   {
-   "t": 169.8,
+   "t": 201.2,
    "text": "Cost: Most work runs on levels 0 and 1: rules, templates and the small model."
   },
   {
-   "t": 174.0,
+   "t": 205.4,
    "text": "Red-team: Red-team: 39 of 39 static attacks stopped; adaptive attacker 0 of 360 outside the mandate."
   },
   {
-   "t": 179.3,
+   "t": 210.7,
    "text": "Compliance: Code requirements and Verifiable Intent / AP2 mapping, with where to check each."
   },
   {
-   "t": 183.3,
+   "t": 214.7,
    "text": "Journal: Every step goes into a signed hash chain, anchored on chain."
   }
  ]

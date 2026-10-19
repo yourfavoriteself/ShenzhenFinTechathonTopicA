@@ -33,7 +33,7 @@ Topic A asks for smart budgeting, bill analysis and spending analytics:
 
 The theme, *AI as a Financial Participant*, is the core of the design: the assistant acts, and the kernel makes acting safe.
 
-The system is about 11 000 lines of Python, JavaScript and Solidity, with 3 350 lines of tests (347 tests, all green in CI with PostgreSQL and a local chain, plus 5 contract tests). It runs with `docker compose up` and needs no API keys in the default replay mode.
+The system is about 11 000 lines of Python, JavaScript and Solidity, with 3 500 lines of tests (355 tests, all green in CI with PostgreSQL and a local chain, plus 5 contract tests). It runs with `docker compose up` and needs no API keys in the default replay mode.
 
 # 2. Scenarios
 
@@ -157,16 +157,32 @@ Requests are signed with the session key and carry a fresh nonce. Endpoints are 
 | critic | none (called by the kernel) |
 | executor | `execute` |
 
-## 4.4 Earned trust
+## 4.4 Earned trust: rewards and penalties
 
-Trust is kept per kind of task (subscriptions, bills, own transfers, external payments, websites) and granted only from verified results:
+Autonomy is granted by the kernel from verified facts on two axes. Every change is a `trust.changed` entry in the signed journal, with the agent, the passport and the reason.
+
+**Per kind of task** (subscriptions, bills, own transfers, external payments, websites):
 
 - **Level 0:** a card for everything.
-- **Level 1:** within a standing mandate the agent may act alone up to 1 000 ₽.
+- **Level 1:** within a standing mandate the agent may act alone up to 1 000 ₽. Every kind starts here.
 - **Level 2:** alone up to the mandate's limit.
 - **Promotion** after 5 verified results in a row.
-- **Demotion** one level on any kernel denial; down to 0 on a scope violation.
+- **Demotion** by one level on a mistake: a result the bank could not confirm, an action the critic rejected, a reference to data that does not exist, or a payment the client reversed. A scope violation (acting outside the signed mandate) drops the kind straight to 0.
 - **Elevated protection** (elderly, minors) pins external payments to level 0 and starts the scam-call ladder at the pause.
+
+**Per agent.** An agent is identified by its role, model and the hash of its instructions, so a new prompt or a new model starts with a clean record. The effective level of an action is the lower of the two axes.
+
+| Agent status | Cap on its level | How it gets there | How it leaves |
+|---|---|---|---|
+| Active | 2 | Start | 3 strikes |
+| Quarantined | 0 | 3 strikes (a mistake is 1, a scope violation is 2), or any mistake on probation | After 24 hours, to probation |
+| Probation | 1 | End of quarantine | 5 verified results in a row |
+
+Quarantine revokes every live passport of the agent (`agent.passports_revoked` in the journal), so a task that is already running stops at the next call. Every 5 clean results in a row also clear one strike.
+
+**Client reversal.** A receipt for an action taken alone inside a standing permission carries an "Undo" button. It opens a bank dispute and calls `Kernel.reverse`, which journals `action.reversed` and records a penalty for the agent and the kind of task.
+
+**Fault injection.** The demo has a "Faulty agent" button. It makes the real planner (same role, model and instructions) first ask for ten times its monthly permission and then cite an invoice that does not exist. Both are denied, the planner collects three strikes and is quarantined. The numbers are in `evidence/trust_report.json`: 1 promotion, 1 demotion, 3 strikes, 1 quarantine, 2 passports revoked, 0 of 2 faulty actions executed.
 
 ## 4.5 Secrets and cancellations (C2)
 
@@ -255,7 +271,7 @@ Cost of one client's month, from `evidence/costs.json`, comes from token counts 
 | First month (seven tasks) | 13 | 1 | 4 379 | 0.73 ₽ |
 | Next month (same tasks) | 7 | 0 | 1 934 | 0.27 ₽ (63 % less) |
 
-The repeated Melodify payment and the repeated double-charge check use no model at all. At the next-month rate a million clients cost about 270 000 ₽ a month in model tokens. In the full demo run 96.7 % of the work happens at levels 0 and 1.
+The repeated Melodify payment and the repeated double-charge check use no model at all. At the next-month rate a million clients cost about 270 000 ₽ a month in model tokens. In the full demo run 97.1 % of the work happens at levels 0 and 1.
 
 # 8. Data, persistence and anchoring
 

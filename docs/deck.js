@@ -7,7 +7,7 @@ const pptxgen = require("pptxgenjs");
 const root = path.resolve(__dirname, "..");
 const ev = (f) => JSON.parse(fs.readFileSync(path.join(root, "evidence", f), "utf8"));
 const rt = ev("redteam.json"), evl = ev("eval_report.json"), cost = ev("costs.json"), demo = ev("demo_summary.json");
-const bud = ev("budget_report.json"), graph = ev("risk_graph.json");
+const bud = ev("budget_report.json"), graph = ev("risk_graph.json"), tr = ev("trust_report.json");
 const media = (f) => path.join(root, "docs", "media", f);
 const num = (n) => String(n).replace(/\B(?=(\d{3})+(?!\d))/g, "\u00a0");
 const rub = (kop) => num(Math.floor(kop / 100)) + "." + String(kop % 100).padStart(2, "0") + " ₽";
@@ -18,7 +18,7 @@ const C = {dark: "101828", mid: "1D4ED8", accent: "1D4ED8", soft: "F2F4F7", ink:
 const HF = "Inter", BF = "Inter", LOGO_FONT = "Noto Sans CJK SC";
 const R = pres => pres.shapes.ROUNDED_RECTANGLE;
 const pngSize = (f) => { const b = fs.readFileSync(f); return [b.readUInt32BE(16), b.readUInt32BE(20)]; };
-const TOTAL = 12;
+const TOTAL = 13;
 let page = 0;
 
 const pres = new pptxgen();
@@ -203,7 +203,45 @@ const st = rt.static, ad = rt.adaptive, lg = rt.legacy_prototype, rr = rt.retent
   });
 }
 
-// 8 Budget and graph
+// 8 Earned trust
+{
+  const fa = tr.faulty_actions;
+  const s = slide("Earned trust: rewards and penalties",
+    "Autonomy is earned, and it is lost faster than it is earned. Every kind of task starts at level 1: inside a standing permission an agent may act alone up to 1 000 rubles. "
+    + "Five results in a row that the kernel verified in the bank raise it to level 2. One mistake lowers it a level, and acting outside the signed permission drops it straight to zero. "
+    + "The second axis is the agent itself: its role, model and the hash of its instructions. A mistake is a strike, a scope violation two. Three strikes mean 24 hours of quarantine: "
+    + "the kernel revokes its passports and everything it proposes needs a card. Then probation until five clean results. The client can also press Undo on any payment made alone, and that counts too. "
+    + `In the demo the fifth verified result promotes subscriptions; then a faulty planner tries twice, is stopped twice, and is quarantined. ${fa.executed} of ${fa.proposed} faulty actions executed. Every change is in the signed journal.`);
+  s.addText("Per kind of task", {x: 0.5, y: 1.15, w: 4.4, h: 0.4, fontFace: HF, fontSize: 17, bold: true, color: C.mid, margin: 0});
+  [["2", "alone up to the permission's cap", C.mint, "B7E4D9"], ["1", "alone up to 1 000 ₽ · the start", C.blue, "C7D7FE"],
+   ["0", "a card for everything", C.sand, "FEDF89"]].forEach(([lvl, t, fill, line], i) => {
+    const y = 1.65 + i * 0.6;
+    s.addShape(R(pres), {x: 0.5, y, w: 2.9, h: 0.5, rectRadius: 0.08, fill: {color: fill}, line: {color: line, width: 1}});
+    s.addText([{text: `Level ${lvl}  `, options: {bold: true}}, {text: t}], {x: 0.62, y, w: 2.75, h: 0.5, fontFace: BF, fontSize: 11, color: C.ink, valign: "middle", margin: 0});
+  });
+  s.addText([{text: "Up ", options: {bold: true, color: "067647"}}, {text: "after 5 verified results in a row", options: {color: C.ink}}],
+    {x: 3.55, y: 1.65, w: 1.45, h: 0.7, fontFace: BF, fontSize: 10.5, valign: "top", margin: 0});
+  s.addText([{text: "Down ", options: {bold: true, color: C.red}}, {text: "one level per mistake; to 0 on a scope violation", options: {color: C.ink}}],
+    {x: 3.55, y: 2.45, w: 1.45, h: 0.8, fontFace: BF, fontSize: 10.5, valign: "top", margin: 0});
+  s.addText("Per agent: role, model, prompt hash", {x: 5.1, y: 1.15, w: 4.4, h: 0.4, fontFace: HF, fontSize: 17, bold: true, color: C.mid, margin: 0});
+  [["Active", "up to level 2", C.white, C.line], ["Quarantine", "24 h · level 0 · passports revoked", "FEF3F2", "FECDCA"],
+   ["Probation", "at most level 1", C.sand, "FEDF89"]].forEach(([h, t, fill, line], i) => {
+    const x = 5.1 + i * 1.5;
+    s.addShape(R(pres), {x, y: 1.65, w: 1.3, h: 0.95, rectRadius: 0.08, fill: {color: fill}, line: {color: line, width: 1}});
+    s.addText(h, {x, y: 1.7, w: 1.3, h: 0.35, fontFace: HF, fontSize: 12, bold: true, color: C.ink, align: "center", valign: "middle", margin: 0});
+    s.addText(t, {x: x + 0.06, y: 2.05, w: 1.18, h: 0.5, fontFace: BF, fontSize: 9, color: C.grey, align: "center", valign: "top", margin: 0});
+    if (i < 2) s.addText("\u203a", {x: x + 1.3, y: 1.65, w: 0.2, h: 0.95, fontFace: HF, fontSize: 18, color: C.accent, align: "center", valign: "middle", margin: 0});
+  });
+  s.addText("A mistake is 1 strike, a scope violation 2, a payment the client undoes 1. Three strikes: quarantine. "
+    + "Five clean results end probation; a mistake on probation means quarantine again.",
+    {x: 5.1, y: 2.7, w: 4.4, h: 0.65, fontFace: BF, fontSize: 10.5, color: C.ink, valign: "top", margin: 0});
+  stat(s, 0.5, 3.65, 2.1, String(tr.promotions), "promotion: subscriptions reach level 2");
+  stat(s, 2.8, 3.65, 2.1, String(tr.demotions), "demotion: a faulty planner, level 2 to 0", C.red);
+  stat(s, 5.1, 3.65, 2.1, `${tr.strikes} › ${tr.quarantines}`, `strikes, then quarantine; ${tr.passports_revoked} passports revoked`, C.amber);
+  stat(s, 7.4, 3.65, 2.1, `${fa.executed}/${fa.proposed}`, "faulty agent actions executed");
+}
+
+// 9 Budget and graph
 {
   const leaks = bud.leaks, fc = bud.budget_forecast, gaps = bud.cash_gaps;
   const s = slide("Budget and payee risk: measured, not claimed",
@@ -226,7 +264,7 @@ const st = rt.static, ad = rt.adaptive, lg = rt.legacy_prototype, rr = rt.retent
     {x: 5.1, y: 4.65, w: 4.4, h: 0.5, fontFace: BF, fontSize: 10.5, color: C.grey, margin: 0});
 }
 
-// 9 Security
+// 10 Security
 {
   const s = slide("Red-team: what an attacker gets",
     `We attacked the kernel four ways. ${st.attacks} static attacks: fake bills, injected instructions, swapped payees, look-alike merchants, replayed signatures, over-limit requests. All ${st.blocked} stopped. `
@@ -252,7 +290,7 @@ const st = rt.static, ad = rt.adaptive, lg = rt.legacy_prototype, rr = rt.retent
     showLegend: false});
 }
 
-// 10 Compliance
+// 11 Compliance
 {
   const s = slide("Compliance: 智能体支付应用自律公约 · VI / AP2",
     "Compliance. The self-regulatory code for agent payment apps has three stages; we implement stage one and two, and we do not offer stage three. "
@@ -281,7 +319,7 @@ const st = rt.static, ad = rt.adaptive, lg = rt.legacy_prototype, rr = rt.retent
     {x: 6.35, y: 1.2, w: 3.2, colW: [1.25, 1.95], fontFace: BF, fontSize: 10, color: C.ink, border: {type: "solid", pt: 0.5, color: C.line}, fill: {color: C.white}, rowH: 0.36, margin: 0.05});
 }
 
-// 11 Cost
+// 12 Cost
 {
   const f = cost.first_month, n = cost.next_month, pj = cost.projection;
   const s = slide("Cost: most of the work needs no large model",
@@ -302,7 +340,7 @@ const st = rt.static, ad = rt.adaptive, lg = rt.legacy_prototype, rr = rt.retent
   stat(s, 6.3, 4.1, 3.2, `≈ ${num(Math.round(pj.rub_per_month / 1000) * 1000)} ₽`, "a month for 1 million clients");
 }
 
-// 12 Results and next
+// 13 Results and next
 {
   const fn = evl.functional, at = evl.attacks;
   const s = slide("Results and what comes next",

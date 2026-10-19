@@ -61,8 +61,8 @@ h1 {{ font-size: 64px; font-weight: 700; letter-spacing: -.03em; line-height: 1;
 
 
 def ledger() -> str:
-    rt, evl, cost, demo, bud = (_ev("redteam.json"), _ev("eval_report.json"), _ev("costs.json"),
-                                _ev("demo_summary.json"), _ev("budget_report.json"))
+    rt, evl, cost, demo, bud, tr = (_ev("redteam.json"), _ev("eval_report.json"), _ev("costs.json"),
+                                    _ev("demo_summary.json"), _ev("budget_report.json"), _ev("trust_report.json"))
     st, ad, rr = rt["static"], rt["adaptive"], rt["retention"]
     lost = st["without_kernel"]["lost_kop"] // 100
     rows = [
@@ -73,6 +73,7 @@ def ledger() -> str:
         ("Functional tasks, EN RU ZH", f"{evl['functional']['passed']} / {evl['functional']['tasks']}", "evidence/eval_report.json"),
         ("Planted subscription leaks found", f"{bud['leaks']['found']} / {bud['leaks']['planted']}", "evidence/budget_report.json"),
         ("Model cost, one client, first and next month", f"{cost['first_month']['cost_rub']:.2f} › {cost['next_month']['cost_rub']:.2f} ₽", "evidence/costs.json"),
+        ("Faulty agent: actions executed, then quarantined", f"{tr['faulty_actions']['executed']} / {tr['faulty_actions']['proposed']} · {tr['strikes']} strikes", "evidence/trust_report.json"),
         ("Work on levels 0 and 1 (no large model)", f"{demo['cost']['share_level_0_1']} %", "evidence/demo_summary.json"),
         ("Signed journal entries in the demo month", f"{demo['journal']['entries']}", "evidence/demo_journal.jsonl"),
     ]
@@ -106,7 +107,7 @@ CLIPS = [
     ("03_leaks", "Leaks:", "Cancel a subscription:", 1.0), ("04_cancel", "Cancel a subscription:", "Pay:", 2.5),
     ("05_pay_monthly", "Pay:", "Double charge:", 1.0), ("06_double_charge", "Double charge:", "Fake bill:", 1.0),
     ("07_fake_bill", "Fake bill:", "Payee risk:", 1.5), ("08_payee_risk", "Payee risk:", "Scam call:", 1.0),
-    ("09_scam_call", "Scam call:", "One month later.", 3.0),
+    ("09_scam_call", "Scam call:", "One month later.", 3.0), ("10_earned_trust", "Reward:", "Trust:", 2.0),
 ]
 CHAT = "crop=720:690:16:72"   # the chat column of the 1440 x 900 recording
 

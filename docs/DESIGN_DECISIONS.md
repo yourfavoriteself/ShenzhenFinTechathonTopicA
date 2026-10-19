@@ -70,7 +70,7 @@ The choices that shaped Guardian, each with the problem behind it and what we ga
 
 **Decision.** Level 0 is rules, templates and kernel code. Level 1 is a small model for reading documents and for the critic. Level 2 plans new tasks, level 3 is kept for rare hard cases. A solved task becomes a template, so the repeat needs no model at all. The gateway enforces a hard budget and refuses prompts that carry secrets.
 
-**Result.** 96.7 % of the demo month runs on levels 0 and 1; the second month costs 63 % less than the first.
+**Result.** 97.1 % of the demo month runs on levels 0 and 1; the second month costs 63 % less than the first.
 
 ## 11. A rehearsal before every payment
 
