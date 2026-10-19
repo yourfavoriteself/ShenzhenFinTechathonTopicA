@@ -39,6 +39,7 @@ anchor:
 docs:
 	$(PY) docs/build.py docs/technical_documentation.md docs/security_report.src.md
 	node docs/deck.js
+	$(PY) docs/brand.py
 
 # Demo video recorded from the UI (Playwright + ffmpeg); also refreshes the screenshots in docs/media
 video:
