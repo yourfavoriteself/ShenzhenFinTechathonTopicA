@@ -256,7 +256,7 @@ def test_ui_c9_safe_account_call_in_chromium(server, svc):
 
 SECTIONS = [("Month for you", "times you were asked"), ("Payments", "Subscriptions on your cards"),
             ("Budget", "Safe to spend today"), ("Permissions", "Pay Melodify up to"), ("Trust", "Verified in a row"),
-            ("Agents at work", "agent passports issued"), ("Cost", "work on levels 0–1"),
+            ("Agents at work", "agent passports issued"), ("Cost", "work on levels 0 and 1"),
             ("Security", "Suspected fake bill"), ("Red-team", "static attacks stopped"),
             ("Compliance", "Know your agent"), ("Inbox", "Guardian screens every message"),
             ("Journal", "Signed hash chain verified")]

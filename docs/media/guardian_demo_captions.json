@@ -1,5 +1,5 @@
 {
- "duration_s": 207.4,
+ "duration_s": 198.4,
  "captions": [
   {
    "t": 6.0,
@@ -10,111 +10,111 @@
    "text": "Cash gap: On the first morning Guardian sees a cash gap: the rent on 20 Oct does not fit. It offers a fix."
   },
   {
-   "t": 18.5,
+   "t": 18.4,
    "text": "What you see is what you sign: Every action is a card: exact payee, amount, source, what it can and cannot do. The device key signs it."
   },
   {
-   "t": 25.4,
+   "t": 25.0,
    "text": "Done, and the kernel checked the bank afterwards, not the assistant's word."
   },
   {
-   "t": 29.9,
+   "t": 29.1,
    "text": "Budget: C8. A budget from twelve months of history: envelopes, bills and savings."
   },
   {
-   "t": 39.5,
+   "t": 38.0,
    "text": "Goal: A goal is a plan month by month; the gym envelope is not touched."
   },
   {
-   "t": 46.2,
+   "t": 44.8,
    "text": "Safe to spend today, after bills, envelopes and the goal."
   },
   {
-   "t": 53.8,
+   "t": 51.5,
    "text": "Leaks: C3. Leaks: forgotten subscriptions, a price rise and a duplicate, 847 ₽ a month."
   },
   {
-   "t": 62.1,
+   "t": 59.3,
    "text": "Cancel a subscription: C2. Cancelling StreamBox through the merchant's API. The bank also blocks future charges on card *1234."
   },
   {
-   "t": 67.1,
+   "t": 64.2,
    "text": "Protected form: The password goes into the bank's protected form: the domain and certificate are checked, no model sees it."
   },
   {
-   "t": 76.0,
+   "t": 72.8,
    "text": "Verified: Verified three ways: the merchant, the bank's card block, and no charge when time runs forward."
   },
   {
-   "t": 85.6,
+   "t": 81.8,
    "text": "Pay: C1. Pay Melodify, and allow it monthly: a standing mandate with a ceiling of 344 ₽."
   },
   {
-   "t": 92.2,
+   "t": 88.0,
    "text": "Double charge: C4. The same FreshMart charge twice in two minutes: Guardian opens a dispute."
   },
   {
-   "t": 97.2,
+   "t": 93.4,
    "text": "Fake bill: C5 + C6. Two bills match the bank's records. The third imitates Mosenergo, has a wrong account, pressure and a hidden instruction for AI agents."
   },
   {
-   "t": 110.1,
+   "t": 105.4,
    "text": "Payee risk: C10. A new payee is scored on the bank's transfer graph. This account behaves like a money mule."
   },
   {
-   "t": 117.7,
+   "t": 112.9,
    "text": "Scam call: C9. Now a 'bank security officer' calls. The operator reports a call from a spoofed number."
   },
   {
-   "t": 126.7,
+   "t": 121.2,
    "text": "The scam ladder rises: explain, ask, pause, hold. Even a confident 'no' and the right PIN only start a pause."
   },
   {
-   "t": 141.1,
+   "t": 133.4,
    "text": "After the pause the money is held for a person at the bank. The analyst calls back: it was a scam."
   },
   {
-   "t": 147.0,
+   "t": 139.2,
    "text": "The money stays in the account. The client hangs up."
   },
   {
-   "t": 150.7,
+   "t": 142.8,
    "text": "One month later."
   },
   {
-   "t": 158.6,
+   "t": 150.3,
    "text": "Next month: The repeat payment runs inside the standing mandate: a notification, no card, no model call."
   },
   {
-   "t": 163.7,
+   "t": 155.4,
    "text": "Month for you: The month: saved per month, done, asked, stopped."
   },
   {
-   "t": 168.2,
+   "t": 159.7,
    "text": "Permissions: Every live mandate and the vault entries: revocable at any time."
   },
   {
-   "t": 172.8,
+   "t": 164.0,
    "text": "Trust: Trust grows only with results the kernel verified."
   },
   {
-   "t": 175.8,
+   "t": 167.0,
    "text": "Agents at work: Each agent gets a passport with the least it needs."
   },
   {
-   "t": 178.9,
-   "text": "Cost: Most work runs on levels 0–1: rules, templates and the small model."
+   "t": 170.1,
+   "text": "Cost: Most work runs on levels 0 and 1: rules, templates and the small model."
   },
   {
-   "t": 183.3,
+   "t": 174.4,
    "text": "Red-team: Red-team: 39 of 39 static attacks stopped; adaptive attacker 0 of 360 outside the mandate."
   },
   {
-   "t": 188.8,
+   "t": 179.7,
    "text": "Compliance: Code requirements and Verifiable Intent / AP2 mapping, with where to check each."
   },
   {
-   "t": 192.9,
+   "t": 183.8,
    "text": "Journal: Every step goes into a signed hash chain, anchored on chain."
   }
  ]

@@ -1,4 +1,4 @@
-"""Record the demo video from the real UI: the "month for you" scenarios C1–C10 in Chromium, with captions.
+"""Record the demo video from the real UI: the "month for you" scenarios C1 to C10 in Chromium, with captions.
 
     python -m scripts.record_demo --out docs/media
 
@@ -301,7 +301,7 @@ def film(f: Film, svc) -> None:
         ("Permissions", "Every live mandate and the vault entries: revocable at any time.", 4),
         ("Trust", "Trust grows only with results the kernel verified.", 3),
         ("Agents at work", "Each agent gets a passport with the least it needs.", 3),
-        ("Cost", "Most work runs on levels 0–1: rules, templates and the small model.", 4),
+        ("Cost", "Most work runs on levels 0 and 1: rules, templates and the small model.", 4),
         ("Red-team", "Red-team: 39 of 39 static attacks stopped; adaptive attacker 0 of 360 outside the mandate.", 5),
         ("Compliance", "Code requirements and Verifiable Intent / AP2 mapping, with where to check each.", 4),
         ("Journal", "Every step goes into a signed hash chain, anchored on chain.", 4),

@@ -99,7 +99,7 @@ function outcomeHTML(o) {
       <div class="k">P(error)</div><div>${pct(r.p_error)} (autonomy threshold ${pct(r.conformal_threshold)})
         <div class="meter"><div style="width:${pW}%;background:${r.p_error > r.conformal_threshold ? "var(--bad)" : "var(--ok)"}"></div></div></div>
       <div class="k">Reversibility of rail</div><div>${pct(r.reversibility)}</div>
-      <div class="k">Expected loss</div><div>${usd(r.expected_loss)} = P(error) × ${usd(r.amount)} × (1 − ${r.reversibility})
+      <div class="k">Expected loss</div><div>${usd(r.expected_loss)} = P(error) × ${usd(r.amount)} × (1 - ${r.reversibility})
         <div class="meter"><div style="width:${elW}%;background:${r.expected_loss > r.el_limit ? "var(--bad)" : "var(--ok)"}"></div></div></div>
       <div class="k">Autonomy limit</div><div>${usd(r.el_limit)} (trust ×${r.trust})</div>
       <div class="k">Reasons</div><div>${r.reasons.map(esc).join("<br>")}</div></div></div>`;
@@ -193,7 +193,7 @@ $$("[data-agent]").forEach((b) => b.addEventListener("click", async () => {
   let html = `<div class="result ${v.approved ? "ok" : "bad"}"><div class="big-status">${v.approved ? "Cart approved" : "Cart rejected"}</div>
     <div>${esc(v.summary)}</div><p class="hint">Agent: ${esc(x.agent_id)} · trust score now ${x.agent_trust} · rationale: “${esc(x.cart.rationale)}”</p></div>
     <div class="panel"><h3>Proposed cart (${usd(x.cart.items.reduce((a, i) => a + i.price, 0))})</h3>
-    ${x.cart.items.map((i) => `<div class="check"><span class="i">•</span><span>${esc(i.name)} — ${usd(i.price)} <span class="chip">${esc(i.category)}</span>${i.recurring ? '<span class="chip">recurring</span>' : ""} <span class="d">${esc(i.seller)}</span></span></div>`).join("")}</div>
+    ${x.cart.items.map((i) => `<div class="check"><span class="i">•</span><span>${esc(i.name)}, ${usd(i.price)} <span class="chip">${esc(i.category)}</span>${i.recurring ? '<span class="chip">recurring</span>' : ""} <span class="d">${esc(i.seller)}</span></span></div>`).join("")}</div>
     <div class="panel" style="margin-top:12px"><h3>Deterministic checks against the signed mandate</h3>
     ${v.checks.map((c) => `<div class="check ${c.ok ? "ok" : c.hard ? "bad" : "soft"}"><span class="i">${c.ok ? "✓" : c.hard ? "✗" : "!"}</span><span><b>${esc(c.name)}</b> <span class="d">${esc(c.detail)}</span></span></div>`).join("")}</div>`;
   const hidden = v.findings.filter((f) => f.severity === "high");
@@ -201,7 +201,7 @@ $$("[data-agent]").forEach((b) => b.addEventListener("click", async () => {
     ${hidden.map((f) => `<div class="finding"><b>${esc(f.page)}</b> · ${esc(f.technique)}<code>${esc(f.text)}</code></div>`).join("")}</div>`;
   if (x.payment) html += `<h3>Payment with a single-use token</h3>` + outcomeHTML(x.payment);
   if (x.alternative) html += `<div class="panel" style="margin-top:12px"><h3>Clean alternative from unmanipulated pages</h3>
-    ${x.alternative.items.map((i) => `${esc(i.name)} — ${usd(i.price)} (${esc(i.seller)})`).join("<br>")}</div>`;
+    ${x.alternative.items.map((i) => `${esc(i.name)}, ${usd(i.price)} (${esc(i.seller)})`).join("<br>")}</div>`;
   $("#shop-result").innerHTML = html;
 }));
 

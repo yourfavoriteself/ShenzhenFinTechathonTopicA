@@ -72,7 +72,7 @@ function costLine(d) {
   const c = d.cost;
   if (!c || !c.calls) return null;
   return h("div", {class: "meta"},
-    `Models: ${c.calls} call${c.calls > 1 ? "s" : ""}, level ${c.levels.join("–")}, ${c.input_tokens + c.output_tokens} tokens, `
+    `Models: ${c.calls} call${c.calls > 1 ? "s" : ""}, level ${c.levels.join(" and ")}, ${c.input_tokens + c.output_tokens} tokens, `
     + `${c.cost_rub.toFixed(2)} ₽${c.estimated ? " (estimate, stub)" : ""}`);
 }
 
@@ -80,7 +80,7 @@ function steps(d) {
   if (!d.steps || !d.steps.length) return null;
   return h("details", {}, h("summary", {}, "kernel pipeline"),
     h("ul", {}, d.steps.map((s) => h("li", {}, `${s.step}: ${["allow", "ask", "deny"][s.verdict]}`
-      + (s.reasons.length ? ` — ${s.reasons.join("; ")}` : "")))));
+      + (s.reasons.length ? `: ${s.reasons.join("; ")}` : "")))));
 }
 
 function optionButtons(opts) {
@@ -405,7 +405,7 @@ function renderSections(x) {
 
   const c = x.cost;
   fill($("#tab-cost"),
-    kpis(kpi(`${c.spent_rub} ₽`, `spent of ${c.cap_rub} ₽ cap`), kpi(c.share_level_0_1 + "%", "work on levels 0–1"),
+    kpis(kpi(`${c.spent_rub} ₽`, `spent of ${c.cap_rub} ₽ cap`), kpi(c.share_level_0_1 + "%", "work on levels 0 and 1"),
       kpi(c.tasks_without_any_model, `of ${c.tasks} tasks without any model`), kpi(c.template_repeats, "repeats from templates")),
     h("div", {class: "meta"}, `Mode: ${c.mode}. ${c.note}`),
     Object.keys(c.by_level).length ? table(Object.entries(c.by_level).map(([k, v]) => ({k, ...v})),
@@ -456,7 +456,7 @@ function renderSections(x) {
 
   const k = x.compliance;
   fill($("#tab-compliance"),
-    h("div", {class: "meta"}, "智能体支付应用自律公约 (Payment & Clearing Association of China, 2026) — what each requirement means here."),
+    h("div", {class: "meta"}, "智能体支付应用自律公约 (Payment & Clearing Association of China, 2026): what each requirement means here."),
     table(k.code, [["requirement", "Requirement"], ["how", "Guardian"], ["where", "See"]]),
     h("h4", {}, "Operations by autonomy stage"),
     h("div", {}, Object.entries(k.stages).map(([s, n]) => `${s}: ${n}`).join(", ") || "none signed yet", ` · stage 3: ${k.stage_3}`),

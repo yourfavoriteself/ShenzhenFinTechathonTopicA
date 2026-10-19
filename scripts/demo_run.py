@@ -180,7 +180,7 @@ class Demo:
         hold = next((i.data["hold"] for i in held if i.type == "held"), None)
         s.scam_call(False)
         if hold:
-            self.say("  analyst: calls the client back, the call was a scam — cancels the transfer")
+            self.say("  analyst: calls the client back, the call was a scam and cancels the transfer")
             self.show(s.analyst_decide(hold, approve=False, note="client confirmed the call was a scam"))
 
 
@@ -206,7 +206,7 @@ def main() -> None:
     m = sec["month"]
     d.say(f"  saved {m['saved_per_month']} a month ({m['saved_per_year']} a year), refunds {m['refunded']}, "
           f"actions done {m['done']}, client asked {m['asked']} times, stopped or held {m['stopped']}")
-    d.say(f"  model calls {sec['cost']['model_calls']}, share of work on levels 0–1 {sec['cost']['share_level_0_1']}%")
+    d.say(f"  model calls {sec['cost']['model_calls']}, share of work on levels 0 and 1 {sec['cost']['share_level_0_1']}%")
     d.say(f"  journal: {v.checked} signed entries, hash chain {'verified' if v.ok else 'BROKEN'}, head {v.head_hash}")
     a.out.mkdir(parents=True, exist_ok=True)
     (a.out / "demo_run.log").write_text("\n".join(d.lines) + "\n")

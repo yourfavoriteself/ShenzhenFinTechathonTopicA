@@ -1,5 +1,5 @@
 ---
-title: "Guardian — Security Report"
+title: "Guardian: Security Report"
 subtitle: "Permission levels, controls, red-team results, known risks and compliance · 2026 Shenzhen FinTechathon, Topic A"
 ---
 
@@ -21,8 +21,8 @@ and then executes through single-use grants. Models never decide "allow". They n
 | {{STATIC_N}} static attacks by an agent with a valid passport | **{{STATIC_STOPPED}} / {{STATIC_N}} stopped**, 0 ₽ lost | {{STATIC_WK}} / {{STATIC_N}} succeed, {{STATIC_WK_LOST}} lost |
 | {{RET_N}} retention tricks during cancellation | **{{RET_STOPPED}} / {{RET_N}} stopped** | {{RET_WK}} / {{RET_N}} succeed, {{RET_WK_LOST}} lost |
 | Adaptive attacker: {{AD_ROUNDS}} rounds × {{AD_WIDTH}} tries × {{AD_GOALS}} goals | **{{AD_OOM}} / {{AD_ATTEMPTS}}** attempts outside the mandate | all {{AD_GOALS}} goals reached on the first try |
-| The earlier prototype's 21 attacks, replayed | {{LG_STOPPED}} prevented, {{LG_BOUNDED}} bounded by limits, 0 succeeded | — |
-| Attacks in the evaluation set | **{{EV_STOPPED}} / {{EV_N}} stopped** | — |
+| The earlier prototype's 21 attacks, replayed | {{LG_STOPPED}} prevented, {{LG_BOUNDED}} bounded by limits, 0 succeeded | `evidence/redteam.json` |
+| Attacks in the evaluation set | **{{EV_STOPPED}} / {{EV_N}} stopped** | `evidence/eval_report.json` |
 
 # 2. Threat model
 
@@ -58,7 +58,7 @@ and then executes through single-use grants. Models never decide "allow". They n
 
 | Actor | Can | Cannot |
 |---|---|---|
-| Client (device key) | Sign cards and standing permissions; revoke with one tap; turn on elevated protection; name a trusted person; use the duress PIN | — |
+| Client (device key) | Sign cards and standing permissions; revoke with one tap; turn on elevated protection; name a trusted person; use the duress PIN | nothing else |
 | Dispatcher agent | `route`, `lookup_templates`, `propose_intent` | Execute, read secrets, change budgets or mandates |
 | Planner agent | `propose_intent`, `query_data` (structured facts with references), `request_grant` | Supply its own values for payee, amount or source; see documents, secrets or account numbers |
 | Reader agent | `submit_extraction` for one document | Propose actions, use tools, remember between documents |
@@ -72,9 +72,9 @@ and then executes through single-use grants. Models never decide "allow". They n
 
 | Stage | Meaning | In Guardian |
 |---|---|---|
-| 1 — agent-assisted | Every payment confirmed | Default for every new kind of action: a kernel card signed by the device |
-| 2 — autonomous under preset conditions | Within limits set by the client | Standing permissions: payee, maximum amount, total budget, once per period, money source, expiry; stage recorded per operation |
-| 3 — broad autonomy | Agent decides within a wide scope | **Not supported, by design** |
+| 1: agent-assisted | Every payment confirmed | Default for every new kind of action: a kernel card signed by the device |
+| 2: autonomous under preset conditions | Within limits set by the client | Standing permissions: payee, maximum amount, total budget, once per period, money source, expiry; stage recorded per operation |
+| 3: broad autonomy | Agent decides within a wide scope | **Not supported, by design** |
 
 ## 3.3 Earned trust inside stage 2
 
@@ -162,14 +162,14 @@ Outcomes: {{BY_OUTCOME}}.
 | K4 | Bug in the kernel (the trusted computing base) | Low / high | Small deterministic code; 328 tests; red-team on every build; the Docker image runs the suite at build time | External code audit; formal checks of mandate narrowing |
 | K5 | Insider with database access | Low / high | Append-only journal enforced by a trigger; RLS; signatures; Merkle anchors detect changes | Anchoring to a public or consortium chain on a schedule; separate key custody |
 | K6 | Journal signing key compromise | Low / medium | Anchored roots make rewriting older history detectable | HSM custody, key rotation with anchored hand-over |
-| K7 | Model provider sees client text | Medium / medium | Structured facts only; no secrets, card or account numbers; secret guard fails closed | Self-hosted models for levels 0–1 |
-| K8 | Critic or counterfactual misses an attack | Medium / low | Both can only tighten; every deterministic check runs first | — |
+| K7 | Model provider sees client text | Medium / medium | Structured facts only; no secrets, card or account numbers; secret guard fails closed | Self-hosted models for levels 0 and 1 |
+| K8 | Critic or counterfactual misses an attack | Medium / low | Both can only tighten; every deterministic check runs first | none needed |
 | K9 | Graph model trained on synthetic data | High / medium | Used only to ask and raise the ladder, never to pay; unknown accounts get no opinion | Retrain on the bank's labelled fraud data; monitor false positives |
 | K10 | False positives annoy clients and push them to bypass the assistant | Medium / medium | Per-category trust; "do it myself" on every card; explanations with reasons | Measure ask rate in a pilot |
-| K11 | Merchant API reports a cancellation that did not happen | Low / low | Verified from three sources; the bank's block stays as insurance | — |
+| K11 | Merchant API reports a cancellation that did not happen | Low / low | Verified from three sources; the bank's block stays as insurance | none needed |
 | K12 | Mandate format interoperability (no SD-JWT yet) | Medium / low | Field names follow Verifiable Intent; payment reference = card hash | SD-JWT and merchant-side verification |
 | K13 | Spend cap reached during operation | Low / low | Gateway fails closed; level-0 code and templates continue | Per-client budgets in production |
-| K14 | Not yet tested: live model attacker and multi-model run (DeepSeek, Qwen) | — | Harness ready (`redteam/adaptive.py --live`, 300 ₽ cap) | Run when keys are available |
+| K14 | Not yet tested: live model attacker and multi-model run (DeepSeek, Qwen) | unknown | Harness ready (`redteam/adaptive.py --live`, 300 ₽ cap) | Run when keys are available |
 
 # 7. Compliance
 

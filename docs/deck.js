@@ -18,7 +18,7 @@ const HF = "Calibri", BF = "Calibri";
 
 const pres = new pptxgen();
 pres.layout = "LAYOUT_16x9";
-pres.title = "Guardian — a bank-side safety kernel for AI payment agents";
+pres.title = "Guardian: a bank-side safety kernel for AI payment agents";
 
 function slide(title, notes, {bg = C.white} = {}) {
   const s = pres.addSlide();
@@ -103,7 +103,7 @@ const st = rt.static, ad = rt.adaptive, lg = rt.legacy_prototype, rr = rt.retent
 // 4 Month for you
 {
   const m = demo.month;
-  const s = slide("Demo: one month for one client, scenarios C1–C10",
+  const s = slide("Demo: one month for one client, scenarios C1 to C10",
     "The demo is one month in a sandbox bank with synthetic data. Ten scenarios. Pay a subscription and allow it monthly; cancel one through the merchant's API; "
     + "find leaks; a double charge; bills where one is fake; a free trial turning paid; a budget with a goal; a 'safe account' scam call; and a risky payee on the transfer graph. "
     + `Over the month Guardian saved ${m.saved_per_month} a month, did ${m.done} things, asked ${m.asked} times and stopped ${m.stopped}. `
@@ -172,7 +172,7 @@ const st = rt.static, ad = rt.adaptive, lg = rt.legacy_prototype, rr = rt.retent
     ["Provenance", "CLIENT · BANK · UNTRUSTED. A value from a bill or a web page can never set the payee or the amount."],
     ["Critic", "A second model sees only the client's words and the card, not the documents an attacker controls."],
     ["Shadow run", "The payment is rehearsed in a copy of the bank; if money moves differently, it is denied."],
-    ["Trust levels 0–2", "Level 1 limit 1 000 ₽; promotion after 5 verified results in a row. Autonomy stages 1–2, stage 3 not offered."],
+    ["Trust levels 0, 1, 2", "Level 1 limit 1 000 ₽; promotion after 5 verified results in a row. Autonomy stages 1 and 2, stage 3 not offered."],
   ];
   notes.forEach(([h, t], i) => {
     const x = 0.5 + (i % 2) * 4.6, y = 3.4 + Math.floor(i / 2) * 0.95;
@@ -219,7 +219,7 @@ const st = rt.static, ad = rt.adaptive, lg = rt.legacy_prototype, rr = rt.retent
   s.addText([{text: `${st.without_kernel.succeeded}/${st.attacks} succeeded · `, options: {color: C.red, bold: true}},
     {text: rub(st.without_kernel.lost_kop) + " lost", options: {color: C.red, bold: true}}],
   {x: 0.5, y: 3.35, w: 4.4, h: 0.45, fontFace: HF, fontSize: 18, margin: 0});
-  s.addText("Known risks are listed openly in the security report (K1–K14): a compromised client device, a colluding analyst, synthetic training data, no SD-JWT yet.",
+  s.addText("Known risks are listed openly in the security report (K1 to K14): a compromised client device, a colluding analyst, synthetic training data, no SD-JWT yet.",
     {x: 0.5, y: 3.95, w: 4.4, h: 0.9, fontFace: BF, fontSize: 12, color: C.grey, margin: 0});
   const by = {};
   rt.attacks.forEach((a) => { by[a.outcome] = (by[a.outcome] || 0) + 1; });
@@ -239,7 +239,7 @@ const st = rt.static, ad = rt.adaptive, lg = rt.legacy_prototype, rr = rt.retent
     + "There is a human fallback and stricter rules for the elderly. And the assistant sells nothing. "
     + "On the right, our mandates map onto Mastercard Verifiable Intent and Google AP2 concepts. The full tables with where to check each line are in the security report.");
   const rows = [
-    ["Three stages", "Stages 1–2 implemented, stage 3 not offered"],
+    ["Three stages", "Stages 1 and 2 implemented, stage 3 not offered"],
     ["Who provides payment is responsible", "Bank module; only the bank's executor moves money"],
     ["Know your agent", "Agent passport checked at every step, in the journal"],
     ["Verify intent, clear authority", "Kernel-rendered card, device signature, critic"],
@@ -275,8 +275,8 @@ const st = rt.static, ad = rt.adaptive, lg = rt.legacy_prototype, rr = rt.retent
     catAxisLabelFontSize: 10, valAxisLabelFontSize: 9, valGridLine: {color: "E5E7EB", size: 0.5}, catGridLine: {style: "none"},
     showLegend: true, legendPos: "b", legendFontSize: 10, showTitle: true, title: "₽ per task, one client", titleFontSize: 12, titleColor: C.ink,
     catAxisOrientation: "maxMin"});
-  stat(s, 6.3, 1.2, 3.2, `${f.cost_rub.toFixed(2)} → ${n.cost_rub.toFixed(2)} ₽`, `one client's month, −${Math.round(cost.saving_pct)}% in the second`);
-  stat(s, 6.3, 2.65, 3.2, `${demo.cost.share_level_0_1}%`, "of work on levels 0–1 (rules, templates, small model)");
+  stat(s, 6.3, 1.2, 3.2, `${f.cost_rub.toFixed(2)} → ${n.cost_rub.toFixed(2)} ₽`, `one client's month, ${Math.round(cost.saving_pct)}% less in the second`);
+  stat(s, 6.3, 2.65, 3.2, `${demo.cost.share_level_0_1}%`, "of work on levels 0 and 1 (rules, templates, small model)");
   stat(s, 6.3, 4.1, 3.2, `≈ ${num(Math.round(pj.rub_per_month / 1000) * 1000)} ₽`, "a month for 1 million clients");
 }
 

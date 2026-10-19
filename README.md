@@ -1,10 +1,10 @@
 # Guardian
 
-**An AI assistant in the banking app that finishes money tasks for the client — and a kernel that lets it do exactly what the client signed, not a cent more.**
+**An AI assistant in the banking app that finishes money tasks for the client, and a kernel that lets it do exactly what the client signed, not a cent more.**
 
 2026 Shenzhen FinTechathon · International Track · Topic A: Personal Finance Assistant · Theme: *AI as a Financial Participant*
 
-> Finding money leaks is easy. Fixing them is risky. We make fixing them safe — and cheap enough to run for millions of clients.
+> Finding money leaks is easy. Fixing them is risky. We make fixing them safe, and cheap enough to run for millions of clients.
 
 ## Promises
 
@@ -19,7 +19,7 @@ All numbers come from `make evidence` and the test suite on the synthetic demo b
 
 | What | Result | Source |
 |---|---|---|
-| Functional evaluation set, scenarios C1–C10, EN/RU/ZH | **48 / 48** tasks | `evidence/eval_report.json` |
+| Functional evaluation set, scenarios C1 to C10, EN/RU/ZH | **48 / 48** tasks | `evidence/eval_report.json` |
 | Attacks in the evaluation set (static, retention, adaptive goals) | **50 / 50** stopped | `evidence/eval_report.json` |
 | Static red-team: compromised agent with a valid passport | **39 / 39** stopped, 0 ₽ lost; without the kernel 39 / 39 succeed, 532 038.76 ₽ lost | `evidence/redteam.json` |
 | Retention tricks during cancellation (discount, upsell, wrong card…) | **5 / 5** stopped | `evidence/redteam.json` |
@@ -28,17 +28,17 @@ All numbers come from `make evidence` and the test suite on the synthetic demo b
 | Subscription leaks planted / found | 5 / 5, 0 extra (847 ₽ a month, 10 164 ₽ a year) | `evidence/budget_report.json` |
 | Double charge planted / found | 1 / 1 | `evidence/budget_report.json` |
 | Cash gap caught in time on the held-out months | 1 / 1, 0 false alarms in 18 probes | `evidence/budget_report.json` |
-| Spending forecast, held-out months Jul–Sep | WAPE 27.3 % overall; bills 4.3 %, subscriptions 1.3 % | `evidence/budget_report.json` |
+| Spending forecast, held-out months July to September | WAPE 27.3 % overall; bills 4.3 %, subscriptions 1.3 % | `evidence/budget_report.json` |
 | Payee risk on the transfer graph (held-out synthetic graphs) | ROC-AUC 1.0, precision 0.993, recall 0.944, 0 false positives on employers, merchants and landlords | `evidence/risk_graph.json` |
 | Journal anchoring (local devnet) | 4 checkpoints; a rewritten-and-rehashed entry and a cut tail are both detected | `evidence/anchors.json` |
-| Model cost of one client's month (estimate on real prompts, stub answers) | first month 0.73 ₽, next month 0.27 ₽ (−63 %); a repeat payment uses no model; ≈ 270 000 ₽ a month per million clients | `evidence/costs.json` |
+| Model cost of one client's month (estimate on real prompts, stub answers) | first month 0.73 ₽, next month 0.27 ₽ (63 % less); a repeat payment uses no model; ≈ 270 000 ₽ a month per million clients | `evidence/costs.json` |
 | Automated tests | 328 passed; 9 PostgreSQL tests run with `make test-pg` | `make test` |
 
 The graph model is trained and tested on graphs from our own generator. Real bank data will score lower: the numbers show the pipeline works, not field accuracy.
 
 ## Submission materials
 
-[Technical documentation](docs/technical_documentation.pdf) · [Presentation](docs/presentation.pdf) ([pptx](docs/presentation.pptx)) · [Demo video, 3:27](docs/media/guardian_demo.mp4) · [Security report](docs/security_report.pdf) · [Execution evidence](evidence/README.md). Index: [`docs/README.md`](docs/README.md).
+[Technical documentation](docs/technical_documentation.pdf) · [Presentation](docs/presentation.pdf) ([pptx](docs/presentation.pptx)) · [Demo video, 3:18](docs/media/guardian_demo.mp4) · [Security report](docs/security_report.pdf) · [Execution evidence](evidence/README.md). Index: [`docs/README.md`](docs/README.md).
 
 ## What it does
 
@@ -85,7 +85,7 @@ Compliance with 智能体支付应用自律公约 (Payment & Clearing Associatio
 ## Quick start
 
 ```bash
-docker compose up --build      # http://localhost:8000 — replay mode, PostgreSQL, no API keys needed
+docker compose up --build      # http://localhost:8000: replay mode, PostgreSQL, no API keys needed
 ```
 
 The image runs the whole test suite at build time. Without Docker (Python 3.14):

@@ -1,5 +1,5 @@
 ---
-title: "Guardian — Technical Documentation"
+title: "Guardian: Technical Documentation"
 subtitle: "2026 Shenzhen FinTechathon · International Track · Topic A: Personal Finance Assistant"
 ---
 
@@ -208,7 +208,7 @@ All amounts are computed by deterministic code in `kernel/budget.py`; a model ma
 - **Salary split** on payday: bills first, then subscriptions, goal and envelopes, with a note when an upcoming payment falls before the next salary.
 - **"Can I afford it?"** The purchase is replayed against the forecast; the answer names the payment it would endanger.
 - **Goals.** Example: 60 000 ₽ by 1 July 2027 means 6 700 ₽ from each of 9 salaries, with every month checked to keep bills covered and the untouchable category ("don't touch the gym") excluded from cuts. Money freed by cancellations can be added to the goal.
-- **Month review and forecast quality.** Plan versus actual, spending spikes, late-night spending, price changes. Envelope forecasts for Jul–Sep 2026 were planned from the nine months before: WAPE is 27.3 % overall (bills 4.3 %, subscriptions 1.3 %, discretionary categories higher).
+- **Month review and forecast quality.** Plan versus actual, spending spikes, late-night spending, price changes. Envelope forecasts for July to September 2026 were planned from the nine months before: WAPE is 27.3 % overall (bills 4.3 %, subscriptions 1.3 %, discretionary categories higher).
 
 # 6. Payee risk on the transfer graph (C10)
 
@@ -222,7 +222,7 @@ All amounts are computed by deterministic code in `kernel/budget.py`; a model ma
   - transfers just below the threshold;
   - cycle membership, 48-hour bursts, regularity of outgoing amounts;
   - share of young peers.
-- **Model.** Gradient boosting (scikit-learn), trained on graphs with seeds 101–103 and tested on graphs with seeds 201–205. Test accounts, victims and schemes were never seen in training.
+- **Model.** Gradient boosting (scikit-learn), trained on graphs with seeds 101 to 103 and tested on graphs with seeds 201 to 205. Test accounts, victims and schemes were never seen in training.
 - **Results on held-out graphs.** ROC-AUC 1.0, precision 0.993, recall 0.944, false-positive rate 0.0004, zero false positives on employers, merchants and landlords.
 - **Recall by scheme.** Ring 0.972, structuring 0.907, fan-in/out 1.0, chain 0.893.
 - **Caveat.** These are synthetic graphs from our own generator: the numbers show the pipeline works, not field accuracy.
@@ -252,9 +252,9 @@ Cost of one client's month, from `evidence/costs.json`, comes from token counts 
 | | Model calls | Big-model calls | Tokens | Cost |
 |---|---|---|---|---|
 | First month (seven tasks) | 13 | 1 | 4 379 | 0.73 ₽ |
-| Next month (same tasks) | 7 | 0 | 1 934 | 0.27 ₽ (−63 %) |
+| Next month (same tasks) | 7 | 0 | 1 934 | 0.27 ₽ (63 % less) |
 
-The repeated Melodify payment and the repeated double-charge check use no model at all. At the next-month rate a million clients cost about 270 000 ₽ a month in model tokens. In the full demo run 96.7 % of the work happens at levels 0–1.
+The repeated Melodify payment and the repeated double-charge check use no model at all. At the next-month rate a million clients cost about 270 000 ₽ a month in model tokens. In the full demo run 96.7 % of the work happens at levels 0 and 1.
 
 # 8. Data, persistence and anchoring
 
@@ -290,7 +290,7 @@ The repeated Melodify payment and the repeated double-charge check use no model 
 |---|---|---|
 | Unit | Kernel modules, budget, analytics, crypto, journal, trust, graph features | pass |
 | End-to-end | All scenarios through the service; the UI in Chromium (Playwright) | pass |
-| Evaluation set | 48 functional tasks (C1–C10, cross-cutting; English, Russian, Chinese) | 48 / 48 |
+| Evaluation set | 48 functional tasks (C1 to C10, cross-cutting; English, Russian, Chinese) | 48 / 48 |
 | Attacks in the evaluation set | 44 static and retention attacks + 6 adaptive goals | 50 / 50 stopped |
 | Red-team | 39 static, 5 retention, adaptive search (360 attempts) | see the security report |
 | Integration | PostgreSQL (RLS, append-only chain), anchoring on anvil | pass with `make test-pg`, Foundry |
@@ -339,5 +339,5 @@ docker compose up --build         # app + PostgreSQL 18, http://localhost:8000
 - SD-JWT mandates.
 - Merchant-side mandate verification (AP2 cart and payment mandates).
 - A federated transfer-graph model across banks.
-- Self-hosted small models for levels 0–1.
+- Self-hosted small models for levels 0 and 1.
 - Anchoring to a consortium chain.

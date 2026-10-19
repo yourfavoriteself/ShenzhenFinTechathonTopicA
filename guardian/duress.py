@@ -91,7 +91,7 @@ def receipt(req: PaymentRequest, reference: str, ts: str, balance_after: int) ->
     """The receipt format is identical for real and decoy payments."""
     return {"title": "Transfer sent", "amount": req.amount, "to": req.payee.name, "account": req.payee.account,
             "reference": reference, "time": ts,
-            "status": "Processing — international transfers can take up to 2 hours"
+            "status": "Processing: international transfers can take up to 2 hours"
             if req.rail == Rail.INTERNATIONAL_TRANSFER else "Completed",
             "available_balance": balance_after}
 
