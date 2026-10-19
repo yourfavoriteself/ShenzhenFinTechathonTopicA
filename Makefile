@@ -1,6 +1,6 @@
 PY ?= python3
 
-.PHONY: install test test-pg run replay live stub evidence anchor docs video
+.PHONY: install test test-pg run replay live stub evidence anchor docs diagram video
 
 install:
 	$(PY) -m pip install -r requirements-dev.txt
@@ -42,6 +42,11 @@ docs:
 	$(PY) docs/brand.py
 
 # Demo video recorded from the UI (Playwright + ffmpeg); also refreshes the screenshots in docs/media
+diagram:
+	$(PY) docs/diagrams/architecture.py
+	xvfb-run -a drawio -x -f pdf --crop -o /tmp/architecture.pdf docs/diagrams/architecture.drawio
+	pdftoppm -r 150 -png -singlefile /tmp/architecture.pdf docs/diagrams/architecture
+
 video:
 	GUARDIAN_LLM_MODE=stub $(PY) -m scripts.record_demo --out docs/media
 	$(PY) docs/brand.py --clips
