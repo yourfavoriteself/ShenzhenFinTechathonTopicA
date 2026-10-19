@@ -26,7 +26,7 @@ os.environ.setdefault("GUARDIAN_LLM_MODE", "stub")
 
 W, H = 1440, 900
 
-SLATE_JS = """([title, lines, fade]) => {
+SLATE_JS = """([title, lines, fade, lead]) => {
   let s = document.getElementById('demo-slate');
   if (!title) {
     if (s) { s.style.opacity = '0'; setTimeout(() => s.remove(), 600); s.id = ''; }
@@ -44,8 +44,10 @@ SLATE_JS = """([title, lines, fade]) => {
   const h = document.createElement('div'); h.textContent = title;
   h.style.cssText = 'font-size:64px;font-weight:700;letter-spacing:-.03em;margin-bottom:24px';
   s.append(h);
-  for (const l of lines) { const p = document.createElement('div'); p.textContent = l;
-    p.style.cssText = 'font:400 25px/1.45 Inter,system-ui,sans-serif;color:#475467;margin:5px 0;max-width:1100px'; s.append(p); }
+  lines.forEach((l, i) => { const p = document.createElement('div'); p.textContent = l;
+    p.style.cssText = lead && i === 0
+      ? 'font:600 31px/1.35 Inter,system-ui,sans-serif;color:#101828;margin:0 0 22px;max-width:1150px'
+      : 'font:400 25px/1.45 Inter,system-ui,sans-serif;color:#475467;margin:5px 0;max-width:1100px'; s.append(p); });
   if (fade) requestAnimationFrame(() => requestAnimationFrame(() => { s.style.opacity = '1'; }));
 }"""
 
@@ -107,14 +109,14 @@ class Film:
         self.pause(hold)
 
     def slate(self, title: str, lines: list[str], hold: float, *, fade: bool = True, keep: bool = False,
-              say: str = "") -> None:
+              say: str = "", lead: bool = False) -> None:
         self._close()
         self.slates.append({"t": self.now(), "title": title, "lines": lines, "say": say})
-        self.page.evaluate(SLATE_JS, [title, lines, fade])
+        self.page.evaluate(SLATE_JS, [title, lines, fade, lead])
         self.pause(hold + (FADE if fade else 0))
         self.slates[-1]["end"] = self.now()
         if not keep:
-            self.page.evaluate(SLATE_JS, ["", [], True])
+            self.page.evaluate(SLATE_JS, ["", [], True, False])
             self.pause(FADE)
 
     def pause(self, s: float) -> None:
@@ -171,12 +173,17 @@ class Film:
         self.pause(hold)
 
 
+THESIS = ("An AI agent may propose any payment, but money moves only inside what the client signed, "
+          "and the bank can prove it.")
+
+
 def film(f: Film, svc) -> None:
     p = f.page
-    f.slate("Guardian", ["A bank-side safety kernel for AI payment agents",
+    f.slate("Guardian", [THESIS,
+                         "A bank-side safety kernel for AI payment agents",
                          "Shenzhen FinTechathon 2026 · International Track · Topic A",
-                         "Sandbox bank, synthetic data · recorded from the real interface"], 6, fade=False,
-              say="Guardian: a safety kernel for AI payment agents, inside the bank. Sandbox bank, synthetic data.")
+                         "Sandbox bank, synthetic data · recorded from the real interface"], 7, fade=False, lead=True,
+              say="Guardian. " + THESIS + " Sandbox bank, synthetic data.")
 
     f.caption("The assistant is a chat. The kernel on the right owns every permission, every dollar and the journal.",
               "A month for you", 5,
@@ -400,8 +407,8 @@ def film(f: Film, svc) -> None:
         ("Agents at work", "Each agent gets a passport with the least it needs.", 3, "Each agent gets a minimal passport."),
         ("Cost", "Most work runs on levels 0 and 1: rules, templates and the small model.", 4,
          "Most work runs on rules, templates and the small model."),
-        ("Red-team", "Red-team: 39 of 39 static attacks stopped; adaptive attacker 0 of 360 outside the mandate.", 5,
-         "All 39 static attacks stopped; 0 of 360 adaptive attempts left the mandate."),
+        ("Red-team", "Red-team: 48 of 48 static attacks stopped; adaptive attacker 0 of 360 outside the mandate.", 5,
+         "All 48 static attacks stopped; 0 of 360 adaptive attempts left the mandate."),
         ("Compliance", "Code requirements and Verifiable Intent / AP2 mapping, with where to check each.", 4,
          "Each requirement is mapped to where you can check it."),
         ("Journal", "Every step goes into a signed hash chain, anchored on chain.", 4,
@@ -435,6 +442,29 @@ def srt(marks: list[dict]) -> str:
     for n, m in enumerate(marks, 1):
         text = f"{m['title']}: {m['text']}" if m["title"] else m["text"]
         rows.append(f"{n}\n{_ts(m['t'])} --> {_ts(_sub_end(m))}\n{text}\n")
+    return "\n".join(rows)
+
+
+ZH = Path(__file__).with_name("subtitles_zh.json")
+
+
+def srt_zh(meta: dict) -> str:
+    """Chinese subtitles: the captions and the title cards, translated line by line from subtitles_zh.json."""
+    zh = json.loads(ZH.read_text(encoding="utf-8"))
+    missing = []
+
+    def tr(s: str) -> str:
+        if s not in zh:
+            missing.append(s)
+        return zh.get(s, s)
+
+    items = [(c["t"], _sub_end({**c, "text": c["body"]}), f"{tr(c['title'])}：{tr(c['body'])}" if c["title"] else tr(c["body"]))
+             for c in meta["captions"]]
+    items += [(s["t"], s.get("end") or meta["duration_s"], "\n".join([tr(s["title"])] + [tr(x) for x in s["lines"]]))
+              for s in meta["slates"]]
+    if missing:
+        print("no Chinese for:", *missing, sep="\n  ")
+    rows = [f"{n}\n{_ts(t)} --> {_ts(end)}\n{text}\n" for n, (t, end, text) in enumerate(sorted(items), 1)]
     return "\n".join(rows)
 
 
@@ -548,7 +578,7 @@ def main() -> None:
         page.on("pageerror", lambda e: errors.append(str(e)))
         page.goto(f"http://127.0.0.1:{port}/")
         f = Film(page, out, t0)
-        page.evaluate(SLATE_JS, ["Guardian", [], False])     # cover the page while it loads
+        page.evaluate(SLATE_JS, ["Guardian", [], False, False])     # cover the page while it loads
         lead = f.now()
         page.add_style_tag(content=RECORDING_CSS)
         page.wait_for_selector("text=device key: Ed25519")
@@ -583,6 +613,7 @@ def main() -> None:
             "slates": f.slates}
     (out / f"{a.name}_captions.json").write_text(json.dumps(meta, ensure_ascii=False, indent=1))
     (out / f"{a.name}.srt").write_text(srt(f.marks))
+    (out / f"{a.name}.zh.srt").write_text(srt_zh(meta), encoding="utf-8")
     subs = out / f"{a.name}.ass"
     subs.write_text(ass(f.marks))
     sub_mp4 = out / f"{a.name}_subtitled.mp4"

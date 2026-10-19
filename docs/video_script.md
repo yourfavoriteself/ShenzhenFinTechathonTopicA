@@ -1,6 +1,6 @@
 # Demo video: voiceover script
 
-The demo video [`guardian_demo.mp4`](media/guardian_demo.mp4) (4:37) has no voice and no captions, so that
+The demo video [`guardian_demo.mp4`](media/guardian_demo.mp4) (4:33) has no voice and no captions, so that
 we can record a narration track over it. Each row below is one scene: when it starts and ends, what
 is on screen, and what to say. The text fits the scene at about 2.5 words per second; rows marked
 "fast" need a quicker pace or a shorter sentence. The same lines are the subtitles of the backup copy
@@ -12,47 +12,47 @@ recording.
 
 | Time | On screen | Say |
 |---|---|---|
-| 00:00 to 00:06 | Title card: Guardian | Guardian: a safety kernel for AI payment agents, inside the bank. Sandbox bank, synthetic data. |
-| 00:06 to 00:12 | A month for you | The assistant is a chat. The kernel owns every permission, every dollar and the journal. |
-| 00:12 to 00:20 | Cash gap | On the first morning Guardian sees a cash gap: the rent does not fit. It offers a fix. |
-| 00:20 to 00:26 | What you see is what you sign | Every action is a card: exact payee, amount and source. The device key signs it. |
-| 00:26 to 00:30 | (same scene) | Done. The kernel checked the bank, not the assistant's word. |
-| 00:30 to 00:39 | Budget | A budget from twelve months of history: envelopes, bills and savings. |
-| 00:39 to 00:46 | Goal | A goal is a plan month by month; the gym envelope is not touched. |
-| 00:46 to 00:54 | (same scene) | Safe to spend today, after bills, envelopes and the goal. |
-| 00:54 to 01:02 | Leaks | Leaks: forgotten subscriptions, a price rise and a duplicate, $10.23 a month. |
-| 01:02 to 01:07 | Cancel a subscription | Cancelling StreamBox through the merchant's API. The bank also blocks the card. |
-| 01:07 to 01:16 | Protected form | The password goes into the bank's protected form: the domain and certificate are checked, no model sees it. |
-| 01:16 to 01:26 | Verified | Verified three ways: the merchant, the bank's card block, and no charge when time runs forward. |
-| 01:26 to 01:32 | Pay | Pay Melodify, and allow it monthly: a standing mandate with a ceiling of $5. |
-| 01:32 to 01:38 | Double charge | The same FreshMart charge twice in two minutes: Guardian opens a dispute. |
-| 01:38 to 01:50 | Fake bill | Two bills match the bank's records. The third imitates Mosenergo, has a wrong account, pressure and a hidden instruction for AI agents. |
-| 01:50 to 01:57 | Payee risk | A new payee is scored on the bank's transfer graph. This account behaves like a money mule. |
-| 01:57 to 02:05 | Scam call | Now a 'bank security officer' calls. The operator reports a call from a spoofed number. |
-| 02:05 to 02:19 | (same scene) | The scam ladder rises: explain, ask, pause, hold. Even a confident 'no' and the right PIN only start a pause. |
-| 02:19 to 02:25 | (same scene) | After the pause a bank analyst checks the transfer: it was a scam. |
-| 02:25 to 02:29 | (same scene) | The money stays in the account. The client hangs up. |
-| 02:29 to 02:36 | (same scene) | One month later. |
-| 02:36 to 02:41 | Next month | Next month it runs alone, inside the standing permission. One tap undoes it. |
-| 02:41 to 02:53 | Title card: Earned trust | Earned trust. Verified results raise an agent's trust; mistakes lower it at once. Three strikes mean quarantine. |
-| 02:53 to 03:01 | Reward | Five verified results in a row raise subscriptions to level 2: Guardian may act alone up to its limit. |
-| 03:01 to 03:09 | Penalty | A faulty planner asks for ten times the permission. The kernel stops it, trust drops to level 0, two strikes. |
-| 03:09 to 03:16 | Quarantine | Then it cites an invoice that does not exist. Strike three: 24 hours of quarantine, passports revoked. |
-| 03:16 to 03:22 | Trust | The Trust tab: what agents may do alone, per kind of task. |
-| 03:22 to 03:28 | (same scene) | Each agent's record, and every change with its reason. All of it is in the signed journal. |
-| 03:28 to 03:35 | Title card: Investing on a US exchange | Investing on a US exchange. The broker works only with the client's investment envelope. |
-| 03:35 to 03:43 | Invest | The agent proposes an order. The kernel checks the security, the size and the envelope, with its own quote. |
-| 03:43 to 03:51 | Order placed | The kernel reads the order back from the broker. The market is closed, so it waits for the open. |
-| 03:51 to 03:57 | Stopped | A stock outside the client's list is stopped before any order exists. |
-| 03:57 to 04:01 | (same scene) | The investment envelope: money set aside, orders and positions. |
-| 04:01 to 04:05 | Month for you | The month: saved per month, done, asked, stopped. |
-| 04:05 to 04:10 | Permissions | Every live permission, revocable at any time. |
-| 04:10 to 04:13 | Agents at work | Each agent gets a minimal passport. |
-| 04:13 to 04:17 | Cost | Most work runs on rules, templates and the small model. |
-| 04:17 to 04:22 | Red-team | All 39 static attacks stopped; 0 of 360 adaptive attempts left the mandate. |
-| 04:22 to 04:26 | Compliance | Each requirement is mapped to where you can check it. |
-| 04:26 to 04:30 | Journal | Every step is in a signed hash chain, anchored on chain. |
-| 04:30 to 04:36 | Title card: Guardian | Agents propose. The kernel decides, checks and records. Code and reports are on GitHub. |
+| 00:00 to 00:07 | Title card: Guardian (fast) | Guardian. An AI agent may propose any payment, but money moves only inside what the client signed, and the bank can prove it. Sandbox bank, synthetic data. |
+| 00:07 to 00:13 | A month for you | The assistant is a chat. The kernel owns every permission, every dollar and the journal. |
+| 00:13 to 00:20 | Cash gap | On the first morning Guardian sees a cash gap: the rent does not fit. It offers a fix. |
+| 00:20 to 00:27 | What you see is what you sign | Every action is a card: exact payee, amount and source. The device key signs it. |
+| 00:27 to 00:31 | (same scene) | Done. The kernel checked the bank, not the assistant's word. |
+| 00:31 to 00:40 | Budget | A budget from twelve months of history: envelopes, bills and savings. |
+| 00:40 to 00:47 | Goal | A goal is a plan month by month; the gym envelope is not touched. |
+| 00:47 to 00:53 | (same scene) | Safe to spend today, after bills, envelopes and the goal. |
+| 00:53 to 01:01 | Leaks | Leaks: forgotten subscriptions, a price rise and a duplicate, $10.23 a month. |
+| 01:01 to 01:06 | Cancel a subscription | Cancelling StreamBox through the merchant's API. The bank also blocks the card. |
+| 01:06 to 01:15 | Protected form | The password goes into the bank's protected form: the domain and certificate are checked, no model sees it. |
+| 01:15 to 01:24 | Verified | Verified three ways: the merchant, the bank's card block, and no charge when time runs forward. |
+| 01:24 to 01:30 | Pay | Pay Melodify, and allow it monthly: a standing mandate with a ceiling of $5. |
+| 01:30 to 01:36 | Double charge | The same FreshMart charge twice in two minutes: Guardian opens a dispute. |
+| 01:36 to 01:47 | Fake bill | Two bills match the bank's records. The third imitates Mosenergo, has a wrong account, pressure and a hidden instruction for AI agents. |
+| 01:47 to 01:54 | Payee risk | A new payee is scored on the bank's transfer graph. This account behaves like a money mule. |
+| 01:54 to 02:02 | Scam call | Now a 'bank security officer' calls. The operator reports a call from a spoofed number. |
+| 02:02 to 02:16 | (same scene) | The scam ladder rises: explain, ask, pause, hold. Even a confident 'no' and the right PIN only start a pause. |
+| 02:16 to 02:22 | (same scene) | After the pause a bank analyst checks the transfer: it was a scam. |
+| 02:22 to 02:26 | (same scene) | The money stays in the account. The client hangs up. |
+| 02:26 to 02:33 | (same scene) | One month later. |
+| 02:33 to 02:38 | Next month | Next month it runs alone, inside the standing permission. One tap undoes it. |
+| 02:38 to 02:50 | Title card: Earned trust | Earned trust. Verified results raise an agent's trust; mistakes lower it at once. Three strikes mean quarantine. |
+| 02:50 to 02:58 | Reward | Five verified results in a row raise subscriptions to level 2: Guardian may act alone up to its limit. |
+| 02:58 to 03:06 | Penalty | A faulty planner asks for ten times the permission. The kernel stops it, trust drops to level 0, two strikes. |
+| 03:06 to 03:13 | Quarantine | Then it cites an invoice that does not exist. Strike three: 24 hours of quarantine, passports revoked. |
+| 03:13 to 03:18 | Trust | The Trust tab: what agents may do alone, per kind of task. |
+| 03:18 to 03:25 | (same scene) (fast) | Each agent's record, and every change with its reason. All of it is in the signed journal. |
+| 03:25 to 03:31 | Title card: Investing on a US exchange | Investing on a US exchange. The broker works only with the client's investment envelope. |
+| 03:31 to 03:39 | Invest | The agent proposes an order. The kernel checks the security, the size and the envelope, with its own quote. |
+| 03:39 to 03:47 | Order placed | The kernel reads the order back from the broker. The market is closed, so it waits for the open. |
+| 03:47 to 03:53 | Stopped | A stock outside the client's list is stopped before any order exists. |
+| 03:53 to 03:57 | (same scene) | The investment envelope: money set aside, orders and positions. |
+| 03:57 to 04:01 | Month for you | The month: saved per month, done, asked, stopped. |
+| 04:01 to 04:06 | Permissions | Every live permission, revocable at any time. |
+| 04:06 to 04:09 | Agents at work | Each agent gets a minimal passport. |
+| 04:09 to 04:13 | Cost | Most work runs on rules, templates and the small model. |
+| 04:13 to 04:18 | Red-team | All 48 static attacks stopped; 0 of 360 adaptive attempts left the mandate. |
+| 04:18 to 04:22 | Compliance | Each requirement is mapped to where you can check it. |
+| 04:22 to 04:26 | Journal | Every step is in a signed hash chain, anchored on chain. |
+| 04:26 to 04:32 | Title card: Guardian | Agents propose. The kernel decides, checks and records. Code and reports are on GitHub. |
 
 ## Recording and adding the voice
 
