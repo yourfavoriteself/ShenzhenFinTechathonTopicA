@@ -1,11 +1,15 @@
-"""Render the README images (hero and the ledger of results) from evidence/*.json.
+"""Render the README images from evidence/*.json and the demo video.
 
-    python docs/brand.py  ->  docs/media/hero.png, docs/media/ledger.png
+    python docs/brand.py          ->  docs/media/hero.png, ledger.png, video_poster.png
+    python docs/brand.py --clips  ->  docs/media/clips/*.gif, the 3 x 3 board of use cases (needs ffmpeg)
 """
 
 from __future__ import annotations
 
+import base64
 import json
+import subprocess
+import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -92,18 +96,64 @@ td.v {{ font-size: 30px; font-weight: 600; text-align: right; white-space: nowra
 </body></html>"""
 
 
+# Use cases for the README board: (file, start s, end s, speed up). Times follow guardian_demo_captions.json.
+CLIPS = [
+    ("01_cash_gap", 11.8, 29.8, 2.0), ("02_budget_goal", 29.8, 54.8, 2.5), ("03_leaks", 54.8, 63.3, 1.0),
+    ("04_cancel", 63.3, 87.1, 2.5), ("05_pay_monthly", 87.1, 94.2, 1.0), ("06_double_charge", 94.2, 99.7, 1.0),
+    ("07_fake_bill", 99.7, 113.5, 1.5), ("08_payee_risk", 113.5, 121.1, 1.0), ("09_scam_call", 121.1, 153.1, 3.0),
+]
+CHAT = "crop=725:700:15:62"   # the chat column of the 1440 x 900 recording
+
+
+def clips(video: Path = MEDIA / "guardian_demo.mp4") -> None:
+    out = MEDIA / "clips"
+    out.mkdir(exist_ok=True)
+    for name, start, end, speed in CLIPS:
+        vf = (f"{CHAT},setpts=PTS/{speed},fps=8,scale=480:-1:flags=lanczos,split[a][b];"
+              "[a]palettegen=max_colors=64:stats_mode=diff[p];[b][p]paletteuse=dither=bayer:bayer_scale=4:diff_mode=rectangle")
+        subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-ss", str(start), "-t", str(end - start), "-i", str(video),
+                        "-vf", vf, str(out / f"{name}.gif")], check=True)
+
+
+def poster(video: Path = MEDIA / "guardian_demo.mp4") -> str:
+    frame = Path("/tmp/guardian_poster_frame.png")
+    subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-ss", "21", "-i", str(video), "-frames:v", "1", str(frame)],
+                   check=True)
+    src = "data:image/png;base64," + base64.b64encode(frame.read_bytes()).decode()
+    caps = json.loads((MEDIA / "guardian_demo_captions.json").read_text())
+    mins, secs = divmod(round(caps["duration_s"]), 60)
+    return f"""<html><head><style>{BASE}
+body {{ width: 1280px; height: 720px; position: relative; overflow: hidden; background: #1b1712; }}
+img {{ position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: .42; }}
+.play {{ position: absolute; left: 50%; top: 46%; transform: translate(-50%, -50%); width: 132px; height: 132px; border-radius: 50%;
+         background: #b8321c; box-shadow: 0 0 0 10px rgba(255,248,238,.18); }}
+.play::after {{ content: ""; position: absolute; left: 52px; top: 38px; border-left: 42px solid #fff8ee;
+                border-top: 28px solid transparent; border-bottom: 28px solid transparent; }}
+.shade {{ position: absolute; left: 0; right: 0; bottom: 0; height: 42%; background: linear-gradient(transparent, #1b1712 55%); }}
+.t {{ position: absolute; left: 0; right: 0; top: 76%; text-align: center; color: #f6f1e7; }}
+.t b {{ display: block; font: 600 40px Georgia, serif; }}
+.t span {{ font-size: 20px; letter-spacing: .14em; text-transform: uppercase; color: #e5c9b8; }}
+</style></head><body><img src="{src}"><div class="shade"></div><div class="play"></div>
+<div class="t"><b>Watch the demo</b><span>{mins}:{secs:02d} · recorded from the real interface · C1 to C10</span></div></body></html>"""
+
+
 def render() -> None:
     from playwright.sync_api import sync_playwright
     with sync_playwright() as p:
         b = p.chromium.launch()
-        for name, html, h in (("hero", hero(), 400), ("ledger", ledger(), None)):
+        for name, html, h in (("hero", hero(), 400), ("ledger", ledger(), None), ("video_poster", poster(), 720)):
             page = b.new_page(viewport={"width": 1280, "height": h or 800}, device_scale_factor=2)
-            page.set_content(html)
+            page.goto("about:blank")
+            page.set_content(html, wait_until="load")
             page.screenshot(path=str(MEDIA / f"{name}.png"), full_page=h is None)
             page.close()
         b.close()
 
 
 if __name__ == "__main__":
-    render()
-    print(MEDIA / "hero.png", MEDIA / "ledger.png")
+    if "--clips" in sys.argv:
+        clips()
+        print(MEDIA / "clips")
+    else:
+        render()
+        print(MEDIA / "hero.png", MEDIA / "ledger.png", MEDIA / "video_poster.png")

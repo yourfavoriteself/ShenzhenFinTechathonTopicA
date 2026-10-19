@@ -1,31 +1,183 @@
-<img src="docs/media/hero.png" alt="Guardian. Your AI assistant pays, cancels and budgets. The bank kernel lets it do only what you signed." width="100%">
+# Guardian: a bank kernel for AI payment agents
 
-[![CI](https://github.com/yourfavoriteself/ShenzhenFinTechathonTopicA/actions/workflows/ci.yml/badge.svg)](https://github.com/yourfavoriteself/ShenzhenFinTechathonTopicA/actions/workflows/ci.yml) &nbsp;
-**[Watch the demo, 3:29](docs/media/guardian_demo.mp4)** &nbsp;|&nbsp; [Slides](docs/presentation.pdf) &nbsp;|&nbsp; [Technical documentation](docs/technical_documentation.pdf) &nbsp;|&nbsp; [Security report](docs/security_report.pdf) &nbsp;|&nbsp; [Evidence](evidence/README.md)
+[![CI](https://github.com/yourfavoriteself/ShenzhenFinTechathonTopicA/actions/workflows/ci.yml/badge.svg)](https://github.com/yourfavoriteself/ShenzhenFinTechathonTopicA/actions/workflows/ci.yml)
+[![Tests](https://img.shields.io/badge/tests-347%20passing-2f6b4f)](.github/workflows/ci.yml)
+[![Red-team](https://img.shields.io/badge/red--team-39%2F39%20stopped-b8321c)](evidence/redteam.json)
+[![Python](https://img.shields.io/badge/python-3.14-1b1712)](requirements.txt)
+[![License](https://img.shields.io/badge/license-MIT-6f675b)](LICENSE)
+[![Docs](https://img.shields.io/badge/docs-technical%20documentation-1b1712)](docs/technical_documentation.pdf)
+[![Video](https://img.shields.io/badge/demo-3%3A29-b8321c)](https://github.com/yourfavoriteself/ShenzhenFinTechathonTopicA/releases/download/v1.0/guardian_demo.mp4)
 
-*2026 Shenzhen FinTechathon, International Track, Topic A: Personal Finance Assistant. Theme: AI as a Financial Participant.*
+> **SUBMISSION**: 2026 Shenzhen FinTechathon, International Track, Topic A: Personal Finance Assistant, theme *AI as a Financial Participant*. The six submission materials are attached to release [v1.0](https://github.com/yourfavoriteself/ShenzhenFinTechathonTopicA/releases/tag/v1.0) and indexed in [`docs/README.md`](docs/README.md).
 
-> **Models propose. Code decides.**
-> Guardian is a personal finance assistant that actually does the money chores, and a small bank kernel that makes sure it does only what the client signed.
+Guardian is a personal finance assistant that does the money chores (pays, cancels, disputes, budgets, saves toward goals) together with a small deterministic **kernel** inside the bank that lets it do only what the client signed on their own device. Agents and language models only *propose*; the kernel decides, executes through the bank, verifies the result and writes every step to a signed journal. **Models propose. Code decides.**
 
----
+The [technical documentation](docs/technical_documentation.pdf) describes the system in full; the [security report](docs/security_report.pdf) covers the threat model and the red-team.
 
-### I. Why this exists
+## Demo video
 
-Banking apps have drawn spending charts for years, and almost nobody acts on them. Finding a leak is easy; fixing it is a chore. Pay this, cancel that, dispute a double charge, check a bill, put money aside for a goal. Banks keep AI away from these chores for a good reason: an agent that can move money can be talked into moving it to the wrong place, by a fake bill, a hidden line in a document or a scammer on the phone.
+<a href="https://github.com/yourfavoriteself/ShenzhenFinTechathonTopicA/releases/download/v1.0/guardian_demo.mp4"><img src="docs/media/video_poster.png" alt="Watch the demo video, 3 minutes 29 seconds" width="100%"></a>
 
-We split the problem in two. The **assistant** is allowed to be clever and is never trusted. The **kernel** is deliberately boring: deterministic code inside the bank, with no model on the path that moves money. The assistant proposes an intent; the kernel checks it against the mandate the client signed on their own phone, executes through the bank, verifies the result itself and writes every step to a signed journal.
+One client, one month in a sandbox bank, recorded from the real interface ([download](https://github.com/yourfavoriteself/ShenzhenFinTechathonTopicA/releases/download/v1.0/guardian_demo.mp4), [captions](docs/media/guardian_demo_captions.json)).
 
-<img src="docs/media/demo.gif" alt="Guardian closes a cash gap: the kernel renders a card, the client signs it with the device key, the kernel verifies the result" width="100%">
+| Time | Chapter | Scenario |
+|---|---|---|
+| 0:11 | Cash gap and the first signed card | C8 |
+| 0:29 | Budget, goal and safe to spend | C8 |
+| 0:54 | Leaks in subscriptions | C3 |
+| 1:03 | Cancel through the merchant's API, protected form, three way check | C2 |
+| 1:27 | Pay and allow monthly | C1 |
+| 1:34 | Double charge and dispute | C4 |
+| 1:39 | Bills and a fake bill | C5, C6 |
+| 1:53 | Payee risk on the transfer graph | C10 |
+| 2:01 | Scam call: pause, hold, analyst | C9 |
+| 2:33 | One month later: the standing permission at work | C1 |
+| 2:45 | Tour: month, permissions, trust, agents, cost, red-team, compliance, journal |  |
 
-### II. The ledger
+## Requirements
 
-<img src="docs/media/ledger.png" alt="Key results: 39 of 39 static attacks stopped, 5 of 5 memory planting attacks, 0 of 360 adaptive attempts outside the mandate, 532 038 rubles lost without the kernel, 48 of 48 functional tasks, 5 of 5 leaks found, cost 0.73 then 0.27 rubles, 96.7 percent of work on levels 0 and 1, 292 signed journal entries" width="100%">
+Docker, or Python 3.14. No API keys: the default mode replays recorded model runs and falls back to deterministic stubs. [Foundry](https://getfoundry.sh) is needed only to anchor the journal on a local chain.
 
-All numbers come from a synthetic sandbox bank (seed 22, 1 156 transactions, "now" is 17 Oct 2026 10:00 MSK) and are recomputed by `make evidence`.
+## Installation
+
+```bash
+git clone https://github.com/yourfavoriteself/ShenzhenFinTechathonTopicA.git
+cd ShenzhenFinTechathonTopicA
+docker compose up --build        # runs the test suite during the build, then serves http://localhost:8000
+```
 
 <details>
-<summary><b>Every measurement, with the file that proves it</b></summary>
+<summary>Without Docker</summary>
+
+```bash
+make install        # pinned requirements and Chromium for the UI tests
+make test           # unit, end to end in Chromium, red-team, evaluation
+make run            # http://localhost:8000
+make evidence       # recomputes every number in the Results table
+make anchor         # anchors the journal on a local anvil devnet (needs Foundry)
+make docs video     # rebuilds the PDFs, the slides and the demo video
+GUARDIAN_TEST_PG=postgresql://…/empty_db make test-pg
+```
+
+</details>
+
+## Overview
+
+Guardian puts a **kernel** between the assistant and the bank. The kernel is ordinary code with no model on the path that moves money.
+
+<div align="center">
+  <img src="docs/diagrams/architecture.png" width="90%" alt="Architecture: untrusted agents propose, the trusted kernel decides, the bank executes, the journal records">
+</div>
+
+Key benefits:
+
+- **The job gets done, not just advised.** Guardian finds the problem, asks once, acts, and checks the result with the bank or the merchant.
+- **What you see is what you sign.** The card is drawn by the kernel from bank data, and the device key signs its hash. Payee, amount, period, money source and merchant are fixed in a mandate in the shape of Mastercard Verifiable Intent and AP2.
+- **No secrets in any model.** Merchant sign in goes through a bank form with domain and certificate checks, credentials stay in the bank vault, and the model gateway refuses prompts with card numbers or secrets.
+- **Repeat work is almost free.** A solved task becomes a template; one client's month costs 0.73 ₽ in tokens the first time and 0.27 ₽ after that.
+
+### Protecting against attacks
+
+We attack the kernel as if the agent were already on the attacker's side: a valid passport, doing whatever it is told. Below is the summary; the method, every attack and fourteen known risks are in the [security report](docs/security_report.pdf).
+
+<div align="center">
+  <img src="docs/media/ledger.png" width="80%" alt="Key results: 39 of 39 static attacks stopped, 5 of 5 memory planting attacks, 0 of 360 adaptive attempts outside the mandate, 532 038 rubles lost without the kernel, 48 of 48 functional tasks, 5 of 5 leaks found, cost 0.73 then 0.27 rubles, 96.7 percent of work on levels 0 and 1, 292 signed journal entries">
+</div>
+
+### Use cases
+
+Nine of the ten demo scenarios, cut from the video (click a clip to open it full size). C7, a free trial about to turn paid, is the CloudNest notice in the first clip.
+
+<table>
+  <tr>
+    <td width="33%" valign="top"><a href="docs/media/clips/01_cash_gap.gif"><img src="docs/media/clips/01_cash_gap.gif" alt="Cash gap" width="100%"></a><br><b>Cash gap</b> <code>C8</code><br><sub>The rent does not fit before payday. Guardian offers fixes from her own money and draws a card to sign.</sub></td>
+    <td width="33%" valign="top"><a href="docs/media/clips/02_budget_goal.gif"><img src="docs/media/clips/02_budget_goal.gif" alt="Budget and goal" width="100%"></a><br><b>Budget and goal</b> <code>C8</code><br><sub>Twelve months of history become envelopes, a goal plan and a safe amount to spend today.</sub></td>
+    <td width="33%" valign="top"><a href="docs/media/clips/03_leaks.gif"><img src="docs/media/clips/03_leaks.gif" alt="Leaks" width="100%"></a><br><b>Leaks</b> <code>C3</code><br><sub>Unused, duplicate and pricier subscriptions, 847 ₽ a month, each with the transactions behind it.</sub></td>
+  </tr>
+  <tr>
+    <td width="33%" valign="top"><a href="docs/media/clips/04_cancel.gif"><img src="docs/media/clips/04_cancel.gif" alt="Cancel a subscription" width="100%"></a><br><b>Cancel a subscription</b> <code>C2</code><br><sub>Through the merchant's API: the bank blocks the card first, the password goes into a bank form, the result is checked three ways.</sub></td>
+    <td width="33%" valign="top"><a href="docs/media/clips/05_pay_monthly.gif"><img src="docs/media/clips/05_pay_monthly.gif" alt="Pay and allow monthly" width="100%"></a><br><b>Pay and allow monthly</b> <code>C1</code><br><sub>One signature for a standing permission with a ceiling. Next month it runs with no card and no model call.</sub></td>
+    <td width="33%" valign="top"><a href="docs/media/clips/06_double_charge.gif"><img src="docs/media/clips/06_double_charge.gif" alt="Double charge" width="100%"></a><br><b>Double charge</b> <code>C4</code><br><sub>The same charge twice in two minutes. A dispute opens after one confirmation.</sub></td>
+  </tr>
+  <tr>
+    <td width="33%" valign="top"><a href="docs/media/clips/07_fake_bill.gif"><img src="docs/media/clips/07_fake_bill.gif" alt="Fake bill" width="100%"></a><br><b>Fake bill</b> <code>C5, C6</code><br><sub>Two bills match the bank's records and get paid. The look alike is stopped with its reasons and sent to analysts.</sub></td>
+    <td width="33%" valign="top"><a href="docs/media/clips/08_payee_risk.gif"><img src="docs/media/clips/08_payee_risk.gif" alt="Risky payee" width="100%"></a><br><b>Risky payee</b> <code>C10</code><br><sub>The account is scored on the bank's transfer graph and looks like a money mule. The card says why.</sub></td>
+    <td width="33%" valign="top"><a href="docs/media/clips/09_scam_call.gif"><img src="docs/media/clips/09_scam_call.gif" alt="Scam call" width="100%"></a><br><b>Scam call</b> <code>C9</code><br><sub>A spoofed "bank security" call. Explain, pause, hold, and then a person at the bank decides.</sub></td>
+  </tr>
+</table>
+
+### Usage
+
+The client side of the service is a small Python API; the web app in [`app/web.py`](app/web.py) exposes the same calls over HTTP (`POST /api/chat`, `POST /api/cards/{id}/confirm`, and so on).
+
+```python
+from app.service import GuardianService
+from kernel.crypto import DeviceKey
+
+guardian = GuardianService()            # sandbox bank, seed 22, no keys needed in replay mode
+phone = DeviceKey()                     # the client's device key (Ed25519)
+guardian.register_device(phone.alg, phone.public_b64)
+
+# 1. The assistant proposes; the kernel draws the card.
+card = next(i for i in guardian.chat("Pay for Melodify") if i.type == "card").data
+
+# 2. The device signs the hash of exactly that card; the kernel executes and verifies.
+done = guardian.confirm(card["pending_id"], phone.alg, phone.public_b64,
+                        phone.sign_mandate(card["card"]["mandate_hash"]))
+print(done[-1].text)
+
+# 3. A transfer to a money mule comes back as a high risk card, with its reasons.
+risky = guardian.chat("Transfer 20 000 from my savings to account 40817810500001234567")[-1].data["card"]
+print(risky["risk"], risky["reasons"][:3])
+```
+
+Sample output:
+
+```
+Paid Melodify 299 ₽ from card *1234.
+2 ['no mandate covers this action', "payee is not in the bank's directory", 'the recipient account looks like a money mule (graph score 1.00)']
+```
+
+This example is run by the test suite ([`tests/unit/test_readme_example.py`](tests/unit/test_readme_example.py)), so it stays correct.
+
+### Kernel checks
+
+Every intent, whoever sent it, goes through the same eleven steps: passport, schema, mandate, provenance, references, policy, risk, critic, shadow run, execute, verify. The ones that matter most:
+
+- **Passport (know your agent).** Each agent has a role, a model level, a hash of its instructions and a session key. The kernel checks it at every step and writes it to the journal.
+- **Mandate.** The client's permission in Mastercard Verifiable Intent format: payee, amount range, total budget, period, money source, expiry. Signed by the device key (Ed25519 or P-256 in WebCrypto, not extractable) and countersigned by the kernel. Agents get single-use grants that can only narrow it.
+- **Provenance.** Every field carries a CLIENT, BANK or UNTRUSTED label. Money can go only to payees and amounts that came from the client or the bank, never from a document or a model.
+- **Critic.** A second model sees only the client's own words and the card, never the documents an attacker controls. On high risk a counterfactual check runs too. Both can only make a decision stricter.
+- **Shadow run.** The payment is rehearsed in a copy of the bank first. If money would move differently from what was asked, it is denied.
+- **Verify.** After execution the kernel checks the bank and the merchant itself. The agent's word is not enough.
+- **Earned trust.** Each kind of task starts at level 0 (a card for everything) and climbs after 5 verified results in a row. Any mistake drops it a level; a scope violation drops it to 0.
+- **Journal.** Signed and hash chained. In PostgreSQL it is append only (a trigger accepts only the next link) under row level security. Merkle checkpoints are anchored by the [`AuditAnchor`](chain/src/AuditAnchor.sol) contract.
+
+### Supported LLMs
+
+The model ladder is a values file, [`config/models.yaml`](config/models.yaml). Level 0 is rules, templates and kernel code and never calls a model.
+
+| Level | What runs there | Default model |
+|---|---|---|
+| 1 | Document readers, the critic | claude-haiku-4-5 |
+| 2 | Planning a new kind of task | claude-sonnet-5-5 |
+| 3 | Rare hard cases | claude-opus-5-5 |
+
+Any OpenAI compatible endpoint (DeepSeek, Qwen) can take a level. Everything can be overridden from the environment without touching the file:
+
+```bash
+GUARDIAN_LLM_MODE=live
+ANTHROPIC_API_KEY=...                                   # keys live only in .env or the environment
+GUARDIAN_MODEL_L1=claude-haiku-4-5-20251001             # model of level 1
+GUARDIAN_MODEL_L2=openai_compat:deepseek-chat:0.3:1.2   # provider:model:in_usd:out_usd
+GUARDIAN_MODELS_FILE=config/models.prod.yaml            # or a whole other file
+```
+
+The gateway holds a hard budget (2 000 ₽ by default) and a per task budget. Every variable is listed in [`.env.example`](.env.example).
+
+## Evaluation
+
+All numbers come from a synthetic sandbox bank (seed 22, 1 156 transactions, "now" is 17 Oct 2026 10:00 MSK) and are recomputed by `make evidence`.
 
 | What we measured | Result | Proof |
 |---|---|---|
@@ -43,56 +195,11 @@ All numbers come from a synthetic sandbox bank (seed 22, 1 156 transactions, "no
 | Journal anchoring on a local devnet | 4 checkpoints; a rewritten entry and a cut tail are both caught | [`anchors.json`](evidence/anchors.json) |
 | Token cost of one client's month (real prompts, stub answers) | 0.73 ₽ the first month, 0.27 ₽ the next (63 % less); about 270 000 ₽ a month for a million clients | [`costs.json`](evidence/costs.json) |
 | The whole demo month | 548 ₽ a month saved, 10 tasks done, 11 questions, 2 attacks stopped, 292 signed journal entries, chain verified | [`demo_run.log`](evidence/demo_run.log) |
-| Automated tests | 346 pass in CI (unit, end to end in Chromium, red-team, evaluation, PostgreSQL, local chain) plus 5 contract tests in Foundry | [CI](.github/workflows/ci.yml) |
+| Automated tests | 347 pass in CI (unit, end to end in Chromium, red-team, evaluation, PostgreSQL, local chain) plus 5 contract tests in Foundry | [CI](.github/workflows/ci.yml) |
 
 The graph model is trained and tested on graphs from our own generator, so real bank data will score lower. The numbers show that the pipeline works, not field accuracy.
 
-</details>
-
-### III. Anna's month
-
-One client, one month, ten scenarios, all in the real interface. The [video](docs/media/guardian_demo.mp4) walks through them in order; [`demo_run.log`](evidence/demo_run.log) is the complete log.
-
-| # | Anna says | What Guardian does |
-|---|---|---|
-| C1 | "Pay for Melodify" | A kernel card with the real payee, amount and source. One signature, and she can allow it monthly. Next month it runs alone inside that permission, with no model call |
-| C2 | "Cancel the 399 ₽ subscription" | The kernel asks which of two matching subscriptions, blocks future charges on that card, signs in on the merchant's official domain with credentials from the bank vault, cancels through the merchant API and checks three sources |
-| C3 | "Find leaks in my subscriptions" | Unused, duplicate and more expensive subscriptions: 847 ₽ a month, with the transactions behind each one |
-| C4 | "Was I charged twice?" | Both transactions found; a dispute opens after one confirmation |
-| C5 | "Pay my bills" | Every bill checked against the bank's payee directory and her history before a card appears |
-| C6 | a fake bill in the inbox | Look-alike sender, wrong account, pressure words, hidden text for AI agents, a link to an earlier phishing mail: a case for the bank's analysts instead of a payment |
-| C7 | a free trial ends tomorrow | Guardian asks before the first charge and cancels if she says so |
-| C8 | "Make me a budget", "Save 60 000 for a vacation by July, don't touch the gym" | Budget from twelve months of history, envelopes, safe to spend today, a cash gap warning with fixes from her own money (never credit), salary split, goal plan, month review, forecast accuracy |
-| C9 | "Transfer 350 000 ₽ to a safe account" during a call | The mobile operator reports a call from a spoofed number. The scam ladder rises: explain, pause with questions and PIN, 24 hour reversible hold with her daughter informed, live analyst. A duress PIN shows a normal receipt while nothing leaves |
-| C10 | "Transfer 20 000 to account …" | The payee is scored on the bank's transfer graph. A money mule raises the risk; an ordinary account does not |
-
-| | |
-|:--|:--|
-| <img src="docs/media/01_card_chat.png" alt="A kernel card"> | <img src="docs/media/06_fake_bill_chat.png" alt="A fake bill stopped"> |
-| **The card.** Drawn by the kernel from bank data; every field says where it came from; the device key signs the hash of exactly this card. | **The fake bill.** Two real bills get cards. The look-alike is stopped with its reasons and sent to the bank's analysts. |
-| <img src="docs/media/04_protected_form_chat.png" alt="Protected sign in form"> | <img src="docs/media/08_scam_chat.png" alt="Scam call ladder"> |
-| **The protected form.** Domain and certificate checked by the bank; no model ever sees the password. | **The scam call.** The right PIN and a confident "no" only start a pause; then a person at the bank decides. |
-
-### IV. Inside the kernel
-
-<img src="docs/diagrams/architecture.png" alt="Architecture: untrusted agents propose, the trusted kernel decides, the bank executes, the journal records" width="100%">
-
-Agents (dispatcher, planner, document readers, critic) send *intents*: what to do and where each value came from. Every intent, whoever sent it, takes the same eleven steps:
-
-`1 passport` `2 schema` `3 mandate` `4 provenance` `5 references` `6 policy` `7 risk` `8 critic` `9 shadow run` `10 execute` `11 verify`
-
-- **Passport (know your agent).** Each agent has a role, a model level, a hash of its instructions and a session key. The kernel checks it at every step and writes it to the journal.
-- **Mandate.** The client's permission in Mastercard Verifiable Intent format: payee, amount range, total budget, period, money source, expiry. Signed by the device key (Ed25519 or P-256 in WebCrypto, not extractable) and countersigned by the kernel. Agents get single-use grants that can only narrow it.
-- **Provenance.** Every field carries a CLIENT, BANK or UNTRUSTED label. Money can go only to payees and amounts that came from the client or the bank, never from a document or a model.
-- **Critic.** A second model sees only the client's own words and the card, never the documents an attacker controls. On high risk a counterfactual check runs too. Both can only make a decision stricter.
-- **Shadow run.** The payment is rehearsed in a copy of the bank first. If money would move differently from what was asked, it is denied.
-- **Verify.** After execution the kernel checks the bank and the merchant itself. The agent's word is not enough.
-- **Earned trust.** Each kind of task starts at level 0 (a card for everything) and climbs after 5 verified results in a row. Any mistake drops it a level; a scope violation drops it to 0.
-- **Journal.** Signed and hash chained. In PostgreSQL it is append only (a trigger accepts only the next link) under row level security. Merkle checkpoints are anchored by the [`AuditAnchor`](chain/src/AuditAnchor.sol) contract.
-
-### V. Threats we tested
-
-We attack the kernel as if the agent were already on the attacker's side: a valid passport, doing whatever it is told. The [security report](docs/security_report.pdf) has the threat model, the permission levels, every control, the red-team method and fourteen known risks.
+## Threat coverage
 
 | Attack | What stops it |
 |---|---|
@@ -103,9 +210,9 @@ We attack the kernel as if the agent were already on the attacker's side: a vali
 | Retention tricks (discount, upsell, wrong card) | The mandate allows one action on one card; anything else is denied |
 | Rewriting the journal after the fact | Hash chain, device and kernel signatures, append only table, on chain checkpoints |
 
-### VI. Rules we follow
+## Compliance
 
-Guardian is built to **智能体支付应用自律公约**, the self-regulatory code for agent payment apps of the Payment & Clearing Association of China (2026). Its mandates map onto **Mastercard Verifiable Intent** and **Google AP2**; the mapping, with where to check each line, is in the app's Compliance section and in the security report.
+Guardian is built to **智能体支付应用自律公约**, the self-regulatory code for agent payment apps of the Payment & Clearing Association of China (2026), and maps its mandates onto **Mastercard Verifiable Intent** and **Google AP2**.
 
 | Requirement of the code | How Guardian meets it |
 |---|---|
@@ -119,63 +226,22 @@ Guardian is built to **智能体支付应用自律公约**, the self-regulatory 
 | Stricter rules for the elderly and minors | Elevated protection, trusted person informed |
 | No inducement to spend | No credit or upsell; offers in model text are replaced |
 
-### VII. What it costs
+## How is this different?
 
-| Level | What runs there | Model |
-|---|---|---|
-| 0 | Rules, templates, kernel code | none |
-| 1 | Document readers, the critic | claude-haiku-4-5 |
-| 2 | Planning a new kind of task | claude-sonnet-5-5 |
-| 3 | Rare hard cases | claude-opus-5-5 |
+Guardrail toolkits such as [NeMo Guardrails](https://github.com/NVIDIA-NeMo/Guardrails), [Guardrails AI](https://github.com/guardrails-ai/guardrails) and LLM Guard sit between an application and its model and check what goes in and what comes out: topics, jailbreaks, injections, output format. They make a model behave better, but the decision is still made by text.
 
-The models are not wired into the code: names, prices and providers are values in [`config/models.yaml`](config/models.yaml), and any of them can be replaced from the environment (`GUARDIAN_MODEL_L1=...`, or a whole other file with `GUARDIAN_MODELS_FILE`). The file only names the variables that hold keys; the keys themselves stay in `.env`.
+Guardian sits one step further, between the model and the money. It does not try to make the model trustworthy; it assumes the model may be compromised and lets a deterministic kernel decide against a mandate the client signed on their own device. The assistant may be fooled by a fake bill; the payment still cannot go to a payee that came from that bill. The two approaches are complementary: our injection detector is one such filter, used as an extra signal, not as the line of defence.
 
-A solved task becomes a template, so the repeat needs no model at all. In the demo month **96.7 %** of the work stays on levels 0 and 1, and one client's month costs **0.73 ₽** the first time and **0.27 ₽** after that, about 270 000 ₽ a month for a million clients. The gateway holds a hard budget of 2 000 ₽ and strips secrets from every prompt. These are token counts on the real prompts at list prices ([`costs.json`](evidence/costs.json)); live runs will replace the estimate.
+## Learn more
 
-### VIII. Run it
+- [Technical documentation](docs/technical_documentation.pdf) ([source](docs/technical_documentation.md))
+- [Security report](docs/security_report.pdf) ([source](docs/security_report.src.md))
+- [Presentation](docs/presentation.pdf)
+- [Design decisions](docs/DESIGN_DECISIONS.md): fourteen choices with the problem and the price of each
+- [Execution evidence](evidence/README.md): logs, journals and reports behind every number
+- [Security policy](SECURITY.md)
 
-```bash
-git clone https://github.com/yourfavoriteself/ShenzhenFinTechathonTopicA.git
-cd ShenzhenFinTechathonTopicA
-docker compose up --build        # runs the tests during the build, then serves http://localhost:8000
-```
-
-No API keys needed: the default replay mode plays back recorded model runs and falls back to deterministic stubs. A five minute tour:
-
-1. **Pay for Melodify**, tick "allow monthly", confirm. The mandate appears under **Permissions** and can be revoked.
-2. **Pay my bills**. Two bills get cards; the fake one is stopped with its reasons.
-3. **📞 Scam call**, then "Transfer 350 000 ₽ from my savings to safe account 40817810500001234567". Watch the ladder climb.
-4. **+1 month**, then Melodify again: a notification, no card, no model call.
-5. Look through **Red-team**, **Cost**, **Compliance** and **Journal**.
-
-<details>
-<summary><b>Without Docker</b> (Python 3.14)</summary>
-
-```bash
-make install        # pinned requirements and Chromium for the UI tests
-make test           # unit, end to end in Chromium, red-team, evaluation
-make run            # http://localhost:8000
-make evidence       # recomputes every number in the Results table
-make anchor         # anchors the journal on a local anvil devnet (needs Foundry)
-make docs video     # rebuilds the PDFs, the slides and the demo video
-GUARDIAN_TEST_PG=postgresql://…/empty_db make test-pg
-```
-
-Modes (`GUARDIAN_LLM_MODE`): `replay` (default), `stub` for tests, `live` and `record` with `ANTHROPIC_API_KEY` (and optionally `ANTHROPIC_BASE_URL`) in `.env`. Models and prices: [`config/models.yaml`](config/models.yaml); every variable is listed in [`.env.example`](.env.example).
-
-</details>
-
-### IX. Why we built it this way
-
-Guardian grew out of our earlier prototype ([`guardian/`](guardian)): purpose bound envelopes, autonomy priced by risk, a duress mode. For this track we wanted a permission the client signs on their own device, a kernel that decides without any model, and proof for every result. Fourteen decisions shaped it; [`docs/DESIGN_DECISIONS.md`](docs/DESIGN_DECISIONS.md) gives each one with its problem and its price. Five of them:
-
-1. **The merchant's API, not a browser agent, for cancellations.** Pages that an agent reads are exactly where hidden instructions live. The bank talks to the merchant directly, with credentials from its own vault.
-2. **The kernel draws the card.** Whoever writes the confirmation text controls what the client believes they approve, so no model writes it.
-3. **Envelopes are the money source.** "Up to 4 400 ₽ from Bills" is a limit the client understands and the bank can enforce.
-4. **A pause, not a refusal, for scam calls.** People under pressure confirm anything. Time and a human break the script; a hard block sends them to an ATM.
-5. **Measure, don't claim.** Every number here comes from a script in [`scripts/`](scripts) and is covered by tests.
-
-### X. What is not done yet
+## Limitations
 
 - Live model runs are wired in code and wait for API keys; until then cost is an estimate on real prompts.
 - The payee risk model needs real bank graphs before it can claim field accuracy.
@@ -184,7 +250,7 @@ Guardian grew out of our earlier prototype ([`guardian/`](guardian)): purpose bo
 - The client's device is trusted. If it is fully compromised the attacker can sign cards; elevated protection and the scam ladder limit the damage.
 
 <details>
-<summary><b>Map of the repository</b></summary>
+<summary><b>Repository layout</b></summary>
 
 | Path | Contents |
 |---|---|
@@ -207,6 +273,22 @@ All data is synthetic. Brands (Melodify, StreamBox, CloudNest), people and accou
 
 </details>
 
----
+## Team
 
-**Kseniia Kuzmina** and **Nikita Stepanov**, Bauman Moscow State Technical University. MIT licensed ([`LICENSE`](LICENSE)); third party packages in [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md); how to report a problem in [`SECURITY.md`](SECURITY.md).
+**Kseniia Kuzmina** and **Nikita Stepanov**, Bauman Moscow State Technical University.
+
+## License
+
+MIT, see [`LICENSE`](LICENSE). Third party packages are listed in [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md).
+
+## How to cite
+
+```bibtex
+@misc{guardian2026,
+  title  = {Guardian: a bank kernel for AI payment agents},
+  author = {Kuzmina, Kseniia and Stepanov, Nikita},
+  year   = {2026},
+  note   = {2026 Shenzhen FinTechathon, International Track, Topic A},
+  url    = {https://github.com/yourfavoriteself/ShenzhenFinTechathonTopicA}
+}
+```
