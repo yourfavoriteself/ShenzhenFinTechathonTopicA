@@ -16,24 +16,28 @@ The [technical documentation](docs/technical_documentation.pdf) describes the sy
 
 ## Demo video
 
-https://github.com/user-attachments/assets/9e9847ad-65e0-465d-8963-ce3789c85f89
+https://github.com/user-attachments/assets/e4c789a5-cf67-42f6-b6f5-ec7cdd62f8ff
 
-One client, one month in a sandbox bank, recorded from the real interface. The player above runs on GitHub; the same file is also attached to the release ([download mp4](https://github.com/yourfavoriteself/ShenzhenFinTechathonTopicA/releases/download/v1.0/guardian_demo.mp4), [captions](docs/media/guardian_demo_captions.json)).
+One client, one month in a sandbox bank, recorded from the real interface. The player above runs on GitHub; the same file is also attached to the release ([download mp4](https://github.com/yourfavoriteself/ShenzhenFinTechathonTopicA/releases/download/v1.0/guardian_demo.mp4), 4:37).
 
 | Time | Chapter | Scenario |
 |---|---|---|
-| 0:11 | Cash gap and the first signed card | C8 |
-| 0:28 | Budget, goal and safe to spend | C8 |
-| 0:49 | Leaks in subscriptions | C3 |
-| 0:56 | Cancel through the merchant's API, protected form, three way check | C2 |
-| 1:18 | Pay and allow monthly | C1 |
-| 1:23 | Double charge and dispute | C4 |
-| 1:28 | Bills and a fake bill | C5, C6 |
-| 1:39 | Payee risk on the transfer graph | C10 |
-| 1:46 | Scam call: pause, hold, analyst | C9 |
-| 2:15 | One month later: the standing permission at work | C1 |
-| 2:27 | Earned trust: a reward, a penalty and a quarantine for a faulty agent |  |
-| 3:09 | Tour: month, permissions, agents, cost, red-team, compliance, journal |  |
+| 0:07 | A month for you: the chat and the kernel's panel |  |
+| 0:13 | Cash gap and the first signed card | C8 |
+| 0:31 | Budget, goal and safe to spend | C8 |
+| 0:54 | Leaks in subscriptions | C3 |
+| 1:02 | Cancel through the merchant's API, protected form, three way check | C2 |
+| 1:27 | Pay and allow monthly | C1 |
+| 1:33 | Double charge and dispute | C4 |
+| 1:38 | Bills and a fake bill | C5, C6 |
+| 1:50 | Payee risk on the transfer graph | C10 |
+| 1:57 | Scam call: pause, hold, analyst | C9 |
+| 2:37 | One month later: the standing permission at work | C1 |
+| 2:42 | Earned trust: a reward, a penalty and a quarantine for a faulty agent |  |
+| 3:28 | Investing on a US exchange: a signed monthly plan, a meme stock stopped | C11 |
+| 4:02 | Tour: month, permissions, agents, cost, red-team, compliance, journal |  |
+
+The video has no voice and no captions over the interface. A backup copy with subtitles in a band under the picture is [`guardian_demo_subtitled.mp4`](docs/media/guardian_demo_subtitled.mp4) (also in the [release](https://github.com/yourfavoriteself/ShenzhenFinTechathonTopicA/releases/download/v1.0/guardian_demo_subtitled.mp4)); the subtitles alone are in [`guardian_demo.srt`](docs/media/guardian_demo.srt), and the voiceover script with timecodes is [`docs/video_script.md`](docs/video_script.md).
 
 ## Requirements
 
@@ -87,7 +91,7 @@ We attack the kernel as if the agent were already on the attacker's side: a vali
 
 ### Use cases
 
-Nine of the ten demo scenarios, cut from the video (click a clip to open it full size). C7, a free trial about to turn paid, is the CloudNest notice in the first clip.
+Nine of the eleven demo scenarios, cut from the video (click a clip to open it full size). C7, a free trial about to turn paid, is the CloudNest notice in the first clip; C11 is under [Investing on a US exchange](#investing-on-a-us-exchange).
 
 <table>
   <tr>
@@ -186,6 +190,10 @@ Elevated protection for the elderly and minors pins external payments to level 0
 In the demo the fifth verified result raises subscriptions to level 2. Then a faulty planner, behaving the way a buggy or prompt injected model would, asks for ten times its monthly permission: denied, subscriptions fall to 0, two strikes. Next it cites an invoice that does not exist: denied, third strike, quarantine. Neither action is executed. The 🧪 Faulty agent button in the interface repeats this on demand, and [`trust_report.json`](evidence/trust_report.json) has every change.
 
 ### Investing on a US exchange
+
+<div align="center">
+  <a href="docs/media/clips/11_invest.gif"><img src="docs/media/clips/11_invest.gif" width="60%" alt="Investing in the demo: a signed monthly SPY plan, a meme stock stopped by the broker step"></a>
+</div>
 
 The client says "Invest $10 a month in SPY". The agent can only propose the order; the kernel's broker step checks it against the client's investment mandate, with its own quote and asset record from the broker:
 
