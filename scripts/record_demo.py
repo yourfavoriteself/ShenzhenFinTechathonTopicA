@@ -29,14 +29,14 @@ CAPTION_JS = """([title, text]) => {
   if (!c) {
     c = document.createElement('div');
     c.id = 'demo-caption';
-    c.style.cssText = 'position:fixed;left:50%;transform:translateX(-50%);bottom:18px;z-index:9999;max-width:1100px;'
-      + 'background:rgba(6,78,59,.94);color:#fff;font:500 21px/1.35 system-ui,sans-serif;padding:12px 22px;'
-      + 'border-radius:12px;box-shadow:0 6px 24px rgba(0,0,0,.25);text-align:center;pointer-events:none';
+    c.style.cssText = 'position:fixed;left:40px;bottom:22px;z-index:9999;max-width:1060px;'
+      + 'background:#1b1712;color:#f6f1e7;font:400 21px/1.4 Georgia,"Noto Serif",serif;padding:12px 22px 13px 20px;'
+      + 'border-left:6px solid #b8321c;border-radius:2px;box-shadow:6px 6px 0 rgba(27,23,18,.18);text-align:left;pointer-events:none';
     document.body.append(c);
   }
   c.replaceChildren();
   if (title) { const b = document.createElement('div'); b.textContent = title;
-    b.style.cssText = 'font-size:14px;letter-spacing:.08em;text-transform:uppercase;opacity:.75;margin-bottom:2px'; c.append(b); }
+    b.style.cssText = 'font:600 12px/1.4 system-ui,sans-serif;letter-spacing:.14em;text-transform:uppercase;color:#e58a6f;margin-bottom:3px'; c.append(b); }
   const t = document.createElement('div'); t.textContent = text; c.append(t);
   c.style.display = text ? 'block' : 'none';
 }"""
@@ -45,13 +45,18 @@ SLATE_JS = """([title, lines]) => {
   let s = document.getElementById('demo-slate');
   if (!title) { if (s) s.remove(); return; }
   if (!s) { s = document.createElement('div'); s.id = 'demo-slate'; document.body.append(s); }
-  s.style.cssText = 'position:fixed;inset:0;z-index:10000;background:#064e3b;color:#fff;display:flex;flex-direction:column;'
-    + 'align-items:center;justify-content:center;font-family:system-ui,sans-serif;text-align:center';
+  s.style.cssText = 'position:fixed;inset:0;z-index:10000;background:#f3eee4;color:#1b1712;display:flex;flex-direction:column;'
+    + 'align-items:flex-start;justify-content:center;padding:0 140px;font-family:Georgia,"Noto Serif",serif;text-align:left';
   s.replaceChildren();
-  const h = document.createElement('div'); h.textContent = title; h.style.cssText = 'font-size:64px;font-weight:700;margin-bottom:18px';
+  const seal = document.createElement('div'); seal.textContent = '\u5b88';
+  seal.style.cssText = 'width:92px;height:92px;display:grid;place-items:center;background:#b8321c;color:#fff8ee;border-radius:4px;'
+    + 'font:700 58px/1 "Noto Serif CJK SC","WenQuanYi Zen Hei",serif;box-shadow:inset 0 0 0 5px #b8321c,inset 0 0 0 8px #fff8ee;margin-bottom:34px';
+  s.append(seal);
+  const h = document.createElement('div'); h.textContent = title;
+  h.style.cssText = 'font-size:68px;font-weight:600;margin-bottom:22px;padding-bottom:20px;border-bottom:2px solid #1b1712;min-width:640px';
   s.append(h);
   for (const l of lines) { const p = document.createElement('div'); p.textContent = l;
-    p.style.cssText = 'font-size:26px;opacity:.9;margin:6px 0;max-width:1100px'; s.append(p); }
+    p.style.cssText = 'font:400 25px/1.45 system-ui,sans-serif;color:#4a4339;margin:5px 0;max-width:1100px'; s.append(p); }
 }"""
 
 HIDE_CHIPS = "#chips { display: none !important; } #feed { padding-bottom: 120px; }"
