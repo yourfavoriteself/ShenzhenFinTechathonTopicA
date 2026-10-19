@@ -20,7 +20,7 @@ from .mandate import (MONEY_ACTIONS, Action, AmountRange, AutonomyStage, Budget,
                       OriginMode, OriginRule, PaymentConstraints, Recurrence, SignedMandate)
 from .passport import Passport, Role
 from .ports import PayeeInfo, Receipt
-from .trust import Category, TrustEvent, category_for
+from .trust import AgentStatus, Category, TrustEvent, category_for
 
 if TYPE_CHECKING:
     from .core import Kernel
@@ -181,7 +181,7 @@ class Pipeline:
             if sm is not None and sm.mandate.client_id != i.client_id:
                 v.append("mandate belongs to another client")
             if v:
-                k.trust.record(ctx.category, TrustEvent.SCOPE_VIOLATION)
+                k.trust.record(ctx.category, TrustEvent.SCOPE_VIOLATION, ctx.passport, v[0])
                 return StepResult(step="", verdict=Verdict.DENY, risk=Risk.HIGH,
                                   reasons=[f"outside the mandate: {x}" for x in v])
             ctx.mandate = sm
@@ -193,11 +193,13 @@ class Pipeline:
             ctx.mandate = sm
         m = ctx.mandate.mandate
         if m.standing and not ctx.confirmed and m.payment and args["amount"] is not None:
-            limit = k.trust.auto_limit(ctx.category, m.payment.amount_range.max)
+            limit = k.trust.auto_limit(ctx.category, m.payment.amount_range.max, ctx.passport)
             if args["amount"] > limit:
+                rec = k.trust.agent(ctx.passport)
+                why = (f"the {rec.role} agent is {rec.status.value}" if rec.status != AgentStatus.ACTIVE else
+                       f"trust level {k.trust.level(ctx.category)} for {ctx.category.value}")
                 return StepResult(step="", verdict=Verdict.ASK, risk=Risk.MEDIUM,
-                                  reasons=[f"trust level {k.trust.level(ctx.category)} for {ctx.category.value} "
-                                           f"does not allow acting alone on this amount"])
+                                  reasons=[f"{why} does not allow acting alone on this amount"])
         return StepResult(step="", data={"mandate": m.id, "stage": int(m.stage)})
 
     def s_provenance(self, ctx: Ctx) -> StepResult:
@@ -219,7 +221,8 @@ class Pipeline:
     def s_references(self, ctx: Ctx) -> StepResult:
         missing = [r for r in ctx.intent.references if not self.k.provenance.exists(r)]
         if missing:
-            self.k.trust.record(ctx.category, TrustEvent.FABRICATED_NUMBER)
+            self.k.trust.record(ctx.category, TrustEvent.FABRICATED_NUMBER, ctx.passport,
+                                missing[0])
             return StepResult(step="", verdict=Verdict.DENY, risk=Risk.HIGH,
                               reasons=[f"reference to data that does not exist: {r}" for r in missing])
         return StepResult(step="")
@@ -267,7 +270,8 @@ class Pipeline:
         if self.critic and ctx.intent.action != Action.BROWSE:
             r = self.critic(ctx)
             if r.verdict != Verdict.ALLOW:
-                self.k.trust.record(ctx.category, TrustEvent.CRITIC_DENY)
+                self.k.trust.record(ctx.category, TrustEvent.CRITIC_DENY, ctx.passport,
+                                    r.reasons[0] if r.reasons else "")
             results.append(r)
         if self.counterfactual and ctx.risk == Risk.HIGH:
             results.append(self.counterfactual(ctx))
@@ -352,7 +356,7 @@ class Pipeline:
         if not receipt.ok:
             return self._finish(ctx, Outcome.FAILED, receipt=receipt)
         verified = self.verifier(i, receipt) if self.verifier else True
-        k.trust.record(ctx.category, TrustEvent.VERIFIED_SUCCESS if verified else TrustEvent.KERNEL_DENY)
+        k.trust.record(ctx.category, TrustEvent.VERIFIED_SUCCESS if verified else TrustEvent.KERNEL_DENY, ctx.passport)
         self._journal(ctx, "result.verified", {"ok": verified})
         if not verified:
             ctx.reasons.append("the kernel could not confirm the result")

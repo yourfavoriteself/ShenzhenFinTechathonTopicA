@@ -15,14 +15,14 @@ from .critic import TaskInfo
 from .crypto import KeyPair
 from .intent import Intent, IntentProposal, ProvenanceStore
 from .journal import Journal
-from .mandate import MandateError, MandateService
+from .mandate import Action, MandateError, MandateService
 from .passport import AuthError, Passport, PassportRegistry, SignedRequest
 from .pipeline import Decision, Outcome, PendingConfirmation, Pipeline, StepResult, Verdict
 from .ports import Directory, Executor, Funds, InMemoryDirectory, InMemoryFunds
 from .provenance import Labeled
 from .secrets import Vault
 from .suspicious_memory import SuspiciousMemory
-from .trust import TrustLedger
+from .trust import AgentStatus, TrustChange, TrustEvent, TrustLedger, agent_key, category_for
 
 
 class ConfirmationError(Exception):
@@ -39,6 +39,7 @@ class Kernel:
         self.mandates = MandateService(self.key, self.clock)
         self.passports = PassportRegistry(self.key, self.clock)
         self.trust = TrustLedger(self.clock, elevated_protection)
+        self.trust.listeners.append(self._on_trust)
         self.provenance = ProvenanceStore()
         self.directory: Directory = directory or InMemoryDirectory()
         self.funds: Funds = funds or InMemoryFunds()
@@ -147,6 +148,28 @@ class Kernel:
         revoked = self.mandates.revoke(mandate_id)
         self.journal.append("client", "mandate.revoked", {"mandates": revoked})
         return revoked
+
+    def reverse(self, intent_id: str, reason: str = "") -> dict[str, Any]:
+        """The client says an action taken by an agent was wrong: a penalty for the agent and the kind of task."""
+        done = next((e for e in reversed(self.journal.entries)
+                     if e.event == "decision.executed" and e.data.get("intent") == intent_id), None)
+        if done is None:
+            raise ConfirmationError("no executed action with this id")
+        passport = self.passports.get(done.passport_id or "")
+        payee = self.directory.payee(passport.client_id, done.data["payee"]) \
+            if passport is not None and isinstance(done.data.get("payee"), str) else None
+        category = category_for(Action(done.data["action"]), payee.kind if payee else None)
+        self.journal.append("client", "action.reversed", {"intent": intent_id, "reason": reason},
+                            passport_id=done.passport_id)
+        level = self.trust.record(category, TrustEvent.CLIENT_REVERSAL, passport)
+        return {"category": category.value, "level": level, "agent": agent_key(passport) if passport else None}
+
+    def _on_trust(self, c: TrustChange) -> None:
+        self.journal.append("kernel", "trust.changed", c.model_dump(mode="json", exclude_none=True),
+                            passport_id=c.passport_id)
+        if c.status_after == AgentStatus.QUARANTINED:
+            revoked = self.passports.revoke_agent(c.agent or "", agent_key)
+            self.journal.append("kernel", "agent.passports_revoked", {"agent": c.agent, "passports": revoked})
 
     def halt(self, reason: str) -> None:
         """Kill switch: every further action is denied until resumed."""

@@ -7,7 +7,7 @@ from kernel.passport import Role
 from kernel.pipeline import Outcome, StepResult, Verdict
 from kernel.ports import InMemoryDirectory, InMemoryFunds, PayeeInfo, Receipt
 from kernel.provenance import Labeled, Label
-from kernel.trust import Category
+from kernel.trust import AgentStatus, Category, agent_key
 
 
 class FakeExecutor:
@@ -192,3 +192,44 @@ def test_elevated_protection_always_asks_for_external_payments(clock):
     d = k.submit(pay(planner, payee=("tok_x", "p"), amount=(100000, "a"), src=("card_1", "c")))
     assert d.outcome == Outcome.PENDING
     assert "notify_trusted_person" in k.journal.entries[-1].data["flags"]
+
+
+def test_client_reversal_penalises_agent_and_kind_in_the_journal(env, clock):
+    k, ex, dev, planner = env
+    d = k.submit(pay(planner))
+    k.confirm(d.pending_id, dev.alg, dev.public_b64, dev.sign_mandate(d.card.standing_mandate_hash), standing=True)
+    clock.advance(days=31)
+    planner = new_planner(k)
+    d = k.submit(pay(planner))
+    assert d.outcome == Outcome.EXECUTED and d.notify_only
+    with pytest.raises(ConfirmationError, match="no executed action"):
+        k.reverse("nope")
+    r = k.reverse(d.intent_id, "not what I wanted")
+    assert r["category"] == "subscriptions" and r["agent"] == agent_key(planner.passport)
+    assert k.trust.agent(planner.passport).strikes == 1
+    events = [e.event for e in k.journal.entries]
+    assert "action.reversed" in events and events[-1] == "trust.changed"
+    assert k.journal.entries[-1].data["event"] == "client_reversal"
+    assert k.journal.verify().ok
+
+
+def test_three_strikes_quarantine_agent_and_revoke_its_passports(env):
+    k, ex, dev, planner = env
+    d = k.submit(pay(planner))
+    k.confirm(d.pending_id, dev.alg, dev.public_b64, dev.sign_mandate(d.card.standing_mandate_hash), standing=True)
+    mid = k.mandates.active("cl_1")[0].mandate.id
+    k.bank_value("bank:amount:big", 299000, "invoice")
+    d = k.submit(pay(planner, amount=(299000, "bank:amount:big"), mandate_id=mid))
+    assert d.outcome == Outcome.DENIED and k.trust.agent(planner.passport).strikes == 2
+    d = k.submit(pay(planner, references=["bank:invoice:ghost"]))
+    assert d.outcome == Outcome.DENIED
+    assert k.trust.agent(planner.passport).status == AgentStatus.QUARANTINED
+    revoked = next(e for e in k.journal.entries if e.event == "agent.passports_revoked")
+    assert planner.passport.id in revoked.data["passports"]
+    d = k.submit(pay(planner))
+    assert d.outcome == Outcome.DENIED and "revoked" in d.reasons[0]
+    fresh = new_planner(k)
+    assert k.trust.auto_limit(Category.SUBSCRIPTIONS, 29900, fresh.passport) == 0
+    d = k.submit(pay(fresh))
+    assert d.outcome == Outcome.PENDING and len(ex.calls) == 1
+    assert k.journal.verify().ok

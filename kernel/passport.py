@@ -111,6 +111,14 @@ class PassportRegistry:
     def revoke(self, passport_id: str) -> None:
         self._revoked.add(passport_id)
 
+    def revoke_agent(self, agent: str, key: Any) -> list[str]:
+        """Revoke every live passport of one agent (same role, model and instructions)."""
+        now = self._clock.now()
+        ids = [p.id for p in self._passports.values()
+               if key(p) == agent and p.id not in self._revoked and p.exp > now]
+        self._revoked.update(ids)
+        return ids
+
     def get(self, passport_id: str) -> Passport | None:
         return self._passports.get(passport_id)
 

@@ -3,7 +3,8 @@ import pytest
 from kernel.crypto import KeyPair
 from kernel.mandate import Action
 from kernel.passport import AgentSession, AuthError, PassportRegistry, Role
-from kernel.trust import LEVEL1_LIMIT, PROMOTE_AFTER, Category, TrustEvent, TrustLedger, category_for
+from kernel.trust import (CLEAN_RUN, LEVEL1_LIMIT, PROMOTE_AFTER, AgentStatus, Category, TrustEvent, TrustLedger,
+                          agent_key, category_for)
 
 
 @pytest.fixture
@@ -80,3 +81,48 @@ def test_elevated_protection_pins_external_payments(clock):
     assert t.level(Category.OWN_TRANSFERS) == 1
     assert category_for(Action.PAY, "subscription") == Category.SUBSCRIPTIONS
     assert category_for(Action.PAY, None) == Category.EXTERNAL_PAYMENTS
+
+
+def test_agent_strikes_quarantine_probation_and_back(registry, clock):
+    t = TrustLedger(clock)
+    p = _planner(registry).passport
+    other = registry.issue(Role.PLANNER, "claude-sonnet-5-5", 2, "Another prompt.", "cl_1", "task_2").passport
+    assert agent_key(p) != agent_key(other)
+    t.record(Category.SUBSCRIPTIONS, TrustEvent.SCOPE_VIOLATION, p)
+    assert t.agent(p).strikes == 2 and t.agent(p).status == AgentStatus.ACTIVE
+    t.record(Category.BILLS, TrustEvent.FABRICATED_NUMBER, p)
+    rec = t.agent(p)
+    assert rec.status == AgentStatus.QUARANTINED and rec.strikes == 0 and rec.penalties == 2
+    assert t.level(Category.BILLS, p) == 0 and t.auto_limit(Category.OWN_TRANSFERS, 50_000, p) == 0
+    assert t.level(Category.OWN_TRANSFERS, other) == 1
+    assert [h.event for h in t.history][-1] == "agent.quarantined"
+    clock.advance(hours=25)
+    t.refresh()
+    assert t.agent(p).status == AgentStatus.PROBATION
+    t.categories[Category.OWN_TRANSFERS].level = 2
+    assert t.level(Category.OWN_TRANSFERS, p) == 1
+    for _ in range(CLEAN_RUN):
+        t.record(Category.OWN_TRANSFERS, TrustEvent.VERIFIED_SUCCESS, p)
+    assert t.agent(p).status == AgentStatus.ACTIVE and t.level(Category.OWN_TRANSFERS, p) == 2
+
+
+def test_mistake_on_probation_quarantines_again_and_clean_runs_clear_strikes(registry, clock):
+    t = TrustLedger(clock)
+    p = _planner(registry).passport
+    t.record(Category.BILLS, TrustEvent.CRITIC_DENY, p)
+    for _ in range(CLEAN_RUN):
+        t.record(Category.BILLS, TrustEvent.VERIFIED_SUCCESS, p)
+    assert t.agent(p).strikes == 0
+    t.agent(p).status = AgentStatus.PROBATION
+    t.record(Category.BILLS, TrustEvent.KERNEL_DENY, p, "amount differs")
+    assert t.agent(p).status == AgentStatus.QUARANTINED
+    assert t.history[-2].reason == "amount differs" and t.history[-1].reason == "a mistake on probation"
+
+
+def test_quarantine_revokes_only_that_agents_passports(registry, clock):
+    a, b = _planner(registry), _planner(registry)
+    other = registry.issue(Role.DISPATCHER, "kernel-code", 0, "Route.", "cl_1", "task_3")
+    assert set(registry.revoke_agent(agent_key(a.passport), agent_key)) == {a.passport.id, b.passport.id}
+    with pytest.raises(AuthError, match="revoked"):
+        registry.authenticate(b.request("propose_intent", {}))
+    registry.authenticate(other.request("route", {}))
