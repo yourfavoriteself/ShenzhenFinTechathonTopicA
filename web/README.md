@@ -1,6 +1,6 @@
 # Web UI
 
-Chat with kernel-rendered confirmation cards, budget, permissions (with revoke), inbox and journal.
+Chat with kernel-rendered confirmation cards and twelve side sections: month for you, payments, budget, permissions (with revoke), trust, agents at work, cost, security, red-team, compliance, inbox and journal.
 Static files served by `app.web` (`uvicorn --factory app.web:create_web_app`), no build step.
 
 - `app.js` keeps the device key in WebCrypto: Ed25519, or ECDSA P-256 where Ed25519 is unavailable.

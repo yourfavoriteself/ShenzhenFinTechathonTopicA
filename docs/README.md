@@ -11,6 +11,8 @@ The six materials of the submission, all generated from this repository.
 | 5 | Security report: permission levels, known risks, 智能体支付应用自律公约 and VI / AP2 tables | [`security_report.pdf`](security_report.pdf) (source [`security_report.src.md`](security_report.src.md), filled from `evidence/`) | `make docs` |
 | 6 | Execution evidence: sandbox logs and video | [`../evidence/`](../evidence/README.md): `demo_run.log`, `demo_journal.jsonl`, `demo_summary.json`, reports; the video above | `make evidence`, `make video` |
 
+Also here: [`DESIGN_DECISIONS.md`](DESIGN_DECISIONS.md), the choices behind the design and what each one cost us.
+
 Screenshots in `media/` are taken by the video script at the key moments and are used by the presentation.
 
 All data is synthetic: the sandbox bank, merchants and people are fictional, domains use the reserved `.example` TLD.

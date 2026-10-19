@@ -33,7 +33,7 @@ Topic A asks for smart budgeting, bill analysis and spending analytics:
 
 The theme, *AI as a Financial Participant*, is the core of the design: the assistant acts, and the kernel makes acting safe.
 
-The system is about 11 000 lines of Python, JavaScript and Solidity, with 3 350 lines of tests (328 tests, 9 more against PostgreSQL). It runs with `docker compose up` and needs no API keys in the default replay mode.
+The system is about 11 000 lines of Python, JavaScript and Solidity, with 3 350 lines of tests (338 tests, all green in CI with PostgreSQL and a local chain, plus 5 contract tests). It runs with `docker compose up` and needs no API keys in the default replay mode.
 
 # 2. Scenarios
 

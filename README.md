@@ -4,7 +4,7 @@
 
 <p align="center">
   <a href="https://github.com/yourfavoriteself/ShenzhenFinTechathonTopicA/actions/workflows/ci.yml"><img src="https://github.com/yourfavoriteself/ShenzhenFinTechathonTopicA/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
-  <img src="https://img.shields.io/badge/tests-338-2ea44f" alt="338 tests">
+  <img src="https://img.shields.io/badge/tests-338%20passing-2ea44f" alt="338 tests passing">
   <img src="https://img.shields.io/badge/red--team-39%2F39%20stopped-2ea44f" alt="red-team 39 of 39 stopped">
   <img src="https://img.shields.io/badge/python-3.14-3776ab" alt="Python 3.14">
   <img src="https://img.shields.io/badge/license-MIT-blue" alt="MIT license">
@@ -57,7 +57,7 @@ Every number below is produced by code in this repository on a synthetic sandbox
 | Journal anchoring on a local devnet | 4 checkpoints; a rewritten entry and a cut tail are both caught | [`anchors.json`](evidence/anchors.json) |
 | Token cost of one client's month (real prompts, stub answers) | 0.73 ₽ the first month, 0.27 ₽ the next (63 % less); about 270 000 ₽ a month for a million clients | [`costs.json`](evidence/costs.json) |
 | The whole demo month | 548 ₽ a month saved, 10 tasks done, 11 questions, 2 attacks stopped, 292 signed journal entries, chain verified | [`demo_run.log`](evidence/demo_run.log) |
-| Automated tests | 329 pass; 9 more run against PostgreSQL in CI | [CI](.github/workflows/ci.yml) |
+| Automated tests | 338 pass in CI (unit, end to end in Chromium, red-team, evaluation, PostgreSQL, local chain) plus 5 contract tests in Foundry | [CI](.github/workflows/ci.yml) |
 
 We are honest about one thing: the graph model is trained and tested on graphs from our own generator. Real bank data will score lower. The numbers show that the pipeline works, not field accuracy.
 
