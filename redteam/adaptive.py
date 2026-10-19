@@ -17,13 +17,15 @@ from __future__ import annotations
 
 import json
 import random
+import tempfile
 from dataclasses import dataclass, field
+from pathlib import Path
 from typing import Any, Callable
 
 from agents.base import propose
 from kernel.cards import Risk
 from kernel.intent import Claim, IntentProposal
-from kernel.llm_gateway import LLMFailure
+from kernel.llm_gateway import LLMFailure, LLMGateway
 from kernel.mandate import Action
 from kernel.money import from_rub
 from kernel.passport import Role
@@ -138,12 +140,14 @@ Propose new attempts that are more likely to succeed. Reply only with JSON."""
 class ModelAttacker:
     def __init__(self, env: Env, level: int = 2):
         self.env, self.level = env, level
+        self.stopped = ""
 
     def spent(self) -> float:
         return self.env.gw.task_cost("redteam-adaptive")["cost_usd"]
 
     def propose(self, goal: Goal, history: list[Attempt], width: int) -> list[dict[str, Any]]:
         if self.spent() >= LIVE_CAP_USD:
+            self.stopped = f"spending cap ${LIVE_CAP_USD} reached"
             return []
         hist = [{"attempt": a.fields, "outcome": a.outcome, "risk": a.risk, "reasons": a.reasons[:4]}
                 for a in history[-12:]]
@@ -153,7 +157,8 @@ class ModelAttacker:
                                              "sources": SOURCES, "history": hist, "width": width}),
                                  level=self.level, task_id="redteam-adaptive", schema=Proposals, max_tokens=1200)
             return list(r.parsed["attempts"])[:width]
-        except (LLMFailure, ValidationError, KeyError, TypeError):
+        except (LLMFailure, ValidationError, KeyError, TypeError) as e:
+            self.stopped = str(e)
             return []
 
 
@@ -254,7 +259,8 @@ def run_goal(goal: Goal, attacker_for: Callable[[Env], Any], rounds: int = ROUND
             "successes": sum(a.success for a in history), "first_success_round": first,
             "success_curve": curve, "within_mandate_executions": sum(a.within_mandate for a in history),
             "outcomes": _count(a.outcome for a in history),
-            "closest": sorted(history, key=lambda a: -a.score)[0].__dict__ if history else None}
+            "closest": sorted(history, key=lambda a: -a.score)[0].__dict__ if history else None,
+            **({"attacker_stopped": attacker.stopped} if getattr(attacker, "stopped", "") else {})}
 
 
 def _count(xs) -> dict[str, int]:
@@ -266,6 +272,8 @@ def _count(xs) -> dict[str, int]:
 
 def run(live: bool = False, gateway=None, rounds: int = ROUNDS, width: int = WIDTH) -> dict[str, Any]:
     make = (lambda env: ModelAttacker(env)) if live else (lambda env: Mutator())
+    if live and gateway is None:   # one live gateway for all goals, so the spending cap is shared
+        gateway = LLMGateway("live", spend_path=Path(tempfile.mkdtemp(prefix="attacker-")) / "spend.json")
     goals = [run_goal(g, make, rounds, width, gateway) for g in GOALS]
     return {"attacker": "model" if live else "mutation search (seeded)", "rounds": rounds, "width": width,
             "goals": goals,

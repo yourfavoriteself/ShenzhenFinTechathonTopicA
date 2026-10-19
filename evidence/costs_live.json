@@ -1,0 +1,194 @@
+{
+ "mode": "live",
+ "estimated": false,
+ "ladder": {
+  "1": "claude-haiku-4-5-20251001",
+  "2": "claude-sonnet-5-5",
+  "3": "claude-opus-5-5"
+ },
+ "ladder_source": {
+  "1": "env",
+  "2": "file",
+  "3": "file"
+ },
+ "first_month": {
+  "tasks": [
+   {
+    "task": "Pay for Melodify",
+    "calls": 3,
+    "levels": [
+     1,
+     2
+    ],
+    "input_tokens": 987,
+    "output_tokens": 283,
+    "cost_usd": 0.004558,
+    "big_model_calls": 1
+   },
+   {
+    "task": "Find leaks in my subscriptions",
+    "calls": 1,
+    "levels": [
+     1
+    ],
+    "input_tokens": 113,
+    "output_tokens": 39,
+    "cost_usd": 0.000308,
+    "big_model_calls": 0
+   },
+   {
+    "task": "Was I charged twice?",
+    "calls": 1,
+    "levels": [
+     1
+    ],
+    "input_tokens": 349,
+    "output_tokens": 67,
+    "cost_usd": 0.000684,
+    "big_model_calls": 0
+   },
+   {
+    "task": "Pay my bills",
+    "calls": 5,
+    "levels": [
+     1
+    ],
+    "input_tokens": 2313,
+    "output_tokens": 419,
+    "cost_usd": 0.004408,
+    "big_model_calls": 0
+   },
+   {
+    "task": "How much can I spend today?",
+    "calls": 1,
+    "levels": [
+     1
+    ],
+    "input_tokens": 260,
+    "output_tokens": 57,
+    "cost_usd": 0.000545,
+    "big_model_calls": 0
+   },
+   {
+    "task": "Can I afford headphones for $181.05?",
+    "calls": 1,
+    "levels": [
+     1
+    ],
+    "input_tokens": 261,
+    "output_tokens": 69,
+    "cost_usd": 0.000606,
+    "big_model_calls": 0
+   },
+   {
+    "task": "Month review",
+    "calls": 1,
+    "levels": [
+     1
+    ],
+    "input_tokens": 105,
+    "output_tokens": 40,
+    "cost_usd": 0.000305,
+    "big_model_calls": 0
+   }
+  ],
+  "calls": 13,
+  "big_model_calls": 1,
+  "tokens": 5362,
+  "cost_usd": 0.011414
+ },
+ "next_month": {
+  "tasks": [
+   {
+    "task": "Pay for Melodify",
+    "calls": 0,
+    "levels": [],
+    "input_tokens": 0,
+    "output_tokens": 0,
+    "cost_usd": 0,
+    "big_model_calls": 0
+   },
+   {
+    "task": "Find leaks in my subscriptions",
+    "calls": 1,
+    "levels": [
+     1
+    ],
+    "input_tokens": 113,
+    "output_tokens": 40,
+    "cost_usd": 0.000313,
+    "big_model_calls": 0
+   },
+   {
+    "task": "Was I charged twice?",
+    "calls": 0,
+    "levels": [],
+    "input_tokens": 0,
+    "output_tokens": 0,
+    "cost_usd": 0,
+    "big_model_calls": 0
+   },
+   {
+    "task": "Pay my bills",
+    "calls": 3,
+    "levels": [
+     1
+    ],
+    "input_tokens": 1591,
+    "output_tokens": 232,
+    "cost_usd": 0.002751,
+    "big_model_calls": 0
+   },
+   {
+    "task": "How much can I spend today?",
+    "calls": 1,
+    "levels": [
+     1
+    ],
+    "input_tokens": 162,
+    "output_tokens": 55,
+    "cost_usd": 0.000437,
+    "big_model_calls": 0
+   },
+   {
+    "task": "Can I afford headphones for $181.05?",
+    "calls": 1,
+    "levels": [
+     1
+    ],
+    "input_tokens": 196,
+    "output_tokens": 53,
+    "cost_usd": 0.000461,
+    "big_model_calls": 0
+   },
+   {
+    "task": "Month review",
+    "calls": 1,
+    "levels": [
+     1
+    ],
+    "input_tokens": 102,
+    "output_tokens": 41,
+    "cost_usd": 0.000307,
+    "big_model_calls": 0
+   }
+  ],
+  "calls": 7,
+  "big_model_calls": 0,
+  "tokens": 2585,
+  "cost_usd": 0.004269
+ },
+ "saving_pct": 62.6,
+ "calls_by_level": {
+  "2": 1,
+  "1": 19
+ },
+ "projection": {
+  "clients": 1000000,
+  "tasks_per_client_per_month": 7,
+  "usd_per_client_per_month": 0.004269,
+  "usd_per_month": 4269.0,
+  "assumption": "every client runs the same seven tasks each month, as in the second month; level-0 work (rules, templates, kernel code) costs no tokens"
+ },
+ "note": "Measured on a live run."
+}
