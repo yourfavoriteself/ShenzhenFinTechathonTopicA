@@ -12,31 +12,48 @@ const media = (f) => path.join(root, "docs", "media", f);
 const num = (n) => String(n).replace(/\B(?=(\d{3})+(?!\d))/g, "\u00a0");
 const rub = (kop) => num(Math.floor(kop / 100)) + "." + String(kop % 100).padStart(2, "0") + " ₽";
 
-const C = {dark: "064E3B", mid: "065F46", accent: "10B981", soft: "ECFDF5", ink: "1F2937", grey: "6B7280", line: "D1D5DB",
-  red: "B91C1C", amber: "B45309", white: "FFFFFF"};
-const HF = "Calibri", BF = "Calibri";
+const C = {dark: "1B1712", mid: "9E2A16", accent: "B8321C", soft: "EFE7D8", ink: "1B1712", grey: "6F675B", line: "D9CFBD",
+  red: "B3261E", amber: "9A6200", white: "FFFFFF", paper: "F6F1E7", cream: "FFF8EE"};
+const HF = "Georgia", BF = "Calibri", SEAL_FONT = "SimSun";
+const TOTAL = 12;
+let page = 0;
 
 const pres = new pptxgen();
 pres.layout = "LAYOUT_16x9";
 pres.title = "Guardian: a bank-side safety kernel for AI payment agents";
 
-function slide(title, notes, {bg = C.white} = {}) {
+function seal(s, x, y, size) {
+  s.addShape(pres.shapes.RECTANGLE, {x, y, w: size, h: size, fill: {color: C.accent}, line: {color: C.accent}});
+  const k = size * 0.09;
+  s.addShape(pres.shapes.RECTANGLE, {x: x + k, y: y + k, w: size - 2 * k, h: size - 2 * k, fill: {type: "none"}, line: {color: C.cream, width: Math.max(0.75, size * 2)}});
+  s.addText("\u5b88", {x, y, w: size, h: size, fontFace: SEAL_FONT, fontSize: size * 44, bold: true, color: C.cream, align: "center", valign: "middle", margin: 0});
+}
+
+function slide(title, notes, {bg = C.paper} = {}) {
   const s = pres.addSlide();
+  page += 1;
   s.background = {color: bg};
-  if (title) s.addText(title, {x: 0.5, y: 0.3, w: 9, h: 0.7, fontFace: HF, fontSize: title.length > 52 ? 24 : 28, bold: true, color: C.dark, margin: 0});
+  if (title) {
+    s.addText(String(page).padStart(2, "0"), {x: 0.5, y: 0.28, w: 0.6, h: 0.3, fontFace: HF, fontSize: 12, bold: true, color: C.accent, margin: 0});
+    s.addText(title, {x: 0.5, y: 0.52, w: 9, h: 0.55, fontFace: HF, fontSize: title.length > 46 ? 22 : 26, bold: true, color: C.ink, margin: 0, valign: "middle"});
+    s.addShape(pres.shapes.LINE, {x: 0.5, y: 1.1, w: 9, h: 0, line: {color: C.ink, width: 1}});
+    seal(s, 9.27, 5.2, 0.23);
+    s.addText(`Guardian  ·  ${page} of ${TOTAL}`, {x: 6.2, y: 5.2, w: 2.95, h: 0.23, fontFace: HF, fontSize: 9, color: C.grey, align: "right", valign: "middle", margin: 0});
+  }
   if (notes) s.addNotes(notes);
   return s;
 }
 
-function stat(s, x, y, w, big, small, color = C.dark) {
-  s.addShape(pres.shapes.RECTANGLE, {x, y, w, h: 1.35, fill: {color: C.soft}, line: {color: C.soft}});
-  s.addText(big, {x, y: y + 0.12, w, h: 0.7, fontFace: HF, fontSize: 32, bold: true, color, align: "center", margin: 0});
-  s.addText(small, {x: x + 0.1, y: y + 0.8, w: w - 0.2, h: 0.5, fontFace: BF, fontSize: 11, color: C.ink, align: "center", valign: "top", margin: 0});
+function stat(s, x, y, w, big, small, color = C.ink) {
+  s.addShape(pres.shapes.LINE, {x, y, w, h: 0, line: {color: C.ink, width: 2}});
+  s.addShape(pres.shapes.RECTANGLE, {x, y: y + 0.08, w: 0.08, h: 0.62, fill: {color: C.accent}, line: {color: C.accent}});
+  s.addText(big, {x: x + 0.18, y: y + 0.08, w: w - 0.18, h: 0.62, fontFace: HF, fontSize: big.length > 12 ? 22 : 30, bold: true, color, valign: "middle", margin: 0});
+  s.addText(small, {x, y: y + 0.78, w, h: 0.5, fontFace: BF, fontSize: 11, color: C.grey, valign: "top", margin: 0});
 }
 
 function shot(s, file, x, y, w, h) {
   s.addImage({path: media(file), x, y, w, h});
-  s.addShape(pres.shapes.RECTANGLE, {x, y, w, h, fill: {type: "none"}, line: {color: C.line, width: 0.75}});
+  s.addShape(pres.shapes.RECTANGLE, {x, y, w, h, fill: {type: "none"}, line: {color: C.ink, width: 1}});
 }
 
 const st = rt.static, ad = rt.adaptive, lg = rt.legacy_prototype, rr = rt.retention;
@@ -44,12 +61,15 @@ const st = rt.static, ad = rt.adaptive, lg = rt.legacy_prototype, rr = rt.retent
 // 1 Title
 {
   const s = slide(null, "Hello. We are Kseniia Kuzmina and Nikita Stepanov, the Guardian team. Our topic is A: an AI agent that pays, cancels and budgets for a bank client. "
-    + "In ten minutes: the problem, the idea, a month of the demo, how the kernel works, the security results, compliance, cost and what is next.", {bg: C.dark});
-  s.addText("Guardian", {x: 0.6, y: 1.3, w: 8.8, h: 1.1, fontFace: HF, fontSize: 60, bold: true, color: C.white, margin: 0});
-  s.addText("A bank-side safety kernel for AI payment agents", {x: 0.6, y: 2.4, w: 8.8, h: 0.6, fontFace: HF, fontSize: 24, color: "A7F3D0", margin: 0});
-  s.addText("Agents propose. The kernel decides, checks and records.", {x: 0.6, y: 3.2, w: 8.8, h: 0.5, fontFace: BF, fontSize: 16, italic: true, color: C.white, margin: 0});
-  s.addText("Kseniia Kuzmina · Nikita Stepanov", {x: 0.6, y: 4.2, w: 8.8, h: 0.4, fontFace: BF, fontSize: 15, bold: true, color: C.white, margin: 0});
-  s.addText("Shenzhen FinTechathon 2026 · International Track · Topic A", {x: 0.6, y: 4.6, w: 8.8, h: 0.4, fontFace: BF, fontSize: 13, color: "A7F3D0", margin: 0});
+    + "In ten minutes: the problem, the idea, a month of the demo, how the kernel works, the security results, compliance, cost and what is next.", {bg: C.paper});
+  s.addShape(pres.shapes.RECTANGLE, {x: 0, y: 0, w: 10, h: 0.12, fill: {color: C.ink}, line: {color: C.ink}});
+  seal(s, 0.7, 1.05, 1.15);
+  s.addText("Guardian", {x: 0.7, y: 2.4, w: 8.6, h: 1.0, fontFace: HF, fontSize: 58, bold: true, color: C.ink, margin: 0});
+  s.addShape(pres.shapes.LINE, {x: 0.7, y: 3.45, w: 5.2, h: 0, line: {color: C.ink, width: 1.5}});
+  s.addText("A bank-side safety kernel for AI payment agents", {x: 0.7, y: 3.6, w: 8.6, h: 0.5, fontFace: HF, fontSize: 22, italic: true, color: C.ink, margin: 0});
+  s.addText("Agents propose. The kernel decides, checks and records.", {x: 0.7, y: 4.1, w: 8.6, h: 0.4, fontFace: BF, fontSize: 15, color: C.grey, margin: 0});
+  s.addText("KSENIIA KUZMINA  ·  NIKITA STEPANOV", {x: 0.7, y: 4.75, w: 5.5, h: 0.3, fontFace: BF, fontSize: 12, bold: true, color: C.accent, charSpacing: 2, margin: 0});
+  s.addText("Shenzhen FinTechathon 2026 · International Track · Topic A", {x: 4.6, y: 4.75, w: 4.9, h: 0.3, fontFace: BF, fontSize: 11, color: C.grey, align: "right", margin: 0});
 }
 
 // 2 Problem
@@ -66,17 +86,17 @@ const st = rt.static, ad = rt.adaptive, lg = rt.legacy_prototype, rr = rt.retent
   ];
   items.forEach(([h, t], i) => {
     const y = 1.3 + i * 1.1;
-    s.addShape(pres.shapes.OVAL, {x: 0.6, y: y + 0.08, w: 0.5, h: 0.5, fill: {color: C.accent}, line: {color: C.accent}});
-    s.addText(String(i + 1), {x: 0.6, y: y + 0.08, w: 0.5, h: 0.5, fontFace: HF, fontSize: 18, bold: true, color: C.white, align: "center", valign: "middle", margin: 0});
+    s.addText(String(i + 1).padStart(2, "0"), {x: 0.5, y, w: 0.7, h: 0.5, fontFace: HF, fontSize: 26, bold: true, color: C.accent, valign: "top", margin: 0});
     s.addText(h, {x: 1.3, y, w: 4.2, h: 0.35, fontFace: HF, fontSize: 18, bold: true, color: C.ink, margin: 0});
     s.addText(t, {x: 1.3, y: y + 0.38, w: 4.4, h: 0.6, fontFace: BF, fontSize: 13, color: C.grey, margin: 0});
   });
-  s.addShape(pres.shapes.RECTANGLE, {x: 6.1, y: 1.3, w: 3.4, h: 3.2, fill: {color: "FEF2F2"}, line: {color: "FEF2F2"}});
-  s.addText("Same attacks, agent without the kernel", {x: 6.3, y: 1.45, w: 3.0, h: 0.6, fontFace: BF, fontSize: 13, color: C.ink, margin: 0});
-  s.addText(`${st.without_kernel.succeeded} / ${st.attacks}`, {x: 6.3, y: 2.05, w: 3.0, h: 0.8, fontFace: HF, fontSize: 44, bold: true, color: C.red, margin: 0});
-  s.addText("attacks succeeded", {x: 6.3, y: 2.8, w: 3.0, h: 0.35, fontFace: BF, fontSize: 13, color: C.ink, margin: 0});
-  s.addText(rub(st.without_kernel.lost_kop), {x: 6.3, y: 3.3, w: 3.0, h: 0.6, fontFace: HF, fontSize: 26, bold: true, color: C.red, margin: 0});
-  s.addText("lost from the sandbox client", {x: 6.3, y: 3.9, w: 3.0, h: 0.35, fontFace: BF, fontSize: 13, color: C.ink, margin: 0});
+  s.addShape(pres.shapes.RECTANGLE, {x: 6.1, y: 1.3, w: 3.4, h: 3.2, fill: {color: C.dark}, line: {color: C.dark}});
+  s.addShape(pres.shapes.RECTANGLE, {x: 6.1, y: 1.3, w: 0.09, h: 3.2, fill: {color: C.accent}, line: {color: C.accent}});
+  s.addText("Same attacks, agent without the kernel", {x: 6.3, y: 1.45, w: 3.0, h: 0.6, fontFace: BF, fontSize: 13, color: C.cream, margin: 0});
+  s.addText(`${st.without_kernel.succeeded} / ${st.attacks}`, {x: 6.3, y: 2.05, w: 3.0, h: 0.8, fontFace: HF, fontSize: 44, bold: true, color: "E58A6F", margin: 0});
+  s.addText("attacks succeeded", {x: 6.3, y: 2.8, w: 3.0, h: 0.35, fontFace: BF, fontSize: 13, color: C.cream, margin: 0});
+  s.addText(rub(st.without_kernel.lost_kop), {x: 6.3, y: 3.3, w: 3.0, h: 0.6, fontFace: HF, fontSize: 26, bold: true, color: "E58A6F", margin: 0});
+  s.addText("lost from the sandbox client", {x: 6.3, y: 3.9, w: 3.0, h: 0.35, fontFace: BF, fontSize: 13, color: C.cream, margin: 0});
 }
 
 // 3 Idea
@@ -93,18 +113,19 @@ const st = rt.static, ad = rt.adaptive, lg = rt.legacy_prototype, rr = rt.retent
   ];
   cols.forEach(([h, t], i) => {
     const x = 0.5 + i * 3.1;
-    s.addShape(pres.shapes.RECTANGLE, {x, y: 1.35, w: 2.9, h: 2.9, fill: {color: C.soft}, line: {color: C.soft}});
-    s.addText(h, {x: x + 0.2, y: 1.5, w: 2.5, h: 0.8, fontFace: HF, fontSize: 17, bold: true, color: C.dark, valign: "top", margin: 0});
-    s.addText(t, {x: x + 0.2, y: 2.35, w: 2.5, h: 1.8, fontFace: BF, fontSize: 13, color: C.ink, valign: "top", margin: 0});
+    s.addShape(pres.shapes.RECTANGLE, {x, y: 1.35, w: 2.9, h: 2.9, fill: {color: C.white}, line: {color: C.ink, width: 1}, shadow: {type: "outer", color: C.line, opacity: 1, blur: 0, offset: 4, angle: 45}});
+    s.addText(["I", "II", "III"][i], {x: x + 0.2, y: 1.45, w: 1, h: 0.3, fontFace: HF, fontSize: 12, bold: true, color: C.accent, margin: 0});
+    s.addText(h, {x: x + 0.2, y: 1.75, w: 2.5, h: 0.7, fontFace: HF, fontSize: 16, bold: true, color: C.dark, valign: "top", margin: 0});
+    s.addText(t, {x: x + 0.2, y: 2.5, w: 2.5, h: 1.65, fontFace: BF, fontSize: 13, color: C.ink, valign: "top", margin: 0});
   });
   s.addText("Agents propose  →  kernel decides  →  bank executes  →  kernel verifies  →  journal records",
-    {x: 0.5, y: 4.55, w: 9, h: 0.45, fontFace: HF, fontSize: 15, bold: true, color: C.mid, align: "center", margin: 0});
+    {x: 0.5, y: 4.55, w: 9, h: 0.45, fontFace: HF, fontSize: 13, bold: true, color: C.mid, align: "center", margin: 0});
 }
 
 // 4 Month for you
 {
   const m = demo.month;
-  const s = slide("Demo: one month for one client, scenarios C1 to C10",
+  const s = slide("One month, one client: scenarios C1 to C10",
     "The demo is one month in a sandbox bank with synthetic data. Ten scenarios. Pay a subscription and allow it monthly; cancel one through the merchant's API; "
     + "find leaks; a double charge; bills where one is fake; a free trial turning paid; a budget with a goal; a 'safe account' scam call; and a risky payee on the transfer graph. "
     + `Over the month Guardian saved ${m.saved_per_month} a month, did ${m.done} things, asked ${m.asked} times and stopped ${m.stopped}. `
@@ -119,15 +140,15 @@ const st = rt.static, ad = rt.adaptive, lg = rt.legacy_prototype, rr = rt.retent
   sc.forEach(([id, t, r], i) => {
     const col = i % 5, row = Math.floor(i / 5);
     const x = 0.5 + col * 1.82, y = 1.3 + row * 1.45;
-    s.addShape(pres.shapes.RECTANGLE, {x, y, w: 1.7, h: 1.3, fill: {color: C.soft}, line: {color: C.soft}});
-    s.addText(id, {x: x + 0.12, y: y + 0.08, w: 1.5, h: 0.35, fontFace: HF, fontSize: 16, bold: true, color: C.accent, margin: 0});
-    s.addText(t, {x: x + 0.12, y: y + 0.42, w: 1.5, h: 0.4, fontFace: HF, fontSize: 12.5, bold: true, color: C.ink, margin: 0});
-    s.addText(r, {x: x + 0.12, y: y + 0.82, w: 1.5, h: 0.4, fontFace: BF, fontSize: 10.5, color: C.grey, valign: "top", margin: 0});
+    s.addShape(pres.shapes.LINE, {x, y, w: 1.7, h: 0, line: {color: C.ink, width: 1.5}});
+    s.addText(id, {x, y: y + 0.08, w: 1.5, h: 0.35, fontFace: HF, fontSize: 16, bold: true, color: C.accent, margin: 0});
+    s.addText(t, {x, y: y + 0.42, w: 1.65, h: 0.4, fontFace: HF, fontSize: 12.5, bold: true, color: C.ink, margin: 0});
+    s.addText(r, {x, y: y + 0.82, w: 1.65, h: 0.4, fontFace: BF, fontSize: 10.5, color: C.grey, valign: "top", margin: 0});
   });
   const k = [[m.saved_per_month, "saved a month"], [String(m.done), "done"], [String(m.asked), "asked"], [String(m.stopped), "stopped"],
     [String(demo.journal.entries), "journal entries, verified"]];
   k.forEach(([b, t], i) => {
-    s.addText([{text: b + " ", options: {bold: true, color: C.dark, fontSize: 18}}, {text: t, options: {color: C.grey, fontSize: 12}}],
+    s.addText([{text: b + " ", options: {bold: true, color: C.accent, fontSize: 18}}, {text: t, options: {color: C.grey, fontSize: 12}}],
       {x: 0.5 + i * 1.82, y: 4.3, w: 1.8, h: 0.6, fontFace: HF, margin: 0, valign: "middle"});
   });
 }
@@ -141,9 +162,9 @@ const st = rt.static, ad = rt.adaptive, lg = rt.legacy_prototype, rr = rt.retent
   const items = [["01_card_chat.png", "A card: every field with its source, signed with the device key"],
     ["06_fake_bill_chat.png", "A fake bill: stopped with reasons, case sent to analysts"]];
   items.forEach(([f, t], i) => {
-    const x = 0.75 + i * 4.4, w = 3.85;
-    shot(s, f, x, 1.05, w, w * 740 / 725);
-    s.addText(t, {x: x - 0.2, y: 1.05 + w * 740 / 725 + 0.06, w: w + 0.4, h: 0.4, fontFace: BF, fontSize: 12, color: C.ink, align: "center", margin: 0});
+    const x = 1.0 + i * 4.6, w = 3.4;
+    shot(s, f, x, 1.3, w, w * 740 / 725);
+    s.addText(t, {x: x - 0.5, y: 1.3 + w * 740 / 725 + 0.04, w: w + 1.0, h: 0.3, fontFace: HF, fontSize: 11, italic: true, color: C.ink, align: "center", margin: 0});
   });
 }
 
@@ -158,7 +179,7 @@ const st = rt.static, ad = rt.adaptive, lg = rt.legacy_prototype, rr = rt.retent
 
 // 7 Kernel pipeline
 {
-  const s = slide("Every intent goes through the same kernel pipeline",
+  const s = slide("One kernel pipeline for every intent",
     "Every intent, whoever proposes it, goes through the same pipeline. Passport: is this agent allowed to ask. Schema. Mandate: does it fit what the client signed. "
     + "Provenance: each value is labelled CLIENT, BANK or UNTRUSTED, and untrusted values cannot set a payee or an amount. References, policy and risk, including the transfer-graph model. "
     + "A critic that only sees the client's own words. A shadow run in a copy of the bank. Only then a single-use grant executes, and the kernel verifies the result in the bank.");
@@ -166,8 +187,10 @@ const st = rt.static, ad = rt.adaptive, lg = rt.legacy_prototype, rr = rt.retent
   steps.forEach((t, i) => {
     const col = i % 6, row = Math.floor(i / 6);
     const x = 0.5 + col * 1.5, y = 1.35 + row * 0.95;
-    s.addShape(pres.shapes.CHEVRON, {x, y, w: 1.45, h: 0.7, fill: {color: i >= 9 ? C.dark : C.accent}, line: {color: C.white}});
-    s.addText(t, {x: x + 0.15, y, w: 1.2, h: 0.7, fontFace: HF, fontSize: 11.5, bold: true, color: C.white, align: "center", valign: "middle", margin: 0});
+    s.addShape(pres.shapes.RECTANGLE, {x, y, w: 1.35, h: 0.7, fill: {color: i >= 9 ? C.accent : C.white}, line: {color: i >= 9 ? C.accent : C.ink, width: 1}});
+    s.addText(String(i + 1).padStart(2, "0"), {x: x + 0.08, y: y + 0.04, w: 0.5, h: 0.2, fontFace: HF, fontSize: 8, color: i >= 9 ? C.cream : C.accent, margin: 0});
+    s.addText(t, {x, y: y + 0.12, w: 1.35, h: 0.58, fontFace: HF, fontSize: 12, bold: true, color: i >= 9 ? C.white : C.ink, align: "center", valign: "middle", margin: 0});
+    if (col < 5 && i < 10) s.addText("\u203a", {x: x + 1.35, y, w: 0.15, h: 0.7, fontFace: HF, fontSize: 18, color: C.accent, align: "center", valign: "middle", margin: 0});
   });
   const notes = [
     ["Provenance", "CLIENT · BANK · UNTRUSTED. A value from a bill or a web page can never set the payee or the amount."],
@@ -177,7 +200,7 @@ const st = rt.static, ad = rt.adaptive, lg = rt.legacy_prototype, rr = rt.retent
   ];
   notes.forEach(([h, t], i) => {
     const x = 0.5 + (i % 2) * 4.6, y = 3.4 + Math.floor(i / 2) * 0.95;
-    s.addText([{text: h + "  ", options: {bold: true, color: C.dark}}, {text: t, options: {color: C.ink}}],
+    s.addText([{text: h + "  ", options: {bold: true, color: C.accent}}, {text: t, options: {color: C.ink}}],
       {x, y, w: 4.4, h: 0.85, fontFace: BF, fontSize: 12, valign: "top", margin: 0});
   });
 }
@@ -225,8 +248,8 @@ const st = rt.static, ad = rt.adaptive, lg = rt.legacy_prototype, rr = rt.retent
   const by = {};
   rt.attacks.forEach((a) => { by[a.outcome] = (by[a.outcome] || 0) + 1; });
   const data = [{name: "Attacks", labels: Object.keys(by), values: Object.values(by)}];
-  s.addChart(pres.charts.BAR, data, {x: 5.1, y: 2.85, w: 4.4, h: 2.2, barDir: "bar", chartColors: [C.accent],
-    catAxisLabelFontSize: 11, valAxisLabelFontSize: 10, valGridLine: {color: "E5E7EB", size: 0.5}, catGridLine: {style: "none"},
+  s.addChart(pres.charts.BAR, data, {x: 5.1, y: 2.85, w: 4.4, h: 2.2, barDir: "bar", chartColors: [C.ink],
+    catAxisLabelFontSize: 11, valAxisLabelFontSize: 10, valGridLine: {color: "D9CFBD", size: 0.5}, catGridLine: {style: "none"},
     showValue: true, dataLabelFontSize: 10, showTitle: true, title: "How the kernel stopped the static attacks", titleFontSize: 12, titleColor: C.ink,
     showLegend: false});
 }
@@ -250,14 +273,14 @@ const st = rt.static, ad = rt.adaptive, lg = rt.legacy_prototype, rr = rt.retent
     ["Elderly and minors", "Elevated protection, trusted person informed"],
     ["No inducement to spend", "No credit or upsell; offers in model text replaced"],
   ];
-  const hdr = (t) => ({text: t, options: {bold: true, color: C.white, fill: {color: C.mid}}});
+  const hdr = (t) => ({text: t, options: {bold: true, color: C.white, fill: {color: C.ink}}});
   s.addTable([[hdr("公约 requirement"), hdr("Guardian")], ...rows.map(([a, b]) => [a, b])],
-    {x: 0.5, y: 1.2, w: 5.6, colW: [2.2, 3.4], fontFace: BF, fontSize: 10, color: C.ink, border: {pt: 0.5, color: C.line}, rowH: 0.36, margin: 0.05});
+    {x: 0.5, y: 1.2, w: 5.6, colW: [2.2, 3.4], fontFace: BF, fontSize: 10, color: C.ink, border: {type: "solid", pt: 0.5, color: C.line}, fill: {color: C.white}, rowH: 0.36, margin: 0.05});
   const vi = [["Intent mandate", "Standing permission with limits"], ["Cart / payment mandate", "One-time mandate per card"],
     ["Constraints", "payees, amount range, budget, recurrence, + origins, money source"], ["Delegation", "Child grants, rights only narrow"],
     ["Signatures", "Device key + kernel countersignature"]];
   s.addTable([[hdr("VI / AP2"), hdr("Guardian")], ...vi],
-    {x: 6.35, y: 1.2, w: 3.2, colW: [1.25, 1.95], fontFace: BF, fontSize: 10, color: C.ink, border: {pt: 0.5, color: C.line}, rowH: 0.36, margin: 0.05});
+    {x: 6.35, y: 1.2, w: 3.2, colW: [1.25, 1.95], fontFace: BF, fontSize: 10, color: C.ink, border: {type: "solid", pt: 0.5, color: C.line}, fill: {color: C.white}, rowH: 0.36, margin: 0.05});
 }
 
 // 11 Cost
@@ -272,8 +295,8 @@ const st = rt.static, ad = rt.adaptive, lg = rt.legacy_prototype, rr = rt.retent
   s.addChart(pres.charts.BAR, [
     {name: "First month", labels: tasks, values: f.tasks.map((t) => t.cost_rub)},
     {name: "Next month", labels: tasks, values: n.tasks.map((t) => t.cost_rub)},
-  ], {x: 0.4, y: 1.15, w: 5.6, h: 3.9, barDir: "bar", barGrouping: "clustered", chartColors: ["9CA3AF", C.accent],
-    catAxisLabelFontSize: 10, valAxisLabelFontSize: 9, valGridLine: {color: "E5E7EB", size: 0.5}, catGridLine: {style: "none"},
+  ], {x: 0.4, y: 1.15, w: 5.6, h: 3.9, barDir: "bar", barGrouping: "clustered", chartColors: ["B9AD97", C.accent],
+    catAxisLabelFontSize: 10, valAxisLabelFontSize: 9, valGridLine: {color: "D9CFBD", size: 0.5}, catGridLine: {style: "none"},
     showLegend: true, legendPos: "b", legendFontSize: 10, showTitle: true, title: "₽ per task, one client", titleFontSize: 12, titleColor: C.ink,
     catAxisOrientation: "maxMin"});
   stat(s, 6.3, 1.2, 3.2, `${f.cost_rub.toFixed(2)} → ${n.cost_rub.toFixed(2)} ₽`, `one client's month, ${Math.round(cost.saving_pct)}% less in the second`);
@@ -301,6 +324,7 @@ const st = rt.static, ad = rt.adaptive, lg = rt.legacy_prototype, rr = rt.retent
     {text: "SD-JWT selective disclosure for mandates; pilot with a bank's fraud team", options: {bullet: true}},
   ], {x: 0.5, y: 3.35, w: 5.6, h: 1.6, fontFace: BF, fontSize: 13, color: C.ink, margin: 0, paraSpaceAfter: 4});
   s.addShape(pres.shapes.RECTANGLE, {x: 6.4, y: 3.0, w: 3.1, h: 1.9, fill: {color: C.dark}, line: {color: C.dark}});
+  s.addShape(pres.shapes.RECTANGLE, {x: 6.4, y: 3.0, w: 0.09, h: 1.9, fill: {color: C.accent}, line: {color: C.accent}});
   s.addText("Agents propose.\nThe kernel decides, checks and records.", {x: 6.55, y: 3.1, w: 2.8, h: 1.7, fontFace: HF, fontSize: 16, bold: true, color: C.white, valign: "middle", margin: 0});
 }
 
