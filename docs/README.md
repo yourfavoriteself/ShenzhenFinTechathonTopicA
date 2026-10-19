@@ -9,7 +9,7 @@ The six materials of the submission, all generated from this repository.
 | 3 | Demo video, ≤ 5 minutes | [`media/guardian_demo.mp4`](media/guardian_demo.mp4) (3:49, recorded from the real UI), caption timeline [`media/guardian_demo_captions.json`](media/guardian_demo_captions.json) | `make video` (`scripts/record_demo.py`) |
 | 4 | Code with README and tests | the repository; [`../README.md`](../README.md) | `make test` |
 | 5 | Security report: permission levels, known risks, Self-Regulatory Convention for Agent Payment Applications and VI / AP2 tables | [`security_report.pdf`](security_report.pdf) (source [`security_report.src.md`](security_report.src.md), filled from `evidence/`) | `make docs` |
-| 6 | Execution evidence: sandbox logs and video | [`../evidence/`](../evidence/README.md): `demo_run.log`, `demo_journal.jsonl`, `demo_summary.json`, `trust_report.json`, `invest_report.json`, reports (and `alpaca_paper.json` when `scripts/alpaca_live.py` is run with Alpaca paper keys); the video above | `make evidence`, `make video` |
+| 6 | Execution evidence: sandbox logs and video | [`../evidence/`](../evidence/README.md): `demo_run.log`, `demo_journal.jsonl`, `demo_summary.json`, `trust_report.json`, `invest_report.json`, reports, `alpaca_paper.json` (a live order on an Alpaca paper account); the video above | `make evidence`, `make video` |
 
 The demo video plays on GitHub:
 

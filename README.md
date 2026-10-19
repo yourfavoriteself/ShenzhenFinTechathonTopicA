@@ -200,6 +200,8 @@ The first order is a card signed on the device, with an optional monthly plan (u
 
 Replay and tests use a deterministic sandbox broker with US market hours. `GUARDIAN_BROKER=alpaca` switches to [Alpaca](https://alpaca.markets) paper trading, with keys in `ALPACA_API_KEY_ID` and `ALPACA_API_SECRET_KEY` or `~/.alpaca_keys`. `python -m scripts.alpaca_check` reads the account, the market clock and a SPY quote without placing orders; `python -m scripts.alpaca_live` runs the same chat, card and broker step against the paper account and writes `evidence/alpaca_paper.json` (order ids, statuses and the broker call log without keys or the account number). Alpaca's API is not reachable from some networks; a VPN helps.
 
+On 19 October 2026 at 18:22 New York time (after hours) we ran it on a real Alpaca paper account: the client's "Invest $10 a month in SPY" became a limit order for 0.012977406 shares at up to $770.57 (the kernel's IEX quote plus 0.5%), filled at $767.57; the kernel read the order back by its grant id before reporting it. GME, an option contract, BTC/USD and a $45 order stopped at the broker step with no order sent. The first attempts that night got `504 request timed out` from Alpaca's order endpoint; the adapter then looks the order up by its grant id instead of sending it again, and no duplicate was created. See [`alpaca_paper.json`](evidence/alpaca_paper.json).
+
 ### Supported LLMs
 
 The model ladder is a values file, [`config/models.yaml`](config/models.yaml). Level 0 is rules, templates and kernel code and never calls a model.

@@ -272,7 +272,8 @@ const st = rt.static, ad = rt.adaptive, lg = rt.legacy_prototype, rr = rt.retent
     s.addText([{text: h, options: {bold: true, breakLine: true}}, {text: t, options: {color: C.grey}}],
       {x: 5.22, y, w: 4.2, h: 0.5, fontFace: BF, fontSize: 10, color: C.ink, valign: "middle", margin: 0});
   });
-  s.addText("Demo: sandbox broker. Live: Alpaca paper, GUARDIAN_BROKER=alpaca.",
+  const live = ev("alpaca_paper.json"), lo = live.orders[0];
+  s.addText(`Live, Alpaca paper: SPY limit up to $${(lo.limit_price_cents / 100).toFixed(2)}, ${lo.status} at $${(lo.filled_avg_price_cents / 100).toFixed(2)}`,
     {x: 5.1, y: 3.37, w: 4.4, h: 0.25, fontFace: BF, fontSize: 9.5, color: C.grey, margin: 0});
   stat(s, 0.5, 3.75, 2.1, String(pf.orders.length), "orders placed in the demo month, each read back");
   stat(s, 2.8, 3.75, 2.1, String(inv.stopped.length), "off-list requests stopped (a meme stock, an option)", C.red);
