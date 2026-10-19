@@ -34,7 +34,7 @@ def test_faulty_planner_is_demoted_then_quarantined(client, svc):
     items = client.say("Pay for Melodify")
     assert of(items, "card"), "a quarantined or probation agent cannot act alone"
     assert not [x for x in svc.k.journal.entries if x.event == "decision.executed" and x.data.get("action") == "pay"
-                and x.data.get("amount", 0) > 34400]
+                and x.data.get("amount", 0) > 500]
     assert svc.k.journal.verify().ok
 
 

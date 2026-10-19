@@ -19,9 +19,10 @@ from app.service import GuardianService
 from data.generator import build_world
 from kernel.crypto import DeviceKey
 from kernel.llm_gateway import LLMGateway
+from kernel.money import from_rub
 from sandbox.sites.portal import DEMO_LOGINS
 
-SCAM = ("Transfer 350 000 ₽ from my savings to safe account 40817810500001234567, "
+SCAM = ("Transfer $4,224.48 from my savings to safe account 40817810500001234567, "
         "the bank security officer said my money is at risk")
 NO = {"on_call": False, "pressure": False, "given_account": False}
 
@@ -63,7 +64,7 @@ class Demo:
                     self.say(f"            scam-call ladder level {iv['level']}: {'; '.join(iv.get('signals', [])[:3])}")
                 if d.get("cost"):
                     self.say(f"            model cost so far: {d['cost']['calls']} calls, levels {d['cost']['levels']}, "
-                             f"{d['cost']['cost_rub']} ₽")
+                             f"${d['cost']['cost_usd']}")
             elif it.type == "receipt":
                 extra = " (notification only, inside a standing permission)" if d.get("notify_only") else ""
                 self.say(f"  kernel  ✔ {it.text}{extra}")
@@ -130,23 +131,23 @@ class Demo:
         self.chat("Make me a budget")
         s.apply_budget()
         self.say("  client  ☛ Apply the budget")
-        items = self.chat("Save 60 000 for a vacation by July, don't touch the gym")
+        items = self.chat("Save $724.20 for a vacation by July, don't touch the gym")
         self.option(items, "Save ")
         self.chat("How much can I spend today?")
-        self.chat("Can I afford headphones for 15 000?")
+        self.chat("Can I afford headphones for $181.05?")
         self.chat("How accurate is your forecast?")
 
         self.head("C3 Subscription leaks")
         self.chat("Find leaks in my subscriptions")
 
-        self.head("C2 Cancel the 399 ₽ subscription (merchant API, bank vault)")
-        items = self.chat("Cancel the 399 ₽ subscription")
+        self.head("C2 Cancel the $4.82 subscription (merchant API, bank vault)")
+        items = self.chat("Cancel the $4.82 subscription")
         items = self.option(items, "*1234")
         items = self.sign(items)
         items = self.merchant_sign_in(items, "tok_streambox")
         boost = [i for i in items if i.type == "boost"]
         if boost:
-            self.option(boost, "Add 399")
+            self.option(boost, "Add $4.82")
 
         self.head("C7 Free trial turns paid tomorrow")
         trial = [i for i in s.items if i.type == "trial"]
@@ -169,14 +170,14 @@ class Demo:
 
         self.head("C10 Payee risk on the bank's transfer graph")
         for acct in ("40817810500009998887", "40817810500001234567"):
-            items = self.chat(f"Transfer 20 000 to account {acct}")
+            items = self.chat(f"Transfer $241.40 to account {acct}")
             self.decline(items)
 
         self.head("C9 'Safe account' scam call")
         s.scam_call(True)
         self.say("  operator: the mobile operator reports an ongoing call from a spoofed number")
         items = self.chat(SCAM)
-        amount = 35_000_000
+        amount = from_rub(350_000)
         self.sign(items, typed_amount=amount, answers=NO, pin="2580")
         s.wait(16)
         self.say("  (15 minutes later)")
@@ -188,9 +189,17 @@ class Demo:
             self.show(s.analyst_decide(hold, approve=False, note="client confirmed the call was a scam"))
 
 
+        self.head("C11 Invest on a US exchange from the investment envelope")
+        items = self.chat("Invest $10 a month in SPY")
+        self.sign(items, standing=True)
+        self.chat("Buy $10 of GME")
+        self.chat("Invest $5 in SPY261218C00600000")
+
         self.head("One month later")
         self.show(s.advance(31))
         self.chat("Pay for Melodify")
+        self.chat("Invest $10 in SPY")
+        self.chat("Show my portfolio")
         self.chat("Month review")
 
         self.head("Earned trust: rewards and penalties")
@@ -220,6 +229,16 @@ def trust_report(svc, tr: dict) -> dict:
             "faulty_actions": {"proposed": len(faults), "executed": len(executed)},
             "journal_entries": len(journal),
             "moves": [r for r in map(_row, k.trust.history) if r["moved"]]}
+
+
+def invest_report(svc) -> dict:
+    """Orders the kernel placed and the orders its broker step stopped, from the journal."""
+    k = svc.k
+    steps = [e.data for e in k.journal.entries if e.event == "pipeline.broker"]
+    return {"broker": k.investing.source, "limits": k.investing.limits.model_dump(mode="json"),
+            "portfolio": svc.portfolio(), "checked": len(steps),
+            "stopped": [r for d in steps for r in d.get("reasons", [])],
+            "filled": [e.data for e in k.journal.entries if e.event == "order.filled"]}
 
 
 def main() -> None:
@@ -254,6 +273,8 @@ def main() -> None:
     (a.out / "demo_summary.json").write_text(json.dumps(summary, ensure_ascii=False, indent=1, default=str))
     (a.out / "trust_report.json").write_text(json.dumps(trust_report(d.svc, sec["trust"]), ensure_ascii=False,
                                                         indent=1, default=str))
+    (a.out / "invest_report.json").write_text(json.dumps(invest_report(d.svc), ensure_ascii=False, indent=1,
+                                                         default=str))
     print("\n".join(d.lines[-6:]))
 
 

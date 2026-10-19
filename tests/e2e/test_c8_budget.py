@@ -2,12 +2,13 @@
 
 import re
 
+from kernel.money import from_rub
 from kernel.trust import Category
 from sandbox.sites.portal import DEMO_LOGINS
 
 from .conftest import Client, of
 
-GOAL = "Save up 60k for a vacation by July, do not touch the gym"
+GOAL = "Save up $724.20 for a vacation by July, do not touch the gym"
 
 
 def set_goal(c: Client):
@@ -19,15 +20,15 @@ def set_goal(c: Client):
 
 def test_goal_plan_keeps_bills_and_the_untouchable_category(client):
     g = of(client.say(GOAL), "goal")[-1].data
-    assert g["target"] == "60 000 ₽" and g["deadline"] == "2027-07-01" and g["untouchable"] == "sport"
+    assert g["target"] == "$724.20" and g["deadline"] == "2027-07-01" and g["untouchable"] == "sport"
     assert g["feasible"] and all(m["ok"] for m in g["months"]) and len(g["months"]) == 9
-    assert g["monthly"] == "6 700 ₽" and "/ 9 payments" in g["calc"]
+    assert g["monthly"] == "$81" and "/ 9 payments" in g["calc"]
     assert not any(c["name"] == "Health & sport" for c in g["cuts"])
 
 
 def test_russian_goal_request(client):
-    g = of(client.say("Накопи 60 000 к июлю, спортзал не трогай"), "goal")[-1].data
-    assert g["target"] == "60 000 ₽" and g["untouchable"] == "sport"
+    g = of(client.say("Накопи 724,20 доллара к июлю, спортзал не трогай"), "goal")[-1].data
+    assert g["target"] == "$724.20" and g["untouchable"] == "sport"
 
 
 def test_payday_split_and_goal_transfer_under_a_standing_permission(svc, client):
@@ -42,30 +43,30 @@ def test_payday_split_and_goal_transfer_under_a_standing_permission(svc, client)
     assert card.data["card"]["standing_offer"] is not None
     save0 = svc.bank.accounts["acc_save"].balance
     client.yes(items, standing=True)
-    assert svc.bank.accounts["acc_save"].balance - save0 == 670_000
-    assert svc.goals[0].goal.saved == 670_000
-    items = svc.advance(30)                       # trust level 1 lets the agent move only 1 000 ₽ alone: card again
+    assert svc.bank.accounts["acc_save"].balance - save0 == 8_100
+    assert svc.goals[0].goal.saved == 8_100
+    items = svc.advance(30)                       # trust level 1 lets the agent move only $12.07 alone: card again
     card = [i for i in of(items, "card") if "Savings" in i.text][-1]
     assert any("trust level 1" in r for s in card.data["steps"] for r in s["reasons"])
     client.yes(items)
     svc.k.trust.categories[Category.OWN_TRANSFERS].level = 2     # earned after five verified transfers
     items = svc.advance(30)                       # next 25th: within the standing permission, a notification
     r = [i for i in of(items, "receipt") if "Savings" in i.text][-1]
-    assert r.data["notify_only"] and svc.goals[0].goal.saved == 3 * 670_000
+    assert r.data["notify_only"] and svc.goals[0].goal.saved == 3 * 8_100
     assert not [i for i in of(items, "card") if "Savings" in i.text]
 
 
 def test_cancelled_subscription_speeds_up_the_goal(svc, client):
     set_goal(client)
-    items = client.say("Cancel the 399 ₽ StreamBox subscription on card 1234")
+    items = client.say("Cancel the $4.82 StreamBox subscription on card 1234")
     items = client.yes(items if of(items, "card") else client.option(items, "*1234"))
     cid = of(items, "login")[-1].data["cancellation"]
     svc.cancel_login(cid, *DEMO_LOGINS[("tok_streambox", "card_1234")])
     items = svc.cancel_code(cid, re.search(r"code: (\d+)", svc.portal.sms[-1].text).group(1))
     boost = of(items, "boost")[-1]
-    assert "+399 ₽ a month" in boost.text and ("days earlier" in boost.text or "date stays" in boost.text)
-    client.option([boost], "Add 399")
-    assert svc.goals[0].monthly == 670_000 + 39_900
+    assert "+$4.82 a month" in boost.text and ("days earlier" in boost.text or "date stays" in boost.text)
+    client.option([boost], "Add $4.82")
+    assert svc.goals[0].monthly == 8_100 + from_rub(399)
 
 
 def test_month_review_finds_spikes_and_late_night_spending(client):

@@ -8,7 +8,7 @@ from fastapi.testclient import TestClient
 from data.generator import CLIENT, build_world
 from kernel.crypto import DeviceKey
 from kernel.executors import TX_REF, HttpRails
-from kernel.money import kop
+from kernel.money import from_rub
 from kernel.passport import Role
 from kernel.pipeline import Outcome
 from kernel.statements import Category
@@ -27,9 +27,9 @@ def env(base):
     bank = base.bank.twin()
     bank.set_envelopes(CLIENT, "acc_main", [
         Envelope(id="env_subs", client_id="", account_id="", name="Subscriptions", categories=[Category.SUBSCRIPTIONS],
-                 balance=kop(500)),
+                 balance=from_rub(500)),
         Envelope(id="env_fun", client_id="", account_id="", name="Cafes & fun", categories=[Category.CAFES],
-                 balance=kop(2_000))])
+                 balance=from_rub(2_000))])
     k = connect(bank, base.merchants, seed="t")
     dev = DeviceKey(seed="t:device")
     k.mandates.register_device(CLIENT, dev.public_b64, dev.alg)
@@ -54,15 +54,15 @@ def yes(k, dev, d, standing=False):
 
 def test_payment_from_envelope_and_overspend_card(env):
     k, bank, dev, planner = env
-    d = ask(k, planner, "pay", "tok_melodify", kop(299), "env_subs")
+    d = ask(k, planner, "pay", "tok_melodify", from_rub(299), "env_subs")
     assert d.outcome == Outcome.PENDING
     assert any('envelope "Subscriptions"' in line for line in d.card.can)
     done = yes(k, dev, d, standing=True)
     assert done.outcome == Outcome.EXECUTED
     tx = bank.tx(done.receipt.reference)
     assert tx.envelope_id == "env_subs" and tx.initiator == "agent" and tx.ref.startswith("grt_")
-    assert bank.available(CLIENT, "env_subs") == kop(201)
-    again = ask(k, planner, "pay", "tok_melodify", kop(299), "env_subs")
+    assert bank.available(CLIENT, "env_subs") == from_rub(500) - from_rub(299)
+    again = ask(k, planner, "pay", "tok_melodify", from_rub(299), "env_subs")
     assert again.outcome == Outcome.PENDING
     assert any('not enough money in envelope "Subscriptions"' in r for r in again.reasons)
     assert k.journal.verify().ok
@@ -70,13 +70,13 @@ def test_payment_from_envelope_and_overspend_card(env):
 
 def test_bank_refusal_is_a_failure_not_a_success(env):
     k, bank, dev, planner = env
-    bank.envelopes["env_subs"].balance = kop(100)
-    d = ask(k, planner, "pay", "tok_melodify", kop(299), "env_subs")
-    bank.envelopes["env_subs"].balance = kop(500)
+    bank.envelopes["env_subs"].balance = from_rub(100)
+    d = ask(k, planner, "pay", "tok_melodify", from_rub(299), "env_subs")
+    bank.envelopes["env_subs"].balance = from_rub(500)
     d2 = yes(k, dev, d)
     assert d2.outcome == Outcome.EXECUTED
-    d3 = ask(k, planner, "pay", "tok_melodify", kop(299), "env_subs")
-    bank.envelopes["env_subs"].balance = kop(10)
+    d3 = ask(k, planner, "pay", "tok_melodify", from_rub(299), "env_subs")
+    bank.envelopes["env_subs"].balance = from_rub(10)
     d4 = yes(k, dev, d3)
     assert d4.outcome == Outcome.FAILED and "not enough" in d4.receipt.details["error"]
 
@@ -96,7 +96,7 @@ def test_dispute_double_charge_refunded_after_three_days(env, base):
     k, bank, dev, planner = env
     second = base.truth.double_charge[1]
     ref = k.bank_value(f"{TX_REF}{second}", second, "statement")
-    d = ask(k, planner, "dispute", "tok_freshmart", kop(2_345.60), refs=[ref], memo="duplicate charge")
+    d = ask(k, planner, "dispute", "tok_freshmart", from_rub(2_345.60), refs=[ref], memo="duplicate charge")
     assert d.outcome == Outcome.PENDING
     done = yes(k, dev, d)
     assert done.outcome == Outcome.EXECUTED and done.receipt.reference.startswith("dsp_")
@@ -107,7 +107,7 @@ def test_dispute_double_charge_refunded_after_three_days(env, base):
 
 def test_fabricated_transaction_reference_is_denied(env):
     k, bank, dev, planner = env
-    d = ask(k, planner, "dispute", "tok_freshmart", kop(2_345.60), refs=[f"{TX_REF}tx_made_up"])
+    d = ask(k, planner, "dispute", "tok_freshmart", from_rub(2_345.60), refs=[f"{TX_REF}tx_made_up"])
     assert d.outcome == Outcome.DENIED and any("does not exist" in r for r in d.reasons)
 
 
@@ -118,6 +118,6 @@ def test_executor_over_http(base):
     dev = DeviceKey(seed="t:device")
     k.mandates.register_device(CLIENT, dev.public_b64, dev.alg)
     planner = k.passports.issue(Role.PLANNER, "m", 2, "p", CLIENT, "t")
-    d = ask(k, planner, "pay", "tok_citywater", kop(912.30), "acc_main")
+    d = ask(k, planner, "pay", "tok_citywater", from_rub(912.30), "acc_main")
     done = yes(k, dev, d)
     assert done.outcome == Outcome.EXECUTED and bank.tx(done.receipt.reference).counterparty == "tok_citywater"

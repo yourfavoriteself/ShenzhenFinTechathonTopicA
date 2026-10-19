@@ -10,6 +10,7 @@ from typing import Any
 from pydantic import BaseModel, Field
 
 from .mandate import Action, new_id
+from .money import cents
 from .provenance import Label, Labeled, untrusted
 
 
@@ -93,5 +94,6 @@ class ProvenanceStore:
 def _mentions(text: str, value: Any) -> bool:
     t = re.sub(r"(?<=\d)[\s,](?=\d{3}\b)", "", text.lower())
     if isinstance(value, int):
-        return value % 100 == 0 and re.search(rf"(?<![\d.]){value // 100}(?![\d])", t) is not None
+        return any(cents(float(m.group(1).replace(",", "."))) == value
+                   for m in re.finditer(r"(?<![\d.])(\d+(?:[.,]\d{1,2})?)(?![\d])", t))
     return "".join(str(value).lower().removeprefix("acct:").split()) in "".join(t.split())

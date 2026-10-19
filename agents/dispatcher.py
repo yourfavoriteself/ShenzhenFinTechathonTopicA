@@ -12,7 +12,7 @@ from pydantic import BaseModel, Field
 from kernel.llm_gateway import LLMGateway
 
 KINDS = ("pay", "pay_bills", "transfer", "cancel", "goal", "month_review", "forecast_quality", "find_leaks", "double_charges", "budget", "safe_to_spend", "can_afford", "cash_gap",
-         "permissions", "help", "unknown")
+         "invest", "permissions", "help", "unknown")
 
 SYSTEM = f"""You are the dispatcher of a personal finance assistant inside a bank.
 Classify the client's message into one task kind: {", ".join(KINDS)}.
@@ -22,6 +22,7 @@ subscriptions; cancel = cancel one subscription (by name or by the amount charge
 double_charges = find and dispute duplicate charges; budget = build a monthly budget;
 safe_to_spend = how much can be spent today; can_afford = whether a purchase is affordable;
 cash_gap = upcoming shortfall before payday; goal = save a sum by a date;
+invest = buy a stock or fund on the US exchange (ticker and dollar amount);
 month_review = how last month went; forecast_quality = how accurate the budget forecast is; permissions = what the assistant is allowed to do.
 Copy the payee name and amount exactly as the client wrote them. You never act and never see bank data."""
 
@@ -44,11 +45,12 @@ RULES: list[tuple[str, str]] = [
     (r"\b(can i afford|afford|могу ли я (себе )?позволить|хватит ли)", "can_afford"),
     (r"\b(how much can i spend|safe to spend|spend today|сколько (я )?могу потратить)", "safe_to_spend"),
     (r"\b(cash gap|short before payday|enough until payday|разрыв|не хватит до зарплаты)", "cash_gap"),
-    (r"\b(save up|saving for|save \d[\d\s]*k?\b.*\bby|накопи|накопить|новая цель|goal)\b", "goal"),
+    (r"\b(save up|saving for|save \$?\d[\d\s,.]*k?\b.*\bby|накопи|накопить|новая цель|goal)\b", "goal"),
     (r"\b(month review|month summary|last month|итоги месяца|прошлый месяц)", "month_review"),
     (r"\b(how accurate|forecast accura|точност|насколько точ)", "forecast_quality"),
     (r"\b(transfer|send|move|wire|переведи|перевести|перевод|отправь)\w*\b.*(\d{10,20}|safe account|"
      r"безопасн\w* сч|安全账户)", "transfer"),
+    (r"\b(invest|buy|купи|инвест|вложи)\w*\b.*\$?\d.*\b(in|of|into|в)\s+[a-z]|\b(portfolio|портфель)\b", "invest"),
     (r"\b(budget|envelopes?|бюджет|конверт)", "budget"),
     (r"\b(permissions?|what can you do|allowed|разрешени|что ты можешь)", "permissions"),
     (r"^\s*(pay( for)?|оплати|заплати( за)?)\s+\S", "pay"),
@@ -67,7 +69,9 @@ _PAYEE = re.compile(r"^\s*(?:please\s+)?(?:pay(?:\s+for)?|оплати|запл�
                     r"(?:\s+(?:again|subscription|подписку))?\s*[.!?]*\s*$", re.I)
 _CANCEL_PAYEE = re.compile(r"(?:[Cc]ancel|[Uu]nsubscribe from|[Оо]тмени(?:ть)?)\s+(?:my\s+)?(?:подписку\s+(?:на\s+)?)?"
                            r"([A-Z][A-Za-z0-9]+)")
-_AMOUNT = re.compile(r"(\d(?:[\d\s ]*\d)?(?:[.,]\d{1,2})?)(?:k\b|к\b|\s*тыс\w*)?\s*(?:₽|rub|руб|r\b)?", re.I)
+_TICKER = re.compile(r"\b(?:in|of|into|в|акции)\s+([A-Z][A-Z0-9./]{0,20})\b")
+_AMOUNT = re.compile(r"(?:\$\s*)?(\d(?:[\d\s ,]*\d)?(?:\.\d{1,2})?)(?:k\b|к\b|\s*тыс\w*)?"
+                     r"\s*(?:\$|usd\b|dollars?\b|долл\w*|美元)?", re.I)
 
 
 def rule_route(text: str) -> Route | None:
@@ -84,6 +88,12 @@ def rule_route(text: str) -> Route | None:
                 if nums:
                     raw = nums[0].group(0)
                     r.amount = nums[0].group(1).strip() + ("000" if re.search(r"(k|к|тыс)", raw, re.I) else "")
+            if kind == "invest":
+                if m := _TICKER.search(text):
+                    r.item = m.group(1)
+                if m := re.search(r"\$\s*(\d[\d,]*(?:\.\d{1,2})?)|(\d[\d,]*(?:\.\d{1,2})?)\s*(?:\$|usd|dollars?|долл)",
+                                  text, re.I):
+                    r.amount = (m.group(1) or m.group(2)).strip()
             if kind == "goal":
                 nums = [m for m in _AMOUNT.finditer(text) if m.group(1).strip()]
                 if nums:

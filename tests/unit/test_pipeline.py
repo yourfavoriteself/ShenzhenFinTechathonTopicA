@@ -3,6 +3,7 @@ import pytest
 from kernel.cards import Risk
 from kernel.core import ConfirmationError, Kernel
 from kernel.crypto import DeviceKey
+from kernel.money import from_rub
 from kernel.passport import Role
 from kernel.pipeline import Outcome, StepResult, Verdict
 from kernel.ports import InMemoryDirectory, InMemoryFunds, PayeeInfo, Receipt
@@ -21,9 +22,9 @@ class FakeExecutor:
 
 PAYEES = [
     PayeeInfo(token="tok_melodify", name="Melodify", kind="subscription", verified=True, known_to_client=True,
-              usual_amount=29900, domain="melodify.example"),
+              usual_amount=from_rub(299), domain="melodify.example"),
     PayeeInfo(token="tok_mosenergo", name="Mosenergo", kind="biller", verified=True, known_to_client=True,
-              usual_amount=420000),
+              usual_amount=from_rub(4_200)),
     PayeeInfo(token="tok_newshop", name="New Shop", verified=False, known_to_client=False),
 ]
 
@@ -33,11 +34,11 @@ def env(clock):
     ex = FakeExecutor()
     k = Kernel(clock=clock, seed="t", executor=ex,
                directory=InMemoryDirectory(PAYEES, blocked={"tok_mule"}),
-               funds=InMemoryFunds({"card_1234": 5_000_000, "env_subs": 20_000}, {"card_1234": "card *1234"}))
+               funds=InMemoryFunds({"card_1234": from_rub(50_000), "env_subs": from_rub(200)}, {"card_1234": "card *1234"}))
     dev = DeviceKey(seed="t:device")
     k.mandates.register_device("cl_1", dev.public_b64, dev.alg)
     k.bank_value("bank:payee:melodify", "tok_melodify", "merchant directory")
-    k.bank_value("bank:amount:melodify", 29900, "usual amount from history")
+    k.bank_value("bank:amount:melodify", from_rub(299), "usual amount from history")
     k.bank_value("bank:card", "card_1234", "client's cards")
     return k, ex, dev, new_planner(k)
 
@@ -46,7 +47,7 @@ def new_planner(k):
     return k.passports.issue(Role.PLANNER, "claude-sonnet-5-5", 2, "planner v1", "cl_1", "task_2")
 
 
-def pay(planner, payee=("tok_melodify", "bank:payee:melodify"), amount=(29900, "bank:amount:melodify"),
+def pay(planner, payee=("tok_melodify", "bank:payee:melodify"), amount=(from_rub(299), "bank:amount:melodify"),
         src=("card_1234", "bank:card"), **extra):
     intent = {"action": "pay", "payee": {"value": payee[0], "ref": payee[1]},
               "amount": {"value": amount[0], "ref": amount[1]},
@@ -69,7 +70,7 @@ def test_first_payment_asks_then_standing_mandate_repeats_without_asking(env, cl
     assert card.standing_offer and "Melodify" in card.can[0] and card.cannot
     assert {f.name: f.badge for f in card.fields}["payee"] == "verified by the bank"
     d2 = k.confirm(d.pending_id, dev.alg, dev.public_b64, dev.sign_mandate(card.standing_mandate_hash), standing=True)
-    assert d2.outcome == Outcome.EXECUTED and ex.calls == [("pay", "tok_melodify", 29900)]
+    assert d2.outcome == Outcome.EXECUTED and ex.calls == [("pay", "tok_melodify", from_rub(299))]
     clock.advance(days=31)
     planner = new_planner(k)
     d3 = k.submit(pay(planner))
@@ -85,11 +86,11 @@ def test_price_increase_shows_card_with_highlighted_change(env, clock):
     k.confirm(d.pending_id, dev.alg, dev.public_b64, dev.sign_mandate(d.card.standing_mandate_hash), standing=True)
     clock.advance(days=31)
     planner = new_planner(k)
-    k.bank_value("bank:amount:melodify:new", 49900, "invoice matched to history")
-    d = k.submit(pay(planner, amount=(49900, "bank:amount:melodify:new")))
+    k.bank_value("bank:amount:melodify:new", from_rub(499), "invoice matched to history")
+    d = k.submit(pay(planner, amount=(from_rub(499), "bank:amount:melodify:new")))
     assert d.outcome == Outcome.PENDING and d.risk == Risk.HIGH
     amount = next(f for f in d.card.fields if f.name == "amount")
-    assert amount.changed and amount.previous == "299 ₽" and amount.value == "499 ₽"
+    assert amount.changed and amount.previous == "$3.61" and amount.value == "$6.02"
 
 
 def test_agent_cannot_exceed_referenced_mandate(env):
@@ -106,16 +107,16 @@ def test_agent_cannot_exceed_referenced_mandate(env):
 
 def test_untrusted_document_values(env):
     k, ex, dev, planner = env
-    d = k.submit(pay(planner, payee=("tok_attacker", None), amount=(5_000_000, None)))
+    d = k.submit(pay(planner, payee=("tok_attacker", None), amount=(from_rub(50_000), None)))
     assert d.outcome == Outcome.DENIED and any("unverified" in r for r in d.reasons)
-    k.publish("doc:inv1:amount", Labeled(value=150000, label=Label.UNTRUSTED, source="invoice inv1"))
-    d = k.submit(pay(planner, payee=("tok_newshop", None), amount=(150000, "doc:inv1:amount")))
+    k.publish("doc:inv1:amount", Labeled(value=from_rub(1_500), label=Label.UNTRUSTED, source="invoice inv1"))
+    d = k.submit(pay(planner, payee=("tok_newshop", None), amount=(from_rub(1_500), "doc:inv1:amount")))
     assert d.outcome == Outcome.PENDING and d.risk == Risk.HIGH
     assert d.card.hold_to_confirm and d.card.type_amount and d.card.standing_offer is None
     assert any(f.warning for f in d.card.fields)
     with pytest.raises(ConfirmationError, match="typed amount"):
         k.confirm(d.pending_id, dev.alg, dev.public_b64, dev.sign_mandate(d.card.mandate_hash), typed_amount=1)
-    d2 = k.confirm(d.pending_id, dev.alg, dev.public_b64, dev.sign_mandate(d.card.mandate_hash), typed_amount=150000)
+    d2 = k.confirm(d.pending_id, dev.alg, dev.public_b64, dev.sign_mandate(d.card.mandate_hash), typed_amount=from_rub(1_500))
     assert d2.outcome == Outcome.EXECUTED
 
 
@@ -131,10 +132,10 @@ def test_mandate_changed_after_card_was_shown_is_rejected(env):
 
 def test_client_amount_from_message_is_trusted(env):
     k, ex, dev, planner = env
-    ref = k.provenance.put_client_message("m1", "Pay 299 for Melodify")
-    d = k.submit(pay(planner, amount=(29900, ref)))
+    ref = k.provenance.put_client_message("m1", "Pay $3.61 for Melodify")
+    d = k.submit(pay(planner, amount=(from_rub(299), ref)))
     assert d.outcome == Outcome.PENDING and d.risk == Risk.MEDIUM
-    d = k.submit(pay(planner, amount=(39900, ref)))
+    d = k.submit(pay(planner, amount=(from_rub(399), ref)))
     assert d.risk == Risk.HIGH
 
 
@@ -186,10 +187,10 @@ def test_elevated_protection_always_asks_for_external_payments(clock):
                directory=InMemoryDirectory([PayeeInfo(token="tok_x", name="X", verified=True, known_to_client=False)]),
                funds=InMemoryFunds({"card_1": 10**9}))
     k.bank_value("p", "tok_x", "directory")
-    k.bank_value("a", 100000, "history")
+    k.bank_value("a", from_rub(1_000), "history")
     k.bank_value("c", "card_1", "cards")
     planner = k.passports.issue(Role.PLANNER, "m", 2, "p", "cl_1", "t")
-    d = k.submit(pay(planner, payee=("tok_x", "p"), amount=(100000, "a"), src=("card_1", "c")))
+    d = k.submit(pay(planner, payee=("tok_x", "p"), amount=(from_rub(1_000), "a"), src=("card_1", "c")))
     assert d.outcome == Outcome.PENDING
     assert "notify_trusted_person" in k.journal.entries[-1].data["flags"]
 
@@ -218,8 +219,8 @@ def test_three_strikes_quarantine_agent_and_revoke_its_passports(env):
     d = k.submit(pay(planner))
     k.confirm(d.pending_id, dev.alg, dev.public_b64, dev.sign_mandate(d.card.standing_mandate_hash), standing=True)
     mid = k.mandates.active("cl_1")[0].mandate.id
-    k.bank_value("bank:amount:big", 299000, "invoice")
-    d = k.submit(pay(planner, amount=(299000, "bank:amount:big"), mandate_id=mid))
+    k.bank_value("bank:amount:big", from_rub(2_990), "invoice")
+    d = k.submit(pay(planner, amount=(from_rub(2_990), "bank:amount:big"), mandate_id=mid))
     assert d.outcome == Outcome.DENIED and k.trust.agent(planner.passport).strikes == 2
     d = k.submit(pay(planner, references=["bank:invoice:ghost"]))
     assert d.outcome == Outcome.DENIED
@@ -229,7 +230,7 @@ def test_three_strikes_quarantine_agent_and_revoke_its_passports(env):
     d = k.submit(pay(planner))
     assert d.outcome == Outcome.DENIED and "revoked" in d.reasons[0]
     fresh = new_planner(k)
-    assert k.trust.auto_limit(Category.SUBSCRIPTIONS, 29900, fresh.passport) == 0
+    assert k.trust.auto_limit(Category.SUBSCRIPTIONS, from_rub(299), fresh.passport) == 0
     d = k.submit(pay(fresh))
     assert d.outcome == Outcome.PENDING and len(ex.calls) == 1
     assert k.journal.verify().ok

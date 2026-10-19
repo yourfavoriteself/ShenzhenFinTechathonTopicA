@@ -19,7 +19,7 @@ def test_payment_is_rehearsed_on_a_copy_and_the_real_bank_is_untouched_until_sig
 
 
 def test_payment_the_bank_would_refuse_goes_back_to_the_client(client, svc):
-    items = client.say("Transfer 9 000 000 to account 40817810500009998887")
+    items = client.say("Transfer $108,629.53 to account 40817810500009998887")
     card = of(items, "card")[-1].data["card"]
     assert any("dry run in a copy of the bank failed" in r for r in card["reasons"])
 

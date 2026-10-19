@@ -30,9 +30,11 @@ class Action(str, Enum):
     DISPUTE = "dispute"
     TRANSFER_OWN = "transfer_own"
     BROWSE = "browse"
+    INVEST = "invest"
 
 
 MONEY_ACTIONS = {Action.PAY, Action.TRANSFER_OWN}
+SPEND_ACTIONS = MONEY_ACTIONS | {Action.INVEST}   # actions whose money a mandate must bound
 
 
 class Frequency(str, Enum):
@@ -54,12 +56,12 @@ class AutonomyStage(IntEnum):
 class AmountRange(BaseModel):
     min: int = 0
     max: int
-    currency: str = "RUB"
+    currency: str = "USD"
 
 
 class Budget(BaseModel):
     total: int
-    currency: str = "RUB"
+    currency: str = "USD"
 
 
 class Recurrence(BaseModel):
@@ -182,7 +184,7 @@ def narrowing_violations(child: Mandate, parent: Mandate) -> list[str]:
         if cp is not None:
             v.append("payment constraints added to a mandate without payments")
     elif cp is None:
-        if set(child.actions) & MONEY_ACTIONS:
+        if set(child.actions) & SPEND_ACTIONS:
             v.append("money action without payment constraints")
     else:
         if extra := set(cp.allowed_payees) - set(pp.allowed_payees):
@@ -314,9 +316,9 @@ class MandateService:
             elif action != Action.BROWSE and allowed[domain] == OriginMode.READ:
                 v.append(f"domain {domain} is read-only for this task")
         p = m.payment
-        if p is not None and (payee is not None or action in MONEY_ACTIONS) and payee not in p.allowed_payees:
+        if p is not None and (payee is not None or action in SPEND_ACTIONS) and payee not in p.allowed_payees:
             v.append("payee not allowed")
-        if p is not None and (amount is not None or action in MONEY_ACTIONS):
+        if p is not None and (amount is not None or action in SPEND_ACTIONS):
             if amount is None or not (p.amount_range.min <= amount <= p.amount_range.max):
                 v.append("amount outside allowed range")
             if p.budget and amount is not None and st.spent + amount > p.budget.total:

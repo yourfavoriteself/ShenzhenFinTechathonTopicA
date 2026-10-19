@@ -40,7 +40,7 @@ class Doc(BaseModel):
 
 
 class Extraction(BaseModel):
-    """Reader output schema. Amount as written in the document (e.g. "4 382.40")."""
+    """Reader output schema. Amount as written in the document (e.g. "219.12")."""
     kind: Literal["bill", "details_change", "price_change", "trial", "other"]
     payee_name: str | None = None
     account: str | None = None
@@ -97,7 +97,8 @@ class DocCheck(BaseModel):
 def parse_amount(text: str | None) -> int | None:
     if not text:
         return None
-    t = re.sub(r"[\s ]", "", text).replace("RUB", "").replace("₽", "").replace(",", ".")
+    t = re.sub(r"[\s\u00a0$]|USD|dollars?|долл\w*|美元", "", text, flags=re.I)
+    t = re.sub(r",(?=\d{3}(?:\D|$))", "", t).replace(",", ".")
     try:
         return int((Decimal(t) * 100).to_integral_value())
     except InvalidOperation:

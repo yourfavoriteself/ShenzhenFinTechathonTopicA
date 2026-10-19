@@ -73,7 +73,7 @@ function costLine(d) {
   if (!c || !c.calls) return null;
   return h("div", {class: "meta"},
     `Models: ${c.calls} call${c.calls > 1 ? "s" : ""}, level ${c.levels.join(" and ")}, ${c.input_tokens + c.output_tokens} tokens, `
-    + `${c.cost_rub.toFixed(2)} ₽${c.estimated ? " (estimate, stub)" : ""}`);
+    + `$${c.cost_usd.toFixed(4)}${c.estimated ? " (estimate, stub)" : ""}`);
 }
 
 function steps(d) {
@@ -153,7 +153,7 @@ function renderCard(it) {
       const hash = useStanding ? c.standing_mandate_hash : c.mandate_hash;
       const sig = await signMandate(hash);
       const body = {alg: device.alg, public_key: device.pub, sig, standing: useStanding};
-      if (typed) body.typed_amount = Math.round(parseFloat(typed.value.replace(/[^\d.,]/g, "").replace(/\s/g, "").replace(",", ".")) * 100);
+      if (typed) body.typed_amount = Math.round(parseFloat(typed.value.replace(/[^\d.,]/g, "").replace(/,(?=\d{3}(\D|$))/g, "").replace(",", ".")) * 100);
       if (answers) {
         const a = {};
         for (const [k, [y, n]] of Object.entries(answers)) if (y.checked || n.checked) a[k] = y.checked;
@@ -222,6 +222,13 @@ function table(rows, cols) {
     rows.map((r) => h("tr", {}, cols.map(([k]) => h("td", {}, typeof k === "function" ? k(r) : r[k])))));
 }
 
+function portfolioTables(p) {
+  return [
+    p.positions.length ? table(p.positions, [["symbol", "Security"], ["qty", "Shares"], ["value", "Value"]]) : null,
+    p.orders.length ? table(p.orders.slice(-4), [["id", "Order"], ["symbol", "Security"], ["amount", "Amount"], ["type", "Type"], ["status", "Status"]]) : null,
+    h("div", {class: "meta"}, `${p.source === "alpaca" ? "Alpaca paper trading" : "broker sandbox"} · US market ${p.session}`)];
+}
+
 function render(it) {
   const d = it.data || {};
   switch (it.type) {
@@ -287,6 +294,7 @@ function render(it) {
     case "quality": return h("div", {class: "msg"}, it.text,
       table(Object.entries(d.forecast.mape).map(([k, v]) => ({k: d.names[k] || k, v: v + "%"})), [["k", "Envelope"], ["v", "Average error"]]),
       h("div", {class: "meta"}, `Trained on ${d.forecast.train[0]}…${d.forecast.train.at(-1)}, tested on ${d.forecast.test.join(", ")}; gap back-test at ${d.gaps.probes} past dates`));
+    case "portfolio": return h("div", {class: "msg"}, "📈 " + it.text, portfolioTables(d));
     case "permissions": return h("div", {class: "msg"}, it.text,
       h("ul", {}, (d.mandates || []).map((m) => h("li", {}, m.can.join("; ")))));
     default: return h("div", {class: "msg " + it.type}, it.text,
@@ -325,6 +333,9 @@ async function refresh() {
     s.gap.length ? h("div", {class: "alert"}, `Cash gap on ${s.gap[0].date}: ${s.gap[0].event}, ${s.gap[0].shortfall} missing`) : null,
     h("h4", {}, "Accounts"),
     ...s.accounts.map((a) => h("div", {class: "env"}, h("div", {class: "row"}, h("span", {}, a.name), h("b", {}, a.label)))),
+    h("h4", {}, "Investment envelope"),
+    h("div", {class: "env", "data-testid": "invest"}, h("div", {class: "row"}, h("span", {}, `${s.portfolio.remaining_label} left of ${s.portfolio.envelope_label}`), h("b", {}, s.portfolio.positions.map((x) => `${x.symbol} ${x.value}`).join(", ") || "no positions")),
+      h("div", {class: "track"}, h("div", {class: "fill", style: `width:${Math.round(100 * s.portfolio.remaining / Math.max(s.portfolio.envelope, 1))}%`}))),
     h("h4", {}, "Envelopes"),
     s.envelopes.length ? null : h("div", {class: "meta"}, "No envelopes yet. Ask: Make me a budget"),
     ...s.envelopes.map((e) => {
@@ -333,7 +344,7 @@ async function refresh() {
         h("div", {class: "track"}, h("div", {class: "fill", style: `width:${Math.round(100 * e.balance / max)}%`})));
     }),
     h("h4", {}, "Models"),
-    h("div", {class: "meta"}, `mode ${s.llm.mode}; spent ${s.llm.spent_total_rub} ₽ of ${s.llm.cap_rub} ₽; critic calls ${s.critic.calls}, cache hits ${s.critic.cache_hits}`),
+    h("div", {class: "meta"}, `mode ${s.llm.mode}; spent $${s.llm.spent_total_usd} of $${s.llm.cap_usd}; critic calls ${s.critic.calls}, cache hits ${s.critic.cache_hits}`),
     h("div", {class: "meta"}, "Trust: " + Object.entries(s.trust).map(([k, v]) => `${k.replace("_", " ")} ${v}`).join(", ")));
   const p = $("#tab-permissions");
   fill(p, h("div", {class: "meta"}, "Standing permissions you signed. Revoking takes effect at once."),
@@ -374,7 +385,7 @@ function renderSections(x) {
     m.cancelled.length ? h("div", {}, "Cancelled and verified with the merchant: " + m.cancelled.join(", ")) : null,
     h("h4", {}, "Goals"),
     m.goals.length ? table(m.goals, [["name", "Goal"], ["saved", "Saved"], ["target", "Target"], [(g) => g.pct + "%", "Done"], ["date", "On track for"]])
-      : empty("No goals yet. Ask: Save 60 000 for a vacation by July"));
+      : empty("No goals yet. Ask: Save $724.20 for a vacation by July"));
 
   const p = x.payments;
   fill($("#tab-payments"),
@@ -417,16 +428,16 @@ function renderSections(x) {
 
   const c = x.cost;
   fill($("#tab-cost"),
-    kpis(kpi(`${c.spent_rub} ₽`, `spent of ${c.cap_rub} ₽ cap`), kpi(c.share_level_0_1 + "%", "work on levels 0 and 1"),
+    kpis(kpi(`$${c.spent_usd}`, `spent of $${c.cap_usd} cap`), kpi(c.share_level_0_1 + "%", "work on levels 0 and 1"),
       kpi(c.tasks_without_any_model, `of ${c.tasks} tasks without any model`), kpi(c.template_repeats, "repeats from templates")),
     h("div", {class: "meta"}, `Mode: ${c.mode}. ${c.note}`),
     Object.keys(c.by_level).length ? table(Object.entries(c.by_level).map(([k, v]) => ({k, ...v})),
-      [["k", "Level"], ["calls", "Calls"], ["input_tokens", "In"], ["output_tokens", "Out"], ["cost_rub", "₽ (est.)"]]) : null,
+      [["k", "Level"], ["calls", "Calls"], ["input_tokens", "In"], ["output_tokens", "Out"], [(r) => r.cost_usd.toFixed(4), "USD (est.)"]]) : null,
     c.months ? h("h4", {}, `One client's month: next month costs ${c.saving_pct}% less`) : null,
-    c.months ? table(c.months, [["month", "Month"], ["calls", "Model calls"], ["big_model_calls", "Big model"], ["tokens", "Tokens"], ["rub", "₽"]]) : null,
-    c.repeat ? table(c.repeat, [["task", "Task"], [(r) => `${r.first_rub} ₽ (L${r.first_levels.join(",") || "0"})`, "First"], [(r) => `${r.next_rub} ₽ (L${r.next_levels.join(",") || "0"})`, "Repeat"]]) : null,
-    c.projection ? h("div", {class: "kpis"}, kpi(`${c.projection.rub_per_month.toLocaleString("ru-RU")} ₽`, "a month for 1 000 000 clients (estimate)"),
-      kpi(`${c.projection.rub_per_client_per_month} ₽`, "per client per month")) : null,
+    c.months ? table(c.months, [["month", "Month"], ["calls", "Model calls"], ["big_model_calls", "Big model"], ["tokens", "Tokens"], ["usd", "USD"]]) : null,
+    c.repeat ? table(c.repeat, [["task", "Task"], [(r) => `$${r.first_usd} (L${r.first_levels.join(",") || "0"})`, "First"], [(r) => `$${r.next_usd} (L${r.next_levels.join(",") || "0"})`, "Repeat"]]) : null,
+    c.projection ? h("div", {class: "kpis"}, kpi(`$${c.projection.usd_per_month.toLocaleString("en-US")}`, "a month for 1,000,000 clients (estimate)"),
+      kpi(`$${c.projection.usd_per_client_per_month}`, "per client per month")) : null,
     c.projection ? h("div", {class: "meta"}, c.projection.assumption) : null);
 
   const s = x.security;
@@ -478,10 +489,10 @@ function renderSections(x) {
 
 // ------------------------------------------------------------------ wiring
 
-const CHIPS = ["Pay for Melodify", "Cancel the 399 ₽ subscription", "Find leaks in my subscriptions", "Was I charged twice?", "Pay my bills",
-  "Make me a budget", "How much can I spend today?", "Can I afford headphones for 15 000?",
-  "Save 60 000 for a vacation by July, don't touch the gym",
-  "Transfer 350 000 ₽ from my savings to safe account 40817810500001234567", "Month review", "How accurate is your forecast?", "What can you do?"];
+const CHIPS = ["Pay for Melodify", "Cancel the $4.82 subscription", "Find leaks in my subscriptions", "Was I charged twice?", "Pay my bills",
+  "Make me a budget", "How much can I spend today?", "Can I afford headphones for $181.05?",
+  "Save $724.20 for a vacation by July, don't touch the gym",
+  "Transfer $4,224.48 from my savings to safe account 40817810500001234567", "Invest $10 a month in SPY", "Month review", "How accurate is your forecast?", "What can you do?"];
 
 function init() {
   $("#chips").append(...CHIPS.map((t) => h("button", {type: "button", onclick: () => send(t)}, t)));

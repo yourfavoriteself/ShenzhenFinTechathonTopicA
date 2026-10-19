@@ -1,4 +1,4 @@
-"""C2: "cancel the subscription that charges 399 ₽", end to end on the sandbox bank and merchant portal."""
+"""C2: "cancel the subscription that charges $4.82", end to end on the sandbox bank and merchant portal."""
 
 import re
 
@@ -10,6 +10,7 @@ from app.service import GuardianService
 from kernel.intent import IntentProposal
 from kernel.llm_gateway import LLMGateway
 from kernel.mandate import Action
+from kernel.money import from_rub
 from kernel.passport import Role
 from kernel.pipeline import Outcome
 from kernel.provenance import untrusted
@@ -17,7 +18,7 @@ from sandbox.sites.portal import CARD_NUMBERS, DEMO_LOGINS
 
 from .conftest import Client, of
 
-REQUEST = "Отмени подписку, по которой списывается 399 ₽"
+REQUEST = "Отмени подписку, по которой списывается $4.82"
 LOGIN, PASSWORD = DEMO_LOGINS[("tok_streambox", "card_1234")]
 
 
@@ -29,7 +30,7 @@ def cancel_streambox(svc, dev, card="*1234", remember=False, wrong_first=False):
     c = Client(svc, dev)
     items = c.say(REQUEST)
     ask = of(items, "options")[-1]
-    assert len(ask.data["options"]) == 2, "StreamBox charges 399 ₽ on two cards: the kernel must ask which"
+    assert len(ask.data["options"]) == 2, "StreamBox charges $4.82 on two cards: the kernel must ask which"
     items = c.option(items, card)
     card_item = of(items, "card")[-1]
     items = c.yes(items)
@@ -46,7 +47,7 @@ def cancel_streambox(svc, dev, card="*1234", remember=False, wrong_first=False):
 
 def test_c2_cancels_the_right_subscription_and_verifies_it(svc, dev):
     card_item, login, items, cid = cancel_streambox(svc, dev, wrong_first=True)
-    assert card_item.data["summary"] == "Cancel StreamBox, 399 ₽ a month, card *1234, charged since March?"
+    assert card_item.data["summary"] == "Cancel StreamBox, $4.82 a month, card *1234, charged since March?"
     assert login.data["domain_check"]["ok"] and login.data["domain"] == "streambox.example"
     done = of(items, "receipt")[-1]
     assert done.data["status"] == "verified" and len(done.data["verified"]) == 3
@@ -116,7 +117,7 @@ def _proposal(svc, action, amount=None, domain=None):
 def test_critic_rejects_accepting_a_retention_discount(svc):
     task = svc.k.open_task(svc.client, REQUEST, "cancel")
     s = session(svc.k, svc.gw, Role.DISPATCHER, 0, D.SYSTEM, svc.client, task.task_id)
-    d = propose(svc.k, s, _proposal(svc, Action.PAY, amount=19_900))
+    d = propose(svc.k, s, _proposal(svc, Action.PAY, amount=from_rub(199)))
     assert d.outcome == Outcome.DENIED
     critic = next(x for x in d.steps if x.step == "critic")
     assert critic.data["critic"] == "inconsistent"

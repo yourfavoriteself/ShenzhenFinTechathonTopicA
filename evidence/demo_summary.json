@@ -1,19 +1,19 @@
 {
  "mode": "stub",
  "journal": {
-  "entries": 347,
+  "entries": 437,
   "ok": true,
-  "head": "042685e6fe0e36ad4364afff36502bcc3dc476d52cbef4a7b9e683e3fe29bf24",
+  "head": "92dc49af2d7ce9c5413d49a97c60e5e0caca66bdb21562f2b55cdfa40b55bed9",
   "public_key": "oW/0FK+7YEeIXIur+DLYtdGlJs/5VpzWWioyCG0H8Ic="
  },
  "month": {
-  "saved_per_month": "797 ₽",
-  "saved_per_year": "9 564 ₽",
-  "refunded": "2 345.60 ₽",
-  "done": 11,
-  "notifications_only": 1,
-  "asked": 12,
-  "stopped": 4,
+  "saved_per_month": "$9.63",
+  "saved_per_year": "$115.56",
+  "refunded": "$28.31",
+  "done": 13,
+  "notifications_only": 2,
+  "asked": 13,
+  "stopped": 6,
   "cancelled": [
    "StreamBox",
    "CloudNest"
@@ -21,52 +21,52 @@
   "goals": [
    {
     "name": "vacation",
-    "target": "60 000 ₽",
-    "saved": "0 ₽",
-    "monthly": "7 099 ₽",
+    "target": "$724.20",
+    "saved": "$0",
+    "monthly": "$85.82",
     "date": "2027-06-25",
     "pct": 0.0
    }
   ]
  },
  "cost": {
-  "model_calls": 31,
+  "model_calls": 34,
   "by_level": {
    "1": {
-    "calls": 30,
-    "input_tokens": 8986,
-    "output_tokens": 546,
-    "cost_rub": 1.1716000000000002
+    "calls": 33,
+    "input_tokens": 9951,
+    "output_tokens": 579,
+    "cost_usd": 0.012846
    },
    "2": {
     "calls": 1,
-    "input_tokens": 803,
+    "input_tokens": 796,
     "output_tokens": 54,
-    "cost_rub": 0.3219
+    "cost_usd": 0.003198
    }
   },
-  "share_level_0_1": 97.1
+  "share_level_0_1": 97.6
  },
  "security": {
   "cases": 1,
   "holds": [
    {
-    "id": "hold_e8ed2c9321b7",
+    "id": "hold_0f63ea7bf7eb",
     "level": 4,
     "status": "rejected",
     "duress": false,
     "release_at": null,
-    "amount": "350 000 ₽"
+    "amount": "$4,224.48"
    }
   ],
-  "denied": 2
+  "denied": 4
  },
  "stages": {
   "stage 1": 7,
-  "stage 2": 2
+  "stage 2": 3
  },
  "passports": {
-  "dispatcher": 11,
+  "dispatcher": 15,
   "planner": 3,
   "reader": 1
  }

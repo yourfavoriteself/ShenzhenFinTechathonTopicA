@@ -12,7 +12,7 @@ from kernel.templates import Template, TemplateStore
     ("Pay for Melodify", "pay"), ("заплати за Melodify", "pay"), ("Pay my bills", "pay_bills"),
     ("Оплати счета", "pay_bills"), ("Find leaks in my subscriptions", "find_leaks"),
     ("Was I charged twice?", "double_charges"), ("Make me a budget", "budget"),
-    ("How much can I spend today?", "safe_to_spend"), ("Can I afford headphones for 15 000?", "can_afford"),
+    ("How much can I spend today?", "safe_to_spend"), ("Can I afford headphones for $181.05?", "can_afford"),
     ("Will I have a cash gap?", "cash_gap"), ("What can you do?", "permissions"),
 ])
 def test_level0_rules(text, kind):
@@ -21,8 +21,9 @@ def test_level0_rules(text, kind):
 
 def test_payee_and_amount_copied_as_written():
     assert rule_route("Pay for Melodify").payee_name == "Melodify"
-    r = rule_route("Can I afford headphones for 15k?")
-    assert r.amount == "15000" and r.item == "headphones"
+    r = rule_route("Can I afford headphones for $181.05?")
+    assert r.amount == "181.05" and r.item == "headphones"
+    assert rule_route("Can I afford a laptop for 2k?").amount == "2000"
 
 
 def test_unmatched_message_goes_to_level1(tmp_path):
@@ -73,4 +74,4 @@ def test_record_then_replay_reproduces_a_run_without_provider(tmp_path):
     rep = LLMGateway(Mode.REPLAY, spend_path=tmp_path / "s2.json", runs_dir=tmp_path / "runs")
     rep.providers["anthropic"] = lambda spec, req: pytest.fail("replay must not call the provider")
     r2, _ = Dispatcher(rep).route("sort out my money please", "t1")
-    assert r1 == r2 and rep.log[-1].source == "replay" and rep.log[-1].cost_rub == rec.log[-1].cost_rub
+    assert r1 == r2 and rep.log[-1].source == "replay" and rep.log[-1].cost_usd == rec.log[-1].cost_usd

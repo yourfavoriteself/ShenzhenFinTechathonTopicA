@@ -13,7 +13,7 @@ def trial_item(svc):
 
 def test_trial_question_on_the_day_before_the_first_charge(svc):
     it = trial_item(svc)
-    assert "CloudNest" in it.text and it.data["first_charge"] == "2026-10-18" and it.data["amount"] == "149 ₽"
+    assert "CloudNest" in it.text and it.data["first_charge"] == "2026-10-18" and it.data["amount"] == "$1.80"
     assert [o["title"] for o in it.data["options"]] == ["Keep CloudNest", "Cancel CloudNest before the first charge"]
 
 

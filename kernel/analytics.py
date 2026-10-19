@@ -14,7 +14,7 @@ from typing import Iterable
 from pydantic import BaseModel
 
 from .merchants import MerchantDirectory
-from .money import rub
+from .money import usd
 from .statements import CardOnFile, Category, Direction, Tx, TxKind
 
 MONTHLY_GAP = (25, 36)
@@ -174,7 +174,7 @@ def leaks(series: list[Series], usage: list[Usage], as_of: datetime) -> LeakRepo
             for dup in ss[1:]:
                 cards = ", ".join(f"*{x.card_id[-4:]}" for x in ss if x.card_id)
                 add("duplicate", dup, dup.amount, True,
-                    f"{dup.name} is charged on {len(ss)} cards ({cards}): {rub(dup.amount)} a month extra",
+                    f"{dup.name} is charged on {len(ss)} cards ({cards}): {usd(dup.amount)} a month extra",
                     f"second {dup.name} subscription on card *{dup.card_id[-4:]} since {dup.first}",
                     related=[x for o in ss if o is not dup for x in o.tx_ids])
 
@@ -194,8 +194,8 @@ def leaks(series: list[Series], usage: list[Usage], as_of: datetime) -> LeakRepo
             usage_note = f", used {u.sessions_30d} times in 30 days vs {used[keep.merchant].sessions_30d}" \
                 if u and keep.merchant in used else ""
             add("overlap", s, s.amount, True,
-                f"two {service} services: {keep.name} {rub(keep.amount)} and {s.name} {rub(s.amount)}; "
-                f"dropping {s.name} saves {rub(s.amount)} a month",
+                f"two {service} services: {keep.name} {usd(keep.amount)} and {s.name} {usd(s.amount)}; "
+                f"dropping {s.name} saves {usd(s.amount)} a month",
                 f"overlaps with {keep.name}{usage_note}", synthetic=bool(u), related=keep.tx_ids)
 
     for s in subs:
@@ -204,7 +204,7 @@ def leaks(series: list[Series], usage: list[Usage], as_of: datetime) -> LeakRepo
             continue
         if as_of.date() - u.last_used > UNUSED_AFTER:
             add("unused", s, s.amount, True,
-                f"{s.name}: {rub(s.amount)} a month, last used {u.last_used} "
+                f"{s.name}: {usd(s.amount)} a month, last used {u.last_used} "
                 f"({(as_of.date() - u.last_used).days} days ago)",
                 "not used for more than 60 days (synthetic usage data)", synthetic=True)
 
@@ -213,21 +213,21 @@ def leaks(series: list[Series], usage: list[Usage], as_of: datetime) -> LeakRepo
                 and as_of.date() - s.changed_on <= PRICE_CHANGE_WINDOW:
             diff = s.amount - s.previous_amount
             add("price_increase", s, diff, False,
-                f"{s.name}: {rub(s.previous_amount)} -> {rub(s.amount)} since {s.changed_on} (+{rub(diff)} a month)",
+                f"{s.name}: {usd(s.previous_amount)} -> {usd(s.amount)} since {s.changed_on} (+{usd(diff)} a month)",
                 "price went up")
 
     for s in subs:
         if s.trial_until and s.count == 0 and s.next_expected - as_of.date() <= TRIAL_WARN:
             u = used.get(s.merchant)
-            note = f"free trial ends {s.trial_until}; first charge {rub(s.amount)} on {s.next_expected}"
+            note = f"free trial ends {s.trial_until}; first charge {usd(s.amount)} on {s.next_expected}"
             if u:
                 note += f"; used {u.sessions_30d} times in 30 days (synthetic usage data)"
-            add("trial_ending", s, s.amount, False, f"{s.name}: {rub(s.amount)} a month from {s.next_expected}",
+            add("trial_ending", s, s.amount, False, f"{s.name}: {usd(s.amount)} a month from {s.next_expected}",
                 note, synthetic=bool(u))
 
     counted = [x for x in found if x.counted]
     total = sum(x.monthly for x in counted)
-    calc = " + ".join(f"{x.name} {rub(x.monthly)}" for x in counted) + f" = {rub(total)} a month"
+    calc = " + ".join(f"{x.name} {usd(x.monthly)}" for x in counted) + f" = {usd(total)} a month"
     return LeakReport(leaks=found, monthly_total=total, yearly_total=total * 12, calc=calc)
 
 

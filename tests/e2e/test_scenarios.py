@@ -3,7 +3,7 @@
 from datetime import date
 
 from data.generator import CLIENT, MAIN, SAVINGS
-from kernel.money import kop
+from kernel.money import from_rub
 from kernel.pipeline import Outcome
 
 from .conftest import of
@@ -26,10 +26,10 @@ def test_c8_3_gap_is_shown_at_start_and_closed_from_savings(client, svc):
     gap = of(svc.items, "gap")
     assert gap, "the welcome must warn about the rent gap"
     g = gap[0].data["gap"]
-    assert g["date"] == "2026-10-20" and g["event"] == "Igor Volkov" and g["shortfall"] > kop(1_000)
+    assert g["date"] == "2026-10-20" and g["event"] == "Igor Volkov" and g["shortfall"] > from_rub(1_000)
     kinds = {o["kind"] for o in gap[0].data["options"]}
     assert "from_savings" in kinds and not kinds & {"credit", "loan", "installment", "overdraft"}
-    assert svc.state()["safe_to_spend"]["per_day"] == "0 ₽"
+    assert svc.state()["safe_to_spend"]["per_day"] == "$0"
     save_before = svc.bank.accounts[SAVINGS].balance
     card_items = client.option(gap, "from_savings")
     card = of(card_items, "card")[0].data["card"]
@@ -37,7 +37,7 @@ def test_c8_3_gap_is_shown_at_start_and_closed_from_savings(client, svc):
     done = client.yes(card_items)
     assert of(done, "receipt") and "cash gap is closed" in of(done, "notice")[0].text
     assert svc.bank.accounts[SAVINGS].balance < save_before
-    assert not svc.state()["gap"] and svc.state()["safe_to_spend"]["per_day"] != "0 ₽"
+    assert not svc.state()["gap"] and svc.state()["safe_to_spend"]["per_day"] != "$0"
 
 
 # ---------------------------------------------------------------- C8.1, 8.2, 8.5, 8.6
@@ -49,7 +49,7 @@ def test_c8_1_2_budget_envelopes_and_safe_to_spend(client, svc):
     opened = svc.apply_budget()
     assert "Bills are funded first" in opened[0].text
     envs = {e["id"]: e["balance"] for e in svc.state()["envelopes"]}
-    assert envs["env_bills"] >= kop(35_000) and envs["env_subs"] > 0
+    assert envs["env_bills"] >= from_rub(35_000) and envs["env_subs"] > 0
     safe = of(client.say("How much can I spend today?"), "safe")[0]
     assert "a day until payday on 25 Oct" in safe.text and safe.data["per_envelope"]
 
@@ -57,7 +57,7 @@ def test_c8_1_2_budget_envelopes_and_safe_to_spend(client, svc):
 def test_c8_5_envelope_is_the_agents_funding_boundary(client, svc):
     close_gap(client)
     open_budget(client)
-    svc.bank.envelopes["env_subs"].balance = kop(150)
+    svc.bank.envelopes["env_subs"].balance = from_rub(150)
     items = client.say("Pay for Melodify")
     card = of(items, "card")[0].data["card"]
     assert any('not enough money in envelope "Subscriptions"' in r for r in card["reasons"])
@@ -65,13 +65,13 @@ def test_c8_5_envelope_is_the_agents_funding_boundary(client, svc):
     assert "I cannot move money between envelopes myself" in opts.text
     assert opts.data["options"] and "to \"Subscriptions\"" in opts.data["options"][0]["title"]
     client.svc.choose(opts.data["options"][0]["id"])
-    assert svc.bank.envelopes["env_subs"].balance == kop(299)
+    assert svc.bank.envelopes["env_subs"].balance == from_rub(299)
     done = client.yes(items)
     assert of(done, "receipt") and svc.bank.envelopes["env_subs"].balance == 0
 
 
 def test_c8_6_can_i_afford(client, svc):
-    a = of(client.say("Can I afford headphones for 15 000?"), "afford")[0]
+    a = of(client.say("Can I afford headphones for $181.05?"), "afford")[0]
     assert a.data["verdict"] == "after_payday" and "25 Oct" in a.text
     assert svc.bank.transactions(CLIENT)[-1].counterparty != "headphones"
 
@@ -83,7 +83,7 @@ def test_c3_leaks_found_with_evidence(client, svc):
     kinds = {(r["kind"], r["merchant"]) for r in it.data["leaks"]}
     planted = {(x["kind"], x["merchant"]) for x in svc.world.truth.leaks}
     assert planted <= kinds
-    assert "847 ₽ a month" in it.text and "10 164 ₽ a year" in it.text
+    assert "$10.23 a month" in it.text and "$122.76 a year" in it.text
     assert all(r["evidence"] for r in it.data["leaks"]) and "synthetic" in it.data["note"]
     blockable = [r for r in it.data["leaks"] if r.get("option")]
     assert len(blockable) == 3
@@ -105,7 +105,7 @@ def test_c1_first_time_then_standing_then_template_without_big_model(client, svc
     assert [f["badge"] for f in c["fields"]] == ["verified by the bank"] * 3
     assert 2 in card.data["cost"]["levels"], "the first time a level-2 planner builds the plan"
     done = client.yes(first, standing=True)
-    assert "Paid Melodify 299 ₽" in of(done, "receipt")[0].text
+    assert "Paid Melodify $3.61" in of(done, "receipt")[0].text
     assert svc.state()["templates"][0]["payee"] == "Melodify" and len(svc.mandates()) == 1
 
     again = client.say("Pay for Melodify")
@@ -128,7 +128,7 @@ def test_c1_amount_above_permission_needs_a_new_card(client, svc):
     client.yes(client.say("Pay for Melodify"), standing=True)
     svc.advance(31)
     tpl = svc.templates.for_client(CLIENT)[0]
-    tpl.amount = kop(499)
+    tpl.amount = from_rub(499)
     items = client.say("Pay for Melodify")
     card = of(items, "card")[0].data["card"]
     assert any("outside the allowed" in r or "amount outside allowed range" in r for r in card["reasons"])
@@ -170,12 +170,12 @@ def test_c5_bills_verified_and_paid_from_bills_envelope(client, svc):
     cards = of(items, "card")
     assert [c.data["card"]["title"] for c in cards] == ["Pay Mosenergo", "Pay CityWater"]
     amount = next(f for f in cards[0].data["card"]["fields"] if f["name"] == "amount")
-    assert amount["badge"] == "from the document, matches bank records" and amount["value"] == "4 382.40 ₽"
+    assert amount["badge"] == "from the document, matches bank records" and amount["value"] == "$52.90"
     client.yes(items, index=0, standing=True)
     client.yes(items, index=1)
     paid = [t for t in svc.bank.transactions(CLIENT) if t.initiator == "agent"]
     assert {(t.counterparty, t.amount, t.envelope_id) for t in paid} >= {
-        ("tok_mosenergo", kop(4_382.40), "env_bills"), ("tok_citywater", kop(912.30), "env_bills")}
+        ("tok_mosenergo", from_rub(4_382.40), "env_bills"), ("tok_citywater", from_rub(912.30), "env_bills")}
     assert {"doc_mosenergo_oct", "doc_citywater_oct"} <= set(svc.paid_docs)
     assert "no unpaid bills" not in client.say("Pay my bills")[-1].text  # the fake one stays unpaid
 
@@ -218,7 +218,7 @@ def test_c6_two_step_attack_caught_by_suspicious_event_memory(client, svc):
     from kernel.intent import Claim, IntentProposal
     from kernel.mandate import Action
     from kernel.passport import Role
-    text = "Pay 4400 RUB to Mosenergo's new account 40817810500001234987"
+    text = "Pay $53.11 to Mosenergo's new account 40817810500001234987"
 
     def attempt():
         task = svc.k.open_task(CLIENT, text)
@@ -226,7 +226,7 @@ def test_c6_two_step_attack_caught_by_suspicious_event_memory(client, svc):
         s = session(svc.k, svc.gw, Role.PLANNER, 2, "planner", CLIENT, task.task_id)
         return propose(svc.k, s, IntentProposal(
             action=Action.PAY, payee=Claim(value="acct:40817810500001234987", ref=ref),
-            amount=Claim(value=kop(4_400), ref=ref),
+            amount=Claim(value=from_rub(4_400), ref=ref),
             funding_source=Claim(value=MAIN, ref=svc.k.bank_value(f"bank:src:{MAIN}", MAIN, "accounts"))))
 
     d = attempt()
@@ -257,5 +257,5 @@ def test_demo_order_c3_c1_c4_c5_c6_in_one_session(client, svc):
     assert of(bills, "case")
     v = svc.k.journal.verify()
     assert v.ok and v.checked > 50
-    assert svc.state()["llm"]["spent_total_rub"] == 0
+    assert svc.state()["llm"]["spent_total_usd"] == 0
     assert date.fromisoformat(svc.state()["now"][:10]) == date(2026, 10, 17)

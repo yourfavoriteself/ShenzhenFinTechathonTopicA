@@ -20,14 +20,14 @@ def test_planted_collector_scores_high_and_the_ordinary_account_low(svc):
 
 
 def test_mule_payee_without_a_call_triggers_the_pause(svc, client):
-    card = of(client.say(f"Transfer 20 000 to account {MULE}"), "card")[-1].data["card"]
+    card = of(client.say(f"Transfer $241.40 to account {MULE}"), "card")[-1].data["card"]
     assert any("money mule (graph score" in r for r in card["reasons"])
     iv = card["intervention"]
     assert iv["level"] == 2 and any("money-mule" in s for s in iv["signals"])
 
 
 def test_ordinary_payee_is_not_flagged(svc, client):
-    card = of(client.say(f"Transfer 5 000 to account {ORDINARY}"), "card")[-1].data["card"]
+    card = of(client.say(f"Transfer $60.35 to account {ORDINARY}"), "card")[-1].data["card"]
     assert not any("graph score" in r for r in card["reasons"]) and card["intervention"] is None
 
 

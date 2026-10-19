@@ -4,7 +4,7 @@ Model ladder: level 1 (small), 2 (medium), 3 (large, escalation only); level 0 i
 never gets here. Models, prices and the names of the key variables come from config/models.yaml and
 the environment (kernel/model_config.py); keys are read from the environment only. Requests start at the cheapest level and escalate on facts: a response that fails
 its schema, low confidence, or a refusal. The gateway holds the API keys, enforces a hard spend
-cap in rubles plus a per-task budget, refuses any prompt that contains a card number or a vault
+cap in US dollars plus a per-task budget, refuses any prompt that contains a card number or a vault
 secret, and records responses so that every demo can be replayed without keys.
 
 Modes: stub (deterministic test responders), record (live + save), replay (saved only), live.
@@ -67,7 +67,7 @@ class LLMResult(BaseModel):
     output_tokens: int = 0
     cache_read_tokens: int = 0
     cache_write_tokens: int = 0
-    cost_rub: float = 0.0
+    cost_usd: float = 0.0
     source: str
     estimated: bool = False
     task_id: str = "default"
@@ -77,25 +77,25 @@ class LLMResult(BaseModel):
 class SpendLedger:
     """Persistent record of real money spent on our own keys."""
 
-    def __init__(self, path: Path, budget_rub: float):
+    def __init__(self, path: Path, budget_usd: float):
         self.path = path
-        self.budget_rub = budget_rub
+        self.budget_usd = budget_usd
         data = json.loads(path.read_text()) if path.exists() else {}
-        self.total_rub: float = data.get("total_rub", 0.0)
+        self.total_usd: float = data.get("total_usd", 0.0)
         self.by_task: dict[str, float] = data.get("by_task", {})
 
-    def reserve(self, task_id: str, estimate_rub: float, task_budget_rub: float) -> None:
-        if self.total_rub + estimate_rub > self.budget_rub:
-            raise BudgetExceeded(f"spend cap {self.budget_rub:.0f} RUB would be exceeded "
-                                 f"(spent {self.total_rub:.2f}, next call up to {estimate_rub:.2f})")
-        if self.by_task.get(task_id, 0.0) + estimate_rub > task_budget_rub:
-            raise TaskBudgetExceeded(f"task {task_id} budget {task_budget_rub:.0f} RUB would be exceeded")
+    def reserve(self, task_id: str, estimate_usd: float, task_budget_usd: float) -> None:
+        if self.total_usd + estimate_usd > self.budget_usd:
+            raise BudgetExceeded(f"spend cap ${self.budget_usd:.2f} would be exceeded "
+                                 f"(spent ${self.total_usd:.4f}, next call up to ${estimate_usd:.4f})")
+        if self.by_task.get(task_id, 0.0) + estimate_usd > task_budget_usd:
+            raise TaskBudgetExceeded(f"task {task_id} budget ${task_budget_usd:.2f} would be exceeded")
 
-    def commit(self, task_id: str, cost_rub: float) -> None:
-        self.total_rub += cost_rub
-        self.by_task[task_id] = self.by_task.get(task_id, 0.0) + cost_rub
+    def commit(self, task_id: str, cost_usd: float) -> None:
+        self.total_usd += cost_usd
+        self.by_task[task_id] = self.by_task.get(task_id, 0.0) + cost_usd
         self.path.parent.mkdir(parents=True, exist_ok=True)
-        self.path.write_text(json.dumps({"total_rub": round(self.total_rub, 4), "by_task": self.by_task}, indent=1))
+        self.path.write_text(json.dumps({"total_usd": round(self.total_usd, 6), "by_task": self.by_task}, indent=1))
 
 
 _PAN = re.compile(r"(?<!\d)(?:\d[ -]?){12,18}\d(?!\d)")
@@ -134,18 +134,17 @@ Responder = Callable[[dict[str, Any]], str]
 
 
 class LLMGateway:
-    def __init__(self, mode: Mode | str | None = None, *, budget_rub: float | None = None,
-                 task_budget_rub: float | None = None, usd_rub: float | None = None,
+    def __init__(self, mode: Mode | str | None = None, *, budget_usd: float | None = None,
+                 task_budget_usd: float | None = None,
                  runs_dir: Path | None = None, spend_path: Path | None = None,
                  ladder: dict[int, ModelSpec] | None = None, config: model_config.ModelConfig | None = None):
         env = os.environ
         self.config = config or model_config.load()
         self.mode = Mode(mode or env.get("GUARDIAN_LLM_MODE", "replay"))
-        self.usd_rub = usd_rub or float(env.get("GUARDIAN_USD_RUB", "100"))
-        self.task_budget_rub = task_budget_rub or float(env.get("GUARDIAN_TASK_BUDGET_RUB", "50"))
+        self.task_budget_usd = task_budget_usd or float(env.get("GUARDIAN_TASK_BUDGET_USD", "0.50"))
         self.runs_dir = runs_dir or Path(env.get("GUARDIAN_RUNS_DIR", Path(__file__).parent.parent / "evidence/runs/llm"))
         self.ledger = SpendLedger(spend_path or Path(env.get("GUARDIAN_SPEND_FILE", "~/.guardian/spend.json")).expanduser(),
-                                  budget_rub or float(env.get("GUARDIAN_TOKEN_BUDGET_RUB", "2000")))
+                                  budget_usd or float(env.get("GUARDIAN_BUDGET_USD", "25")))
         self.ladder = ladder or dict(self.config.levels)
         self.replay_fallback = env.get("GUARDIAN_REPLAY_FALLBACK", "stub") == "stub"
         self.guard = SecretGuard()
@@ -201,18 +200,18 @@ class LLMGateway:
         rs = [r for r in self.log if r.task_id == task_id]
         return {"calls": len(rs), "levels": sorted({r.level for r in rs}),
                 "input_tokens": sum(r.input_tokens for r in rs), "output_tokens": sum(r.output_tokens for r in rs),
-                "cost_rub": round(sum(r.cost_rub for r in rs), 4), "estimated": any(r.estimated for r in rs)}
+                "cost_usd": round(sum(r.cost_usd for r in rs), 6), "estimated": any(r.estimated for r in rs)}
 
     def report(self) -> dict[str, Any]:
         by_level: dict[int, dict[str, float]] = {}
         for r in self.log:
-            s = by_level.setdefault(r.level, {"calls": 0, "input_tokens": 0, "output_tokens": 0, "cost_rub": 0.0})
+            s = by_level.setdefault(r.level, {"calls": 0, "input_tokens": 0, "output_tokens": 0, "cost_usd": 0.0})
             s["calls"] += 1
             s["input_tokens"] += r.input_tokens
             s["output_tokens"] += r.output_tokens
-            s["cost_rub"] += r.cost_rub
-        return {"mode": self.mode.value, "spent_total_rub": round(self.ledger.total_rub, 2),
-                "cap_rub": self.ledger.budget_rub, "by_level": by_level}
+            s["cost_usd"] = round(s["cost_usd"] + r.cost_usd, 6)
+        return {"mode": self.mode.value, "spent_total_usd": round(self.ledger.total_usd, 4),
+                "cap_usd": self.ledger.budget_usd, "by_level": by_level}
 
     # ------------------------------------------------------------------ internals
 
@@ -237,14 +236,14 @@ class LLMGateway:
             rec = json.loads(path.read_text())
             return LLMResult(**{**rec, "source": "replay", "escalations": []})
         estimate = self._cost(spec, len(req["system"] + req["user"]) / 3, req["max_tokens"], 0, 0)
-        self.ledger.reserve(task_id, estimate, self.task_budget_rub)
+        self.ledger.reserve(task_id, estimate, self.task_budget_usd)
         out = self.providers[spec.provider](spec, req)
         cost = self._cost(spec, out["input_tokens"], out["output_tokens"], out.get("cache_read", 0),
                           out.get("cache_write", 0))
         self.ledger.commit(task_id, cost)
         res = LLMResult(text=out["text"], input_tokens=out["input_tokens"], output_tokens=out["output_tokens"],
                         cache_read_tokens=out.get("cache_read", 0), cache_write_tokens=out.get("cache_write", 0),
-                        cost_rub=round(cost, 4), source="live", **base)
+                        cost_usd=round(cost, 6), source="live", **base)
         if self.mode == Mode.RECORD:
             self.runs_dir.mkdir(parents=True, exist_ok=True)
             path.write_text(res.model_dump_json(indent=1))
@@ -258,13 +257,12 @@ class LLMGateway:
         text = responder(req)
         inp, out = len(req["system"] + req["user"]) // 4, len(text) // 4
         return LLMResult(text=text, source=source, input_tokens=inp, output_tokens=out,
-                         cost_rub=round(self._cost(spec, inp, out, 0, 0), 4), estimated=True, **base)
+                         cost_usd=round(self._cost(spec, inp, out, 0, 0), 6), estimated=True, **base)
 
     def _cost(self, spec: ModelSpec, inp: float, out: float, cache_read: float, cache_write: float) -> float:
         c = self.config
-        usd = (inp * spec.in_usd + cache_read * spec.in_usd * c.cache_read_factor
-               + cache_write * spec.in_usd * c.cache_write_factor + out * spec.out_usd) / 1_000_000
-        return usd * self.usd_rub
+        return (inp * spec.in_usd + cache_read * spec.in_usd * c.cache_read_factor
+                + cache_write * spec.in_usd * c.cache_write_factor + out * spec.out_usd) / 1_000_000
 
 
 def _extract_json(text: str) -> Any:

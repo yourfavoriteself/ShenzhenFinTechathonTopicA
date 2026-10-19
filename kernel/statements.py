@@ -62,7 +62,7 @@ class Tx(BaseModel):
     card_id: str | None = None
     kind: TxKind
     direction: Direction
-    amount: int                     # kopecks, always positive
+    amount: int                     # cents, always positive
     counterparty: str               # payee token
     counterparty_name: str
     category: Category

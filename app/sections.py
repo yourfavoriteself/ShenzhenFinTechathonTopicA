@@ -9,9 +9,9 @@ from collections import Counter
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
-from kernel.money import rub
+from kernel.money import usd
 from kernel.passport import ROLE_ENDPOINTS, Role
-from kernel.trust import AGENT_CAP, PROMOTE_AFTER, START_LEVEL, STRIKE_LIMIT, AgentStatus
+from kernel.trust import AGENT_CAP, LEVEL1_LIMIT, PROMOTE_AFTER, START_LEVEL, STRIKE_LIMIT, AgentStatus
 
 if TYPE_CHECKING:
     from .service import GuardianService
@@ -80,12 +80,12 @@ def month(svc: "GuardianService") -> dict[str, Any]:
     saved_monthly = sum(c.amount or 0 for c in cancelled) + sum(cof.get(b.merchant, 0) for b in blocked
                                                                if b.merchant not in {c.merchant for c in cancelled})
     events = Counter(e.event for e in svc.k.journal.entries)
-    goals = [{"name": g.goal.name, "target": rub(g.goal.target), "saved": rub(g.goal.saved),
-              "monthly": rub(g.monthly), "date": g.projected_date.isoformat(),
+    goals = [{"name": g.goal.name, "target": usd(g.goal.target), "saved": usd(g.goal.saved),
+              "monthly": usd(g.monthly), "date": g.projected_date.isoformat(),
               "pct": round(100 * g.goal.saved / g.goal.target, 1) if g.goal.target else 0} for g in svc.goals]
     return {
-        "saved_per_month": rub(saved_monthly), "saved_per_year": rub(saved_monthly * 12),
-        "refunded": rub(sum(t.amount for t in refunds)),
+        "saved_per_month": usd(saved_monthly), "saved_per_year": usd(saved_monthly * 12),
+        "refunded": usd(sum(t.amount for t in refunds)),
         "done": len(receipts), "notifications_only": sum(1 for r in receipts if r.data.get("notify_only")),
         "asked": events["card.shown"],
         "stopped": sum(1 for i in items if i.type == "denied") + len(svc.desk.cases)
@@ -101,13 +101,13 @@ def payments(svc: "GuardianService") -> dict[str, Any]:
             continue
         status = "blocked" if svc.bank.is_blocked(svc.client, c.merchant, c.card_id) else \
             "trial" if c.trial_until and c.active else "active" if c.active else "cancelled"
-        subs.append({"name": svc._name(c.merchant), "card": "*" + c.card_id[-4:], "amount": rub(c.amount),
+        subs.append({"name": svc._name(c.merchant), "card": "*" + c.card_id[-4:], "amount": usd(c.amount),
                      "next": c.next_date.isoformat(), "status": status})
     bills = [{"subject": d.subject, "verdict": svc.bill_checks[d.id].verdict if d.id in svc.bill_checks else "-",
-              "amount": rub(svc.bill_checks[d.id].amount) if d.id in svc.bill_checks and svc.bill_checks[d.id].amount
+              "amount": usd(svc.bill_checks[d.id].amount) if d.id in svc.bill_checks and svc.bill_checks[d.id].amount
               else "-", "paid": d.id in svc.paid_docs} for d in svc.inbox() if d.kind == "bill"]
     agent = [{"date": t.ts.date().isoformat(), "to": t.counterparty_name or svc._name(t.counterparty),
-              "amount": rub(t.amount), "from": t.envelope_id or t.account_id}
+              "amount": usd(t.amount), "from": t.envelope_id or t.account_id}
              for t in svc.bank.transactions(svc.client) if t.initiator == "agent"][-15:][::-1]
     return {"subscriptions": sorted(subs, key=lambda s: s["status"]), "bills": bills, "agent_payments": agent}
 
@@ -127,7 +127,8 @@ def trust(svc: "GuardianService") -> dict[str, Any]:
             "demotions": sum(1 for h in t.history if h.level_after is not None and h.level_after < h.level_before),
             "quarantines": sum(1 for h in t.history if h.status_after == AgentStatus.QUARANTINED),
             "rules": f"Each kind of task starts at level {START_LEVEL}. Level 0: a card for everything. Level 1: "
-                     "alone up to 1 000 ₽ inside a standing permission. Level 2: alone up to the permission's limit. "
+                     f"alone up to {usd(LEVEL1_LIMIT)} inside a standing permission. Level 2: alone up to the "
+                     "permission's limit. "
                      f"Up after {PROMOTE_AFTER} verified results in a row; down one level on a mistake; to 0 on a "
                      f"scope violation. Agents collect strikes (a scope violation is two); {STRIKE_LIMIT} strikes "
                      "mean 24 hours of quarantine, then probation."}
@@ -170,14 +171,14 @@ def cost(svc: "GuardianService") -> dict[str, Any]:
     tasks = sum(1 for e in svc.k.journal.entries if e.event == "task.opened")
     kernel_only = max(0, tasks - len({r.task_id for r in svc.gw.log}))
     est = _evidence("costs.json")
-    return {"mode": rep["mode"], "spent_rub": rep["spent_total_rub"], "cap_rub": rep["cap_rub"],
+    return {"mode": rep["mode"], "spent_usd": rep["spent_total_usd"], "cap_usd": rep["cap_usd"],
             "by_level": rep["by_level"], "model_calls": calls,
             "share_level_0_1": round(100 * (cheap + kernel_only) / max(1, calls + kernel_only), 1),
             "tasks": tasks, "tasks_without_any_model": kernel_only, "template_repeats": tpl,
             "months": est and [{"month": name, "calls": est[k]["calls"], "big_model_calls": est[k]["big_model_calls"],
-                                "tokens": est[k]["tokens"], "rub": est[k]["cost_rub"]}
+                                "tokens": est[k]["tokens"], "usd": est[k]["cost_usd"]}
                                for name, k in (("first", "first_month"), ("next", "next_month"))],
-            "repeat": est and [{"task": a["task"], "first_rub": a["cost_rub"], "next_rub": b["cost_rub"],
+            "repeat": est and [{"task": a["task"], "first_usd": a["cost_usd"], "next_usd": b["cost_usd"],
                                 "first_levels": a["levels"], "next_levels": b["levels"]}
                                for a, b in zip(est["first_month"]["tasks"], est["next_month"]["tasks"])],
             "saving_pct": est and est["saving_pct"], "projection": est and est["projection"],
@@ -193,7 +194,7 @@ def security(svc: "GuardianService") -> dict[str, Any]:
               for i in svc.items if i.type == "denied"][-8:][::-1]
     holds = [{"id": h.id, "level": h.level, "status": h.status, "duress": h.duress,
               "release_at": h.release_at.isoformat() if h.release_at else None,
-              "amount": rub(h.intent.val("amount") or 0)} for h in svc.guard.holds.values()]
+              "amount": usd(h.intent.val("amount") or 0)} for h in svc.guard.holds.values()]
     v = svc.k.journal.verify()
     return {"cases": [{"title": c.title, "sender": c.sender, "indicators": c.indicators[:6],
                        "recommendation": c.recommendation} for c in svc.desk.cases],
@@ -210,8 +211,8 @@ def redteam() -> dict[str, Any]:
     if rt:
         def block(b):
             return {"attacks": b["attacks"], "stopped": b["blocked"], "by_outcome": b["by_outcome"],
-                    "lost": rub(b["lost_kop"]), "without_kernel_succeeded": b["without_kernel"]["succeeded"],
-                    "without_kernel_lost": rub(b["without_kernel"]["lost_kop"])}
+                    "lost": usd(b["lost_cents"]), "without_kernel_succeeded": b["without_kernel"]["succeeded"],
+                    "without_kernel_lost": usd(b["without_kernel"]["lost_cents"])}
         ad, lg = rt["adaptive"], rt["legacy_prototype"]
         out |= {"note": rt["note"], "static": block(rt["static"]), "retention": block(rt["retention"]),
                 "adaptive": {"attacker": ad["attacker"], "rounds": ad["rounds"], "width": ad["width"],
@@ -223,7 +224,7 @@ def redteam() -> dict[str, Any]:
                 "legacy": {"total": lg["attacks"], "stopped": lg["prevented"], "bounded": lg["bounded"],
                            "succeeded": lg["succeeded"]},
                 "attacks": [{k: a[k] for k in ("id", "group", "goal", "title", "outcome", "stopped_by")}
-                            | {"without_kernel_lost": rub(a["without_kernel"]["lost_kop"])} for a in rt["attacks"]]}
+                            | {"without_kernel_lost": usd(a["without_kernel"]["lost_cents"])} for a in rt["attacks"]]}
     if ev:
         out["eval"] = {"functional": {k: ev["functional"][k] for k in ("tasks", "passed", "pct", "by_scenario")},
                        "attacks": {k: ev["attacks"][k] for k in ("attacks", "stopped", "pct")}}

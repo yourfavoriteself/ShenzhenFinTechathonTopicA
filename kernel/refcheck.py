@@ -12,7 +12,7 @@ from typing import Any, Iterable
 
 from pydantic import BaseModel
 
-NUMBER = re.compile(r"(?<![\w.])\d[\d  ]*(?:[.,]\d+)?")
+NUMBER = re.compile(r"(?<![\w.])\d(?:[\d  ]|,(?=\d{3}(?!\d)))*(?:[.,]\d+)?")
 # the assistant never sells credit: a loan, instalments or an overdraft is not an answer to a cash gap
 CREDIT = re.compile(r"\b(loans?|credit(?!ed)|instal+ments?|pay later|overdraft|microloan|кредит\w*|займ\w*|заём|"
                     r"рассрочк\w*|овердрафт\w*)\b", re.I)
@@ -25,7 +25,7 @@ class RefCheck(BaseModel):
 
 
 def _norm(s: str) -> str:
-    s = re.sub(r"[  ]", "", s).replace(",", ".")
+    s = re.sub(r"[  ]|,(?=\d{3}(?!\d))", "", s).replace(",", ".")
     s = s.rstrip(".")
     if "." in s:
         s = s.rstrip("0").rstrip(".")

@@ -23,6 +23,7 @@ from pydantic import BaseModel
 
 from .clock import SimClock
 from .mandate import Action
+from .money import from_rub
 
 if TYPE_CHECKING:
     from .passport import Passport
@@ -34,6 +35,7 @@ class Category(str, Enum):
     OWN_TRANSFERS = "own_transfers"
     EXTERNAL_PAYMENTS = "external_payments"
     WEBSITES = "websites"
+    INVESTMENTS = "investments"
 
 
 class TrustEvent(str, Enum):
@@ -51,7 +53,7 @@ class AgentStatus(str, Enum):
     QUARANTINED = "quarantined"
 
 
-LEVEL1_LIMIT = 100_000
+LEVEL1_LIMIT = from_rub(1_000)
 START_LEVEL = 1
 PROMOTE_AFTER = 5
 MAX_LEVEL = 2
@@ -211,5 +213,7 @@ def category_for(action: Action, payee_kind: str | None) -> Category:
         return Category.SUBSCRIPTIONS
     if action == Action.BROWSE:
         return Category.WEBSITES
+    if action == Action.INVEST:
+        return Category.INVESTMENTS
     return {"subscription": Category.SUBSCRIPTIONS, "biller": Category.BILLS}.get(payee_kind or "",
                                                                                  Category.EXTERNAL_PAYMENTS)

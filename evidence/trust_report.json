@@ -1,5 +1,5 @@
 {
- "rules": "Each kind of task starts at level 1. Level 0: a card for everything. Level 1: alone up to 1 000 ₽ inside a standing permission. Level 2: alone up to the permission's limit. Up after 5 verified results in a row; down one level on a mistake; to 0 on a scope violation. Agents collect strikes (a scope violation is two); 3 strikes mean 24 hours of quarantine, then probation.",
+ "rules": "Each kind of task starts at level 1. Level 0: a card for everything. Level 1: alone up to $12.07 inside a standing permission. Level 2: alone up to the permission's limit. Up after 5 verified results in a row; down one level on a mistake; to 0 on a scope violation. Agents collect strikes (a scope violation is two); 3 strikes mean 24 hours of quarantine, then probation.",
  "levels": [
   {
    "category": "subscriptions",
@@ -25,17 +25,22 @@
    "category": "websites",
    "level": 1,
    "streak": 0
+  },
+  {
+   "category": "investments",
+   "level": 1,
+   "streak": 2
   }
  ],
  "agents": [
   {
-   "agent": "dispatcher:kernel-code:ff80aa24",
+   "agent": "dispatcher:kernel-code:4be233ff",
    "role": "dispatcher",
    "model": "kernel-code",
    "status": "active",
    "until": null,
    "strikes": 0,
-   "verified": 8,
+   "verified": 10,
    "penalties": 0,
    "cap": 2
   },
@@ -60,7 +65,7 @@
   "proposed": 2,
   "executed": 0
  },
- "journal_entries": 13,
+ "journal_entries": 15,
  "moves": [
   {
    "at": "2026-11-17T10:16:00+03:00",

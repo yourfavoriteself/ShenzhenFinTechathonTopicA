@@ -16,7 +16,7 @@ from redteam.report import legacy, run_static, summary
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--out", type=Path, default=Path("evidence/redteam.json"))
-    ap.add_argument("--live", action="store_true", help="model attacker through the gateway, capped at 300 RUB")
+    ap.add_argument("--live", action="store_true", help="model attacker through the gateway, capped at $3")
     args = ap.parse_args()
     rows = run_static()
     static = [r for r in rows if r["group"] == "static"]

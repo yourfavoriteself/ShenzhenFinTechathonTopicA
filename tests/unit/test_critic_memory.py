@@ -6,7 +6,7 @@ from data.generator import CLIENT, build_world
 from kernel.critic import MAX_REFUSALS, Critic, rule_critic
 from kernel.intent import Claim, IntentProposal
 from kernel.mandate import Action
-from kernel.money import kop
+from kernel.money import from_rub
 from kernel.passport import Role
 from kernel.pipeline import Outcome, Verdict
 from sandbox.bank.wiring import connect
@@ -26,8 +26,8 @@ def test_rule_critic_matches_request_to_action():
     assert judge("Pay for Melodify", payee="TuneWave") == "inconsistent"
     assert judge("Cancel StreamBox", action="pay", payee="StreamBox") == "inconsistent"
     assert judge("Cancel StreamBox", action="block_merchant", payee="StreamBox") == "consistent"
-    assert judge("Pay for Melodify", amount="2 990 ₽", usual="299 ₽") == "inconsistent"
-    assert judge("Pay for Melodify for a year", amount="2 990 ₽", usual="299 ₽") == "consistent"
+    assert judge("Pay for Melodify", amount="$36.09", usual="$3.61") == "inconsistent"
+    assert judge("Pay for Melodify for a year", amount="$36.09", usual="$3.61") == "consistent"
     assert judge("hmm") == "unsure"
 
 
@@ -54,11 +54,11 @@ def pay(k, task, payee, amount):
 
 def test_critic_denies_wrong_payee_and_hands_control_back_after_three(k):
     task = k.open_task(CLIENT, "Pay for Melodify")
-    assert pay(k, task, "tok_melodify", kop(299)).outcome == Outcome.PENDING
+    assert pay(k, task, "tok_melodify", from_rub(299)).outcome == Outcome.PENDING
     for _ in range(MAX_REFUSALS):
-        d = pay(k, task, "tok_tunewave", kop(249))
+        d = pay(k, task, "tok_tunewave", from_rub(249))
         assert d.outcome == Outcome.DENIED and any(r.startswith("critic:") for r in d.reasons)
-    d = pay(k, task, "tok_melodify", kop(299))
+    d = pay(k, task, "tok_melodify", from_rub(299))
     assert d.outcome == Outcome.DENIED and "control returned to the client" in d.reasons[-1]
 
 
@@ -67,7 +67,7 @@ def test_critic_never_sees_documents_and_is_cached(k):
     seen = []
     k.pipeline.critic.judge = (lambda orig: lambda payload, tid="c": (seen.append(payload), orig(payload, tid))[1])(
         k.pipeline.critic.judge)
-    pay(k, task, "tok_melodify", kop(299))
+    pay(k, task, "tok_melodify", from_rub(299))
     assert set(seen[0]) == {"client_request", "mandate", "proposed_action"}
     assert "memo" not in json.dumps(seen[0])
     c = Critic(k)

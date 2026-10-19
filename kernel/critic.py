@@ -17,7 +17,7 @@ from pydantic import BaseModel
 from .cards import Risk
 from .crypto import obj_hash
 from .mandate import Action
-from .money import rub
+from .money import usd
 
 if TYPE_CHECKING:
     from .llm_gateway import LLMGateway
@@ -57,9 +57,9 @@ def action_view(ctx: "Ctx", payee_name: str | None, funding_label: str | None) -
         view["payee"] = {"name": payee_name or str(i.val("payee")), "label": i.payee.label.value,
                          "kind": ctx.payee.kind if ctx.payee else "unknown"}
     if i.amount is not None:
-        view["amount"] = {"value": rub(i.val("amount")), "label": i.amount.label.value}
+        view["amount"] = {"value": usd(i.val("amount")), "label": i.amount.label.value}
         if ctx.payee and ctx.payee.usual_amount:
-            view["amount"]["usual_for_this_payee"] = rub(ctx.payee.usual_amount)
+            view["amount"]["usual_for_this_payee"] = usd(ctx.payee.usual_amount)
     if i.funding_source is not None:
         view["funding_source"] = funding_label or i.val("funding_source")
     if i.domain is not None:
@@ -73,7 +73,7 @@ def mandate_view(ctx: "Ctx") -> dict[str, Any] | None:
     m = ctx.mandate.mandate
     out: dict[str, Any] = {"actions": [a.value for a in m.actions], "standing": m.standing}
     if m.payment:
-        out["max_amount"] = rub(m.payment.amount_range.max)
+        out["max_amount"] = usd(m.payment.amount_range.max)
         out["frequency"] = m.payment.agent_recurrence.frequency.value
     return out
 
@@ -135,6 +135,7 @@ _VERBS: list[tuple[str, set[str]]] = [
     (r"\b(gap|short|cover|rent|move|transfer|savings?|save|разрыв|не хватает|перевед|перенеси|накоп)",
      {"transfer_own", "block_merchant", "cancel_subscription"}),
     (r"\b(pay|bill|оплати|заплати|счет|счёт)", {"pay"}),
+    (r"\b(invest|buy|купи|инвест|вложи)", {"invest"}),
     (r"\b(transfer|send|wire|переведи|перевести|отправь)\w*\b.*\d{10,20}", {"pay"}),
 ]
 _PER_YEAR = re.compile(r"\b(year|annual|годов)", re.I)
@@ -171,7 +172,7 @@ def rule_critic(payload: dict[str, Any]) -> str:
 def _named(text: str) -> list[str]:
     """Capitalised words that are not the first word of a sentence: likely a payee the client named."""
     out = []
-    for sentence in re.split(r"[.!?\n]+", text):
+    for sentence in re.split(r"[.!?]+(?=\s|$)|\n+", text):
         words = re.findall(r"[A-Za-z][A-Za-z0-9]+", sentence)
         out += [w for w in words[1:] if w[0].isupper() and len(w) > 3 and w.lower() != "please"]
         if len(words) == 1 and words[0][0].isupper():
@@ -180,7 +181,7 @@ def _named(text: str) -> list[str]:
 
 
 def _amount(s: str) -> float:
-    return float(re.sub(r"[^\d.]", "", s.replace(",", ".")) or 0)
+    return float(re.sub(r"[^\d.]", "", re.sub(r",(?=\d{3}(?!\d))", "", s).replace(",", ".")) or 0)
 
 
 def stub_responder(req: dict[str, Any]) -> str:

@@ -30,6 +30,7 @@ from pydantic import BaseModel, Field
 
 from .cards import Risk
 from .mandate import MONEY_ACTIONS, Action, new_id
+from .money import usd
 
 if TYPE_CHECKING:
     from .core import Kernel
@@ -185,8 +186,7 @@ class InterventionDesk:
             signals.append(f"{round(amount / total * 100)}% of all your money")
         if (moved := self.recent_own_inflow(cid)) > 0:
             score += 1
-            signals.append(f"{moved // 100:,} ₽ moved from savings to the current account in the last 24 hours"
-                           .replace(",", " "))
+            signals.append(f"{usd(moved)} moved from savings to the current account in the last 24 hours")
         week = [e for e in self.k.memory.for_client(cid) if e.kind == "call" and e.ts >= now - timedelta(days=7)]
         if week and not self.on_call(cid):
             score += 1
@@ -268,13 +268,12 @@ class InterventionDesk:
         self.holds[h.id] = h
         amount = intent.val("amount") or 0
         if a.duress:
-            self.notify(intent.client_id, f"SILENT ALERT: a transfer of {amount // 100:,} ₽ may be made under duress. "
-                                          "It is frozen. Please call your relative.".replace(",", " "), True)
+            self.notify(intent.client_id, f"SILENT ALERT: a transfer of {usd(amount)} may be made under duress. "
+                                          "It is frozen. Please call your relative.", True)
         elif a.level >= 3:
             wait = "is holding it for 24 hours" if a.level == 3 else "has stopped it until an analyst talks to them"
-            self.notify(intent.client_id, f"Your relative asked to transfer {amount // 100:,} ₽ to a new recipient "
-                                          f"during a phone call. The bank {wait}. Please call them."
-                        .replace(",", " "), False)
+            self.notify(intent.client_id, f"Your relative asked to transfer {usd(amount)} to a new recipient "
+                                          f"during a phone call. The bank {wait}. Please call them.", False)
         self.k.journal.append("kernel", "intervention.held", {"hold": h.id, "intent": intent.id, "level": a.level,
                                                               "release_at": h.release_at.isoformat() if h.release_at
                                                               else None, "duress": a.duress})

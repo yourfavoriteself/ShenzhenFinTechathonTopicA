@@ -5,12 +5,12 @@ shops (legitimate fan-in), small transfers between friends and family, loans pai
 two). Planted schemes, whose intermediary accounts are labelled as mules:
 
   ring          4-6 fresh accounts pass similar sums around a cycle within hours, several times;
-  structuring   one account splits a large sum into many transfers just below 15 000 RUB;
+  structuring   one account splits a large sum into many transfers just below $181.05;
   fan_in_out    a fresh collector receives from many victims and forwards almost all within hours;
   chain         a sum hops through 4-6 fresh accounts, losing a small cut at each hop.
 
 Victims are ordinary people and stay unlabelled. To keep the test honest, 40% of mule accounts
-are bought aged accounts and half of them carry cover activity (a salary, shop payments). All amounts are in kopecks.
+are bought aged accounts and half of them carry cover activity (a salary, shop payments). All amounts are in cents.
 """
 
 from __future__ import annotations
@@ -20,8 +20,10 @@ from datetime import datetime, timedelta
 
 from pydantic import BaseModel
 
+from kernel.money import from_rub
+
 SCHEMES = ("ring", "structuring", "fan_in_out", "chain")
-THRESHOLD = 1_500_000          # 15 000 RUB: transfers just below it are a structuring sign
+THRESHOLD = from_rub(15_000)   # $181.05: transfers just below it are a structuring sign
 
 
 class Transfer(BaseModel):
@@ -85,20 +87,20 @@ def generate(seed: int, as_of: datetime, people: int = 500, days: int = 60, sche
         day = as_of - timedelta(days=d)
         for p in folks:
             if day.day in (10, 25):
-                g.send(work[p], p, r.randint(30_000, 120_000) * 100, day.replace(hour=9))
+                g.send(work[p], p, from_rub(r.randint(30_000, 120_000)), day.replace(hour=9))
             if day.day == 20 and p in home:
-                g.send(p, home[p], r.randint(25_000, 60_000) * 100, day.replace(hour=r.randint(10, 20)))
+                g.send(p, home[p], from_rub(r.randint(25_000, 60_000)), day.replace(hour=r.randint(10, 20)))
             if r.random() < 0.08:
-                g.send(p, r.choice(shops), r.randint(500, 20_000) * 100, day + timedelta(hours=r.randint(8, 22)))
+                g.send(p, r.choice(shops), from_rub(r.randint(500, 20_000)), day + timedelta(hours=r.randint(8, 22)))
             if r.random() < 0.03:
-                f, amt = r.choice(friends[p]), r.randint(300, 8_000) * 100
+                f, amt = r.choice(friends[p]), from_rub(r.randint(300, 8_000))
                 ts = day + timedelta(hours=r.randint(8, 23))
                 g.send(p, f, amt, ts)
                 if r.random() < 0.3:                      # a loan paid back: an honest two-cycle
                     g.send(f, p, amt, ts + timedelta(days=r.randint(1, 10)))
         for s in shops:
             if r.random() < 0.15:
-                g.send(s, r.choice(employers), r.randint(50_000, 300_000) * 100, day.replace(hour=12))
+                g.send(s, r.choice(employers), from_rub(r.randint(50_000, 300_000)), day.replace(hour=12))
     victims = [p for p in folks if p != plant.get("ordinary")]
     kinds = list(SCHEMES) * (schemes // len(SCHEMES) + 1)
     r.shuffle(kinds)
@@ -110,9 +112,9 @@ def generate(seed: int, as_of: datetime, people: int = 500, days: int = 60, sche
             for _ in range(r.randint(3, 10)):
                 ts = g.when(r.uniform(1, days))
                 if r.random() < 0.5:
-                    g.send(r.choice(employers), a, r.randint(20_000, 60_000) * 100, ts)
+                    g.send(r.choice(employers), a, from_rub(r.randint(20_000, 60_000)), ts)
                 else:
-                    g.send(a, r.choice(shops), r.randint(500, 15_000) * 100, ts)
+                    g.send(a, r.choice(shops), from_rub(r.randint(500, 15_000)), ts)
     return TransferGraph(transfers=sorted(g.t, key=lambda x: x.ts), opened=g.opened, kind=g.kind, label=g.label,
                          as_of=as_of)
 
@@ -121,8 +123,8 @@ class _Schemes:
     @staticmethod
     def ring(g: _Gen, r: random.Random, victims: list[str], fixed: str | None) -> None:
         ring = [g.acct("mule", (5, 40), "ring") for _ in range(r.randint(4, 6))]
-        g.send(r.choice(victims), ring[0], r.randint(200_000, 600_000) * 100, g.when(r.uniform(8, 20)))
-        base = r.randint(150_000, 500_000) * 100
+        g.send(r.choice(victims), ring[0], from_rub(r.randint(200_000, 600_000)), g.when(r.uniform(8, 20)))
+        base = from_rub(r.randint(150_000, 500_000))
         start = g.when(r.uniform(2, 7))
         for lap in range(r.randint(2, 4)):
             ts = start + timedelta(hours=lap * r.randint(10, 30))
@@ -133,15 +135,15 @@ class _Schemes:
     @staticmethod
     def structuring(g: _Gen, r: random.Random, victims: list[str], fixed: str | None) -> None:
         src = g.acct("mule", (10, 90), "structuring")
-        g.send(r.choice(victims), src, r.randint(150_000, 400_000) * 100, g.when(r.uniform(5, 15)))
+        g.send(r.choice(victims), src, from_rub(r.randint(150_000, 400_000)), g.when(r.uniform(5, 15)))
         outs = [g.acct("mule", (3, 60), "structuring") for _ in range(r.randint(3, 6))]
         ts = g.when(r.uniform(1, 4))
         for _ in range(r.randint(8, 16)):
             ts += timedelta(minutes=r.randint(15, 240))
-            g.send(src, r.choice(outs), r.randint(13_600, 14_990) * 100, ts)
+            g.send(src, r.choice(outs), from_rub(r.randint(13_600, 14_990)), ts)
         ex = g.acct("exit", (100, 2000))
         for o in outs:
-            g.send(o, ex, r.randint(20_000, 40_000) * 100, ts + timedelta(hours=r.randint(1, 12)))
+            g.send(o, ex, from_rub(r.randint(20_000, 40_000)), ts + timedelta(hours=r.randint(1, 12)))
 
     @staticmethod
     def fan_in_out(g: _Gen, r: random.Random, victims: list[str], fixed: str | None) -> None:
@@ -151,7 +153,7 @@ class _Schemes:
         start = g.when(r.uniform(1, 5))
         for v in r.sample(victims, r.randint(10, 25)):
             ts = start + timedelta(hours=r.uniform(0, 40))
-            amt = r.randint(20_000, 300_000) * 100
+            amt = from_rub(r.randint(20_000, 300_000))
             g.send(v, col, amt, ts)
             left = int(amt * r.uniform(0.9, 0.98))
             for e in r.sample(exits, 2):
@@ -162,7 +164,7 @@ class _Schemes:
     @staticmethod
     def chain(g: _Gen, r: random.Random, victims: list[str], fixed: str | None) -> None:
         hops = [g.acct("mule", (4, 50), "chain") for _ in range(r.randint(4, 6))]
-        amt = r.randint(200_000, 900_000) * 100
+        amt = from_rub(r.randint(200_000, 900_000))
         ts = g.when(r.uniform(1, 10))
         g.send(r.choice(victims), hops[0], amt, ts)
         for a, b in zip(hops, hops[1:]):

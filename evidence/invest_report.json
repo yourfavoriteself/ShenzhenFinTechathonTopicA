@@ -1,0 +1,76 @@
+{
+ "broker": "sim",
+ "limits": {
+  "allowlist": [
+   "SPY",
+   "VTI",
+   "QQQ",
+   "BND"
+  ],
+  "min_notional_cents": 100,
+  "max_notional_cents": 2500,
+  "max_quote_age": "PT15M",
+  "corridor_pct": 2.0,
+  "max_orders_per_symbol_per_day": 1
+ },
+ "portfolio": {
+  "source": "sim",
+  "label": "investment envelope (broker sandbox)",
+  "envelope": 5000,
+  "spent": 2000,
+  "remaining": 3000,
+  "allowlist": [
+   "SPY",
+   "VTI",
+   "QQQ",
+   "BND"
+  ],
+  "max_order": 2500,
+  "broker_cash": 49000,
+  "session": "closed",
+  "orders": [
+   {
+    "id": "sim-0001",
+    "symbol": "SPY",
+    "status": "filled",
+    "amount": "$10",
+    "type": "market",
+    "submitted": "2026-10-17T10:16:00+03:00"
+   },
+   {
+    "id": "sim-0002",
+    "symbol": "SPY",
+    "status": "accepted",
+    "amount": "$10",
+    "type": "market",
+    "submitted": "2026-11-17T10:16:00+03:00"
+   }
+  ],
+  "positions": [
+   {
+    "symbol": "SPY",
+    "qty": "0.017356289",
+    "market_value_cents": 1013,
+    "avg_entry_cents": 57616,
+    "value": "$10.13"
+   }
+  ],
+  "envelope_label": "$50",
+  "spent_label": "$20",
+  "remaining_label": "$30",
+  "max_order_label": "$25"
+ },
+ "checked": 26,
+ "stopped": [
+  "GME is not on the client's list of securities",
+  "SPY261218C00600000 is not a plain stock or fund ticker (no options, crypto or other derivatives)"
+ ],
+ "filled": [
+  {
+   "order": "sim-0001",
+   "price": 57616,
+   "qty": "0.017356289",
+   "symbol": "SPY"
+  }
+ ]
+}

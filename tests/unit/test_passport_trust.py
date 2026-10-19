@@ -2,6 +2,7 @@ import pytest
 
 from kernel.crypto import KeyPair
 from kernel.mandate import Action
+from kernel.money import from_rub
 from kernel.passport import AgentSession, AuthError, PassportRegistry, Role
 from kernel.trust import (CLEAN_RUN, LEVEL1_LIMIT, PROMOTE_AFTER, AgentStatus, Category, TrustEvent, TrustLedger,
                           agent_key, category_for)
@@ -31,7 +32,7 @@ def test_replay_wrong_role_and_tampered_body_rejected(registry):
     with pytest.raises(AuthError, match="may not call"):
         registry.authenticate(s.request("browser_command", {}))
     req = s.request("propose_intent", {"amount": 100})
-    req.body["amount"] = 100000
+    req.body["amount"] = from_rub(1_000)
     with pytest.raises(AuthError, match="session key"):
         registry.authenticate(req)
 
@@ -60,8 +61,8 @@ def test_expired_and_revoked_passports(registry, clock):
 def test_trust_demotes_fast_promotes_slow(clock):
     t = TrustLedger(clock)
     assert t.level(Category.SUBSCRIPTIONS) == 1
-    assert t.auto_limit(Category.SUBSCRIPTIONS, 35000) == 35000
-    assert t.auto_limit(Category.SUBSCRIPTIONS, 500000) == LEVEL1_LIMIT
+    assert t.auto_limit(Category.SUBSCRIPTIONS, from_rub(350)) == from_rub(350)
+    assert t.auto_limit(Category.SUBSCRIPTIONS, from_rub(5_000)) == LEVEL1_LIMIT
     t.record(Category.SUBSCRIPTIONS, TrustEvent.CRITIC_DENY)
     assert t.level(Category.SUBSCRIPTIONS) == 0
     for _ in range(PROMOTE_AFTER - 1):
@@ -93,7 +94,7 @@ def test_agent_strikes_quarantine_probation_and_back(registry, clock):
     t.record(Category.BILLS, TrustEvent.FABRICATED_NUMBER, p)
     rec = t.agent(p)
     assert rec.status == AgentStatus.QUARANTINED and rec.strikes == 3 and rec.penalties == 2
-    assert t.level(Category.BILLS, p) == 0 and t.auto_limit(Category.OWN_TRANSFERS, 50_000, p) == 0
+    assert t.level(Category.BILLS, p) == 0 and t.auto_limit(Category.OWN_TRANSFERS, from_rub(500), p) == 0
     assert t.level(Category.OWN_TRANSFERS, other) == 1
     assert [h.event for h in t.history][-1] == "agent.quarantined"
     clock.advance(hours=25)

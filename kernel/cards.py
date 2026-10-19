@@ -14,7 +14,7 @@ from pydantic import BaseModel, Field
 from .crypto import obj_hash
 from .intent import Intent
 from .mandate import Action, Frequency, Mandate, new_id
-from .money import rub
+from .money import usd
 from .ports import PayeeInfo
 from .provenance import Label
 
@@ -35,6 +35,7 @@ ALWAYS_CANNOT = [
 _ACTION_TEXT = {
     Action.PAY: "Pay", Action.TRANSFER_OWN: "Move money to", Action.CANCEL_SUBSCRIPTION: "Cancel subscription",
     Action.BLOCK_MERCHANT: "Block future charges", Action.DISPUTE: "Dispute charge", Action.BROWSE: "Browse",
+    Action.INVEST: "Invest in",
 }
 
 _LABEL_BADGE = {
@@ -78,13 +79,13 @@ def describe(m: Mandate, payee_names: dict[str, str], funding_label: str) -> tup
     can: list[str] = []
     until = m.exp.strftime("%d %b %Y, %H:%M")
     for a in m.actions:
-        if m.payment and a in (Action.PAY, Action.TRANSFER_OWN):
+        if m.payment and a in (Action.PAY, Action.TRANSFER_OWN, Action.INVEST):
             names = ", ".join(payee_names.get(p, _show("payee", p, None, "")) for p in m.payment.allowed_payees)
             r = m.payment.agent_recurrence
             how = "once" if r.frequency == Frequency.ONCE else f"once a {r.frequency.value.removesuffix('ly')}"
-            line = f"{_ACTION_TEXT[a]} {names} up to {rub(m.payment.amount_range.max)}, {how}, from {funding_label}"
+            line = f"{_ACTION_TEXT[a]} {names} up to {usd(m.payment.amount_range.max)}, {how}, from {funding_label}"
             if m.payment.budget:
-                line += f", {rub(m.payment.budget.total)} in total"
+                line += f", {usd(m.payment.budget.total)} in total"
             can.append(f"{line}, until {until}")
         else:
             target = ", ".join(payee_names.get(p, p) for p in (m.payment.allowed_payees if m.payment else []))
@@ -126,7 +127,7 @@ def render(mandate: Mandate, intent: Intent, payee: PayeeInfo | None, funding_la
 
 def _show(name: str, value, payee: PayeeInfo | None, funding_label: str) -> str:
     if name == "amount":
-        return rub(int(value))
+        return usd(int(value))
     if name == "payee" and payee and payee.token == value:
         return payee.name
     if name == "funding_source":

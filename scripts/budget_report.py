@@ -12,7 +12,7 @@ from pathlib import Path
 from data.generator import CLIENT, MAIN, build_world, export
 from kernel import budget as B
 from kernel.analytics import Usage, double_charges, leaks, recurring
-from kernel.money import rub
+from kernel.money import usd
 
 
 def report(seed: int = 22) -> dict:
@@ -31,7 +31,7 @@ def report(seed: int = 22) -> dict:
     return {
         "world": {"seed": seed, "transactions": len(txs), "as_of": now.isoformat()},
         "leaks": {"planted": len(planted), "found": len(found & planted), "extra": len(found - planted),
-                  "monthly_total": rub(lk.monthly_total), "yearly_total": rub(lk.yearly_total), "calc": lk.calc},
+                  "monthly_total": usd(lk.monthly_total), "yearly_total": usd(lk.yearly_total), "calc": lk.calc},
         "double_charge": {"planted": 1, "found": sum(1 for d in dc if [d.first, d.second] == w.truth.double_charge)},
         "budget_forecast": {"train": q.train, "test": q.test, "mape_by_envelope_pct": q.mape,
                             "overall_wape_pct": q.overall_wape},

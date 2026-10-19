@@ -20,7 +20,7 @@ from kernel.crypto import DeviceKey
 from kernel.llm_gateway import LLMGateway
 
 MONTH = ["Pay for Melodify", "Find leaks in my subscriptions", "Was I charged twice?", "Pay my bills",
-         "How much can I spend today?", "Can I afford headphones for 15 000?", "Month review"]
+         "How much can I spend today?", "Can I afford headphones for $181.05?", "Month review"]
 CLIENTS = 1_000_000
 
 
@@ -49,7 +49,7 @@ class Run:
         rs = self.gw.log[n:]
         return {"task": text, "calls": len(rs), "levels": sorted({r.level for r in rs}),
                 "input_tokens": sum(r.input_tokens for r in rs), "output_tokens": sum(r.output_tokens for r in rs),
-                "cost_rub": round(sum(r.cost_rub for r in rs), 4),
+                "cost_usd": round(sum(r.cost_usd for r in rs), 6),
                 "big_model_calls": sum(1 for r in rs if r.level >= 2)}
 
 
@@ -58,7 +58,7 @@ def month(run: Run) -> dict:
     return {"tasks": rows, "calls": sum(r["calls"] for r in rows),
             "big_model_calls": sum(r["big_model_calls"] for r in rows),
             "tokens": sum(r["input_tokens"] + r["output_tokens"] for r in rows),
-            "cost_rub": round(sum(r["cost_rub"] for r in rows), 4)}
+            "cost_usd": round(sum(r["cost_usd"] for r in rows), 6)}
 
 
 def report(mode: str = "stub") -> dict:
@@ -68,7 +68,7 @@ def report(mode: str = "stub") -> dict:
     first = month(run)
     run.svc.advance(31)
     second = month(run)
-    per_client = second["cost_rub"]
+    per_client = second["cost_usd"]
     by_level: dict[int, int] = {}
     for r in gw.log:
         by_level[r.level] = by_level.get(r.level, 0) + 1
@@ -77,11 +77,11 @@ def report(mode: str = "stub") -> dict:
         "ladder": {lvl: spec.model for lvl, spec in gw.ladder.items()},
         "ladder_source": gw.config.source,
         "first_month": first, "next_month": second,
-        "saving_pct": round(100 * (1 - second["cost_rub"] / first["cost_rub"]), 1) if first["cost_rub"] else 0,
+        "saving_pct": round(100 * (1 - second["cost_usd"] / first["cost_usd"]), 1) if first["cost_usd"] else 0,
         "calls_by_level": by_level,
         "projection": {"clients": CLIENTS, "tasks_per_client_per_month": len(MONTH),
-                       "rub_per_client_per_month": per_client,
-                       "rub_per_month": round(per_client * CLIENTS),
+                       "usd_per_client_per_month": per_client,
+                       "usd_per_month": round(per_client * CLIENTS, 2),
                        "assumption": "every client runs the same seven tasks each month, as in the second month; "
                                      "level-0 work (rules, templates, kernel code) costs no tokens"},
         "note": "Token counts on real prompts with stub answers, priced at the gateway's list prices; "
@@ -97,7 +97,7 @@ def main() -> None:
     r = report(a.mode)
     a.out.write_text(json.dumps(r, ensure_ascii=False, indent=1))
     print(json.dumps({k: r[k] for k in ("mode", "saving_pct", "projection")}, ensure_ascii=False, indent=1))
-    print("first month", r["first_month"]["cost_rub"], "₽, next month", r["next_month"]["cost_rub"], "₽")
+    print("first month $" + str(r["first_month"]["cost_usd"]) + ", next month $" + str(r["next_month"]["cost_usd"]))
 
 
 if __name__ == "__main__":

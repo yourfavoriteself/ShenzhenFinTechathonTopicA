@@ -8,9 +8,9 @@
   "planted": 5,
   "found": 5,
   "extra": 0,
-  "monthly_total": "847 ₽",
-  "yearly_total": "10 164 ₽",
-  "calc": "StreamBox 399 ₽ + TuneWave 249 ₽ + PixelPlay 199 ₽ = 847 ₽ a month"
+  "monthly_total": "$10.23",
+  "yearly_total": "$122.76",
+  "calc": "StreamBox $4.82 + TuneWave $3.01 + PixelPlay $2.40 = $10.23 a month"
  },
  "double_charge": {
   "planted": 1,
@@ -34,15 +34,15 @@
    "2026-09"
   ],
   "mape_by_envelope_pct": {
-   "env_bills": 4.3,
-   "env_subs": 1.3,
-   "env_food": 19.6,
+   "env_bills": 4.2,
+   "env_subs": 2.5,
+   "env_food": 19.5,
    "env_transport": 35.6,
    "env_fun": 45.6,
    "env_shopping": 35.9,
-   "env_health": 49.0
+   "env_health": 49.1
   },
-  "overall_wape_pct": 27.3
+  "overall_wape_pct": 27.2
  },
  "cash_gaps": {
   "probes": 18,

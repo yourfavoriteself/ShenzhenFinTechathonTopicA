@@ -23,7 +23,7 @@ def fake_provider(texts, calls):
 @pytest.fixture
 def gw(tmp_path):
     def make(mode="live", **kw):
-        g = LLMGateway(mode, runs_dir=tmp_path / "runs", spend_path=tmp_path / "spend.json", usd_rub=100, **kw)
+        g = LLMGateway(mode, runs_dir=tmp_path / "runs", spend_path=tmp_path / "spend.json", **kw)
         return g
     return make
 
@@ -33,7 +33,7 @@ def test_stub_mode_never_touches_providers(gw):
     g.register_stub("reader", lambda req: '{"category": "bills", "confidence": 1}')
     r = g.call("reader", "Classify.", "Mosenergo bill", schema=Answer)
     assert r.parsed == {"category": "bills", "confidence": 1.0} and r.source == "stub"
-    assert r.estimated and r.input_tokens > 0 and g.ledger.total_rub == 0
+    assert r.estimated and r.input_tokens > 0 and g.ledger.total_usd == 0
 
 
 def test_live_call_is_costed_and_persisted(gw, tmp_path):
@@ -42,13 +42,13 @@ def test_live_call_is_costed_and_persisted(gw, tmp_path):
     g.providers["anthropic"] = fake_provider([], calls)
     r = g.call("reader", "Classify.", "Melodify 299", schema=Answer)
     assert r.parsed["category"] == "music" and calls == [("claude-haiku-4-5", 1)]
-    assert r.cost_rub == pytest.approx((1000 * 1 + 200 * 5) / 1e6 * 100)
+    assert r.cost_usd == pytest.approx((1000 * 1 + 200 * 5) / 1e6)
     saved = json.loads((tmp_path / "spend.json").read_text())
-    assert saved["total_rub"] == pytest.approx(r.cost_rub)
+    assert saved["total_usd"] == pytest.approx(r.cost_usd)
 
 
 def test_hard_cap_stops_before_the_call(gw):
-    g = gw(budget_rub=0.01)
+    g = gw(budget_usd=0.0001)
     calls = []
     g.providers["anthropic"] = fake_provider([], calls)
     with pytest.raises(BudgetExceeded):
@@ -57,18 +57,18 @@ def test_hard_cap_stops_before_the_call(gw):
 
 
 def test_cap_survives_restart(gw, tmp_path):
-    g = gw(budget_rub=0.6)
+    g = gw(budget_usd=0.006)
     g.providers["anthropic"] = fake_provider([], [])
     g.call("reader", "Classify.", "a", schema=Answer)
-    g2 = gw(budget_rub=0.6)
+    g2 = gw(budget_usd=0.006)
     g2.providers["anthropic"] = fake_provider([], [])
-    assert g2.ledger.total_rub == pytest.approx(0.2)
+    assert g2.ledger.total_usd == pytest.approx(0.002)
     with pytest.raises(BudgetExceeded):
         g2.call("reader", "Classify.", "b", schema=Answer)
 
 
 def test_task_budget_stops_the_task(gw):
-    g = gw(task_budget_rub=0.5)
+    g = gw(task_budget_usd=0.005)
     g.providers["anthropic"] = fake_provider([], [])
     g.call("reader", "Classify.", "a", schema=Answer, max_tokens=100, task_id="t1")
     g.call("reader", "Classify.", "b", schema=Answer, max_tokens=100, task_id="t1")
@@ -109,8 +109,8 @@ def test_record_then_replay_without_keys(gw):
     r = gw("replay")
     r.providers["anthropic"] = lambda *a: pytest.fail("replay must not call the provider")
     again = r.call("reader", "Classify.", "Melodify 299", schema=Answer)
-    assert again.parsed == first.parsed and again.source == "replay" and again.cost_rub == first.cost_rub
-    assert r.ledger.total_rub == pytest.approx(first.cost_rub)
+    assert again.parsed == first.parsed and again.source == "replay" and again.cost_usd == first.cost_usd
+    assert r.ledger.total_usd == pytest.approx(first.cost_usd)
     with pytest.raises(ReplayMiss):
         r.call("reader", "Classify.", "something else", schema=Answer)
 
@@ -137,4 +137,4 @@ def test_report_by_level(gw):
     g.providers["anthropic"] = fake_provider(["bad", "bad"], [])
     g.call("reader", "Classify.", "a", schema=Answer)
     rep = g.report()
-    assert rep["by_level"][2]["calls"] == 1 and rep["spent_total_rub"] > 0
+    assert rep["by_level"][2]["calls"] == 1 and rep["spent_total_usd"] > 0

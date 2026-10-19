@@ -20,9 +20,9 @@
      1,
      2
     ],
-    "input_tokens": 1181,
+    "input_tokens": 1178,
     "output_tokens": 82,
-    "cost_rub": 0.3129,
+    "cost_usd": 0.003122,
     "big_model_calls": 1
    },
    {
@@ -33,7 +33,7 @@
     ],
     "input_tokens": 92,
     "output_tokens": 26,
-    "cost_rub": 0.0222,
+    "cost_usd": 0.000222,
     "big_model_calls": 0
    },
    {
@@ -42,9 +42,9 @@
     "levels": [
      1
     ],
-    "input_tokens": 327,
+    "input_tokens": 325,
     "output_tokens": 14,
-    "cost_rub": 0.0397,
+    "cost_usd": 0.000395,
     "big_model_calls": 0
    },
    {
@@ -53,9 +53,9 @@
     "levels": [
      1
     ],
-    "input_tokens": 1978,
-    "output_tokens": 130,
-    "cost_rub": 0.2628,
+    "input_tokens": 1970,
+    "output_tokens": 128,
+    "cost_usd": 0.00261,
     "big_model_calls": 0
    },
    {
@@ -64,20 +64,20 @@
     "levels": [
      1
     ],
-    "input_tokens": 171,
-    "output_tokens": 30,
-    "cost_rub": 0.0321,
+    "input_tokens": 166,
+    "output_tokens": 28,
+    "cost_usd": 0.000306,
     "big_model_calls": 0
    },
    {
-    "task": "Can I afford headphones for 15 000?",
+    "task": "Can I afford headphones for $181.05?",
     "calls": 1,
     "levels": [
      1
     ],
-    "input_tokens": 203,
-    "output_tokens": 45,
-    "cost_rub": 0.0428,
+    "input_tokens": 198,
+    "output_tokens": 43,
+    "cost_usd": 0.000413,
     "big_model_calls": 0
    },
    {
@@ -88,14 +88,14 @@
     ],
     "input_tokens": 82,
     "output_tokens": 18,
-    "cost_rub": 0.0172,
+    "cost_usd": 0.000172,
     "big_model_calls": 0
    }
   ],
   "calls": 13,
   "big_model_calls": 1,
-  "tokens": 4379,
-  "cost_rub": 0.7297
+  "tokens": 4350,
+  "cost_usd": 0.00724
  },
  "next_month": {
   "tasks": [
@@ -105,7 +105,7 @@
     "levels": [],
     "input_tokens": 0,
     "output_tokens": 0,
-    "cost_rub": 0,
+    "cost_usd": 0,
     "big_model_calls": 0
    },
    {
@@ -116,7 +116,7 @@
     ],
     "input_tokens": 92,
     "output_tokens": 26,
-    "cost_rub": 0.0222,
+    "cost_usd": 0.000222,
     "big_model_calls": 0
    },
    {
@@ -125,7 +125,7 @@
     "levels": [],
     "input_tokens": 0,
     "output_tokens": 0,
-    "cost_rub": 0,
+    "cost_usd": 0,
     "big_model_calls": 0
    },
    {
@@ -134,9 +134,9 @@
     "levels": [
      1
     ],
-    "input_tokens": 1301,
-    "output_tokens": 102,
-    "cost_rub": 0.1811,
+    "input_tokens": 1296,
+    "output_tokens": 100,
+    "cost_usd": 0.001796,
     "big_model_calls": 0
    },
    {
@@ -145,20 +145,20 @@
     "levels": [
      1
     ],
-    "input_tokens": 116,
-    "output_tokens": 16,
-    "cost_rub": 0.0196,
+    "input_tokens": 112,
+    "output_tokens": 15,
+    "cost_usd": 0.000187,
     "big_model_calls": 0
    },
    {
-    "task": "Can I afford headphones for 15 000?",
+    "task": "Can I afford headphones for $181.05?",
     "calls": 1,
     "levels": [
      1
     ],
-    "input_tokens": 151,
-    "output_tokens": 30,
-    "cost_rub": 0.0301,
+    "input_tokens": 146,
+    "output_tokens": 28,
+    "cost_usd": 0.000286,
     "big_model_calls": 0
    },
    {
@@ -169,16 +169,16 @@
     ],
     "input_tokens": 81,
     "output_tokens": 17,
-    "cost_rub": 0.0166,
+    "cost_usd": 0.000166,
     "big_model_calls": 0
    }
   ],
   "calls": 7,
   "big_model_calls": 0,
-  "tokens": 1932,
-  "cost_rub": 0.2696
+  "tokens": 1913,
+  "cost_usd": 0.002657
  },
- "saving_pct": 63.1,
+ "saving_pct": 63.3,
  "calls_by_level": {
   "2": 1,
   "1": 19
@@ -186,8 +186,8 @@
  "projection": {
   "clients": 1000000,
   "tasks_per_client_per_month": 7,
-  "rub_per_client_per_month": 0.2696,
-  "rub_per_month": 269600,
+  "usd_per_client_per_month": 0.002657,
+  "usd_per_month": 2657.0,
   "assumption": "every client runs the same seven tasks each month, as in the second month; level-0 work (rules, templates, kernel code) costs no tokens"
  },
  "note": "Token counts on real prompts with stub answers, priced at the gateway's list prices; a live run replaces this estimate."

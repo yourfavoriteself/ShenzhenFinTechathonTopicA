@@ -42,7 +42,7 @@ BLOCKED = {DENIED, EXPOSED, HELD, DETECTED, FILTERED}
 class Result:
     outcome: str
     detail: str = ""
-    lost: int = 0                      # kopecks that reached the attacker
+    lost: int = 0                      # cents that reached the attacker
     out_of_mandate: bool = False       # money moved or an action ran beyond what the client signed
     stopped_by: list[str] = field(default_factory=list)
 

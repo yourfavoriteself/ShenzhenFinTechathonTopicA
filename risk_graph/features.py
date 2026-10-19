@@ -81,7 +81,7 @@ def explain(f: dict[str, float]) -> list[str]:
     if f["in_cycle"]:
         out.append("money goes around a circle of accounts and comes back")
     if f["below_threshold"] > 0.4:
-        out.append("many transfers just below 15 000 ₽")
+        out.append("many transfers just below $181.05")
     if f["young_peers"] > 0.5 and f["n_out"]:
         out.append("most of its counterparties are new accounts")
     return out

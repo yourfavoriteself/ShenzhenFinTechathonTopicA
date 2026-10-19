@@ -16,8 +16,9 @@ from pydantic import BaseModel
 
 from .cards import ConfirmationCard, Risk, render
 from .intent import Intent
-from .mandate import (MONEY_ACTIONS, Action, AmountRange, AutonomyStage, Budget, Frequency, Mandate, MandateError,
+from .mandate import (MONEY_ACTIONS, SPEND_ACTIONS, Action, AmountRange, AutonomyStage, Budget, Frequency, Mandate, MandateError,
                       OriginMode, OriginRule, PaymentConstraints, Recurrence, SignedMandate)
+from .money import from_rub
 from .passport import Passport, Role
 from .ports import PayeeInfo, Receipt
 from .trust import AgentStatus, Category, TrustEvent, category_for
@@ -100,11 +101,12 @@ REQUIRED: dict[Action, tuple[str, ...]] = {
     Action.BLOCK_MERCHANT: ("payee",),
     Action.DISPUTE: ("payee", "amount"),
     Action.BROWSE: ("domain",),
+    Action.INVEST: ("payee", "amount"),
 }
-UNTRUSTED_DENY_AMOUNT = 1_000_000
+UNTRUSTED_DENY_AMOUNT = from_rub(10_000)
 UNUSUAL_FACTOR = 1.5
 STANDING_TOLERANCE = 1.15
-STANDING_KINDS = {"subscription", "biller", "own"}
+STANDING_KINDS = {"subscription", "biller", "own", "security"}
 
 Step = Callable[[Ctx], StepResult]
 
@@ -121,7 +123,7 @@ class Pipeline:
     def steps(self) -> list[tuple[str, Step]]:
         return [("agent", self.s_agent), ("schema", self.s_schema), ("mandate", self.s_mandate),
                 ("provenance", self.s_provenance), ("references", self.s_references), ("policy", self.s_policy),
-                ("risk", self.s_risk), ("critic", self.s_critic), ("shadow", self.s_shadow)]
+                ("broker", self.s_broker), ("risk", self.s_risk), ("critic", self.s_critic), ("shadow", self.s_shadow)]
 
     # ------------------------------------------------------------------ run
 
@@ -131,7 +133,8 @@ class Pipeline:
             ctx.apply(StepResult(step="kill_switch", verdict=Verdict.DENY, reasons=[f"kernel halted: {self.k.halted}"]))
             return self._finish(ctx, Outcome.DENIED)
         payee_token = intent.val("payee")
-        ctx.payee = self.k.directory.payee(intent.client_id, payee_token) if isinstance(payee_token, str) else None
+        directory = self.k.investing if intent.action == Action.INVEST and self.k.investing else self.k.directory
+        ctx.payee = directory.payee(intent.client_id, payee_token) if isinstance(payee_token, str) else None
         ctx.category = category_for(intent.action, ctx.payee.kind if ctx.payee else None)
         for name, step in self.steps():
             r = step(ctx)
@@ -165,7 +168,7 @@ class Pipeline:
         reasons = [f"missing {f}" for f in REQUIRED[i.action] if i.val(f) in (None, "")]
         amt = i.val("amount")
         if amt is not None and (not isinstance(amt, int) or isinstance(amt, bool) or amt <= 0):
-            reasons.append("amount must be a positive integer in kopecks")
+            reasons.append("amount must be a positive integer in cents")
         for f in ("payee", "funding_source", "domain"):
             if i.val(f) is not None and not isinstance(i.val(f), str):
                 reasons.append(f"{f} must be a string")
@@ -262,6 +265,13 @@ class Pipeline:
             return StepResult(step="", verdict=Verdict.ASK, risk=Risk.HIGH if high else Risk.MEDIUM, reasons=ask)
         return StepResult(step="", risk=Risk.LOW if ctx.mandate else Risk.MEDIUM)
 
+    def s_broker(self, ctx: Ctx) -> StepResult:
+        if ctx.intent.action != Action.INVEST:
+            return StepResult(step="")
+        if self.k.investing is None:
+            return StepResult(step="", verdict=Verdict.DENY, reasons=["no broker is connected"])
+        return self.k.investing.check(ctx)
+
     def s_risk(self, ctx: Ctx) -> StepResult:
         return _merge([chk(ctx) for chk in self.risk_checks])
 
@@ -286,6 +296,8 @@ class Pipeline:
         i, k = ctx.intent, self.k
         once, standing = self._drafts(ctx)
         label = k.funds.label(i.client_id, i.val("funding_source")) if i.val("funding_source") else "-"
+        if i.action == Action.INVEST and k.investing:
+            label = k.investing.label
         previous = {"amount": ctx.payee.usual_amount} if ctx.payee and ctx.payee.usual_amount else None
         card = render(once, i, ctx.payee, label, ctx.risk, ctx.reasons, previous=previous, standing=standing)
         a = k.intervention.assessments.get(i.id) if k.intervention else None
@@ -317,7 +329,7 @@ class Pipeline:
                        funding_source=i.val("funding_source"), nbf=now, exp=exp, single_use=True,
                        stage=AutonomyStage.ASSISTED)
         standing = None
-        if (i.action in MONEY_ACTIONS and ctx.risk < Risk.HIGH and i.not_after is None and ctx.payee is not None
+        if (i.action in SPEND_ACTIONS and ctx.risk < Risk.HIGH and i.not_after is None and ctx.payee is not None
                 and ctx.payee.kind in STANDING_KINDS and amount):
             exp = datetime(now.year, 12, 31, 23, 59, tzinfo=now.tzinfo)
             if (exp - now).days < 30:
@@ -338,7 +350,8 @@ class Pipeline:
         if ctx.mandate is None:
             ctx.apply(StepResult(step="execute", verdict=Verdict.DENY, reasons=["no mandate to execute under"]))
             return self._finish(ctx, Outcome.DENIED)
-        if k.executor is None:
+        executor = k.investing if i.action == Action.INVEST and k.investing else k.executor
+        if executor is None:
             ctx.apply(StepResult(step="execute", verdict=Verdict.DENY, reasons=["no executor configured"]))
             return self._finish(ctx, Outcome.FAILED)
         args = dict(payee=i.val("payee"), amount=i.val("amount"), funding_source=i.val("funding_source"),
@@ -348,14 +361,15 @@ class Pipeline:
             grant = k.mandates.grant(ctx.mandate.mandate.id, holder, i.action, **args)
             self._journal(ctx, "grant.issued", {"grant": grant.id, "mandate": grant.mandate_id, **args})
             k.mandates.consume(grant, holder, i.action, **args)
-            receipt = k.executor.execute(grant, i)
+            receipt = executor.execute(grant, i)
         except MandateError as e:
             ctx.apply(StepResult(step="execute", verdict=Verdict.DENY, reasons=[str(e)]))
             return self._finish(ctx, Outcome.DENIED)
         self._journal(ctx, "executed", {"ok": receipt.ok, "reference": receipt.reference})
         if not receipt.ok:
             return self._finish(ctx, Outcome.FAILED, receipt=receipt)
-        verified = self.verifier(i, receipt) if self.verifier else True
+        verifier = k.investing.verify if i.action == Action.INVEST and k.investing else self.verifier
+        verified = verifier(i, receipt) if verifier else True
         k.trust.record(ctx.category, TrustEvent.VERIFIED_SUCCESS if verified else TrustEvent.KERNEL_DENY, ctx.passport)
         self._journal(ctx, "result.verified", {"ok": verified})
         if not verified:

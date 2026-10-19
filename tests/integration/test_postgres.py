@@ -9,6 +9,7 @@ import psycopg
 import pytest
 
 from app.service import GuardianService
+from kernel.money import from_rub
 from sandbox.sites.portal import DEMO_LOGINS
 from tests.e2e.test_c2_cancel import cancel_streambox
 
@@ -95,11 +96,11 @@ def test_signed_mandates_and_vault_ciphertexts_are_stored_under_rls(svc, client)
 
 def test_held_transfer_and_analyst_case_are_persisted(svc, client, dev):
     svc.scam_call(True)
-    items = client.say("Transfer 350 000 ₽ from my savings to safe account 40817810500001234567")
+    items = client.say("Transfer $4,224.48 from my savings to safe account 40817810500001234567")
     svc.wait(15)
     card = [i for i in items if i.type == "card"][-1]
     svc.confirm(card.data["pending_id"], dev.alg, dev.public_b64, dev.sign_mandate(card.data["card"]["mandate_hash"]),
-                   typed_amount=35_000_000, answers={"on_call": True, "pressure": True, "given_account": True},
+                   typed_amount=from_rub(350_000), answers={"on_call": True, "pressure": True, "given_account": True},
                    pin="2580")
     with svc.db.as_client(svc.client) as c:
         holds = c.execute("SELECT level, status FROM holds").fetchall()

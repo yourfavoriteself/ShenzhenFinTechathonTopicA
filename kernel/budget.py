@@ -18,7 +18,7 @@ from datetime import date, datetime, time, timedelta
 from pydantic import BaseModel
 
 from .analytics import LeakReport, Series, by_month_category, debits, month_key
-from .money import rub
+from .money import from_rub, usd
 from .statements import FLEXIBLE, Category, Direction, Tx, TxKind
 
 
@@ -44,19 +44,19 @@ ENV = {e.id: e for e in ENVELOPES}
 ENV_OF = {c: e.id for e in ENVELOPES for c in e.categories}
 PROTECTED = {"mandatory", "subscriptions"}
 CUSHION_SHARE = 0.05
-ONE_OFF = 1_000_000            # a single flexible purchase above 10 000 RUB is a one-off, not daily spending
+ONE_OFF = from_rub(10_000)    # a single flexible purchase above $120.70 is a one-off, not daily spending
 FORBIDDEN_OPTIONS = {"credit", "loan", "installment", "overdraft", "credit_card", "bnpl"}
 GOAL_CUT_CAP = 0.2
 SEASON_LIMITS = (0.7, 2.5)
 SEASON_MIN_EFFECT = 0.35
 
 
-def _up100(k: float) -> int:
-    return int(math.ceil(k / 10_000) * 10_000)
+def _up_dollar(k: float) -> int:
+    return int(math.ceil(k / 100) * 100)
 
 
-def _down100(k: float) -> int:
-    return int(math.floor(k / 10_000) * 10_000)
+def _down_dollar(k: float) -> int:
+    return int(math.floor(k / 100) * 100)
 
 
 def _month_add(m: str, n: int) -> str:
@@ -186,16 +186,16 @@ def autobudget(txs: list[Tx], as_of: datetime, month: str | None = None,
             keep = int(statistics.median(sum(per.get(m, {}).get(c, 0) for c in e.categories if c in untouchable)
                                          for m in months))
         plans.append(EnvelopePlan(id=e.id, name=e.name, kind=e.kind, categories=e.categories,
-                                  planned=_up100(med * factor), average=int(statistics.mean(vals)), median=int(med),
+                                  planned=_up_dollar(med * factor), average=int(statistics.mean(vals)), median=int(med),
                                   spread=int(q[2] - q[0]), seasonal_factor=factor, untouchable_part=keep,
                                   history=totals[e.id]))
-    cushion = _up100(income * CUSHION_SHARE)
+    cushion = _up_dollar(income * CUSHION_SHARE)
     plans.append(EnvelopePlan(id="env_cushion", name="Cushion", kind="cushion", categories=[], planned=cushion,
                               average=0, median=0, spread=0))
     spending = sum(p.planned for p in plans if p.kind != "cushion")
-    savings = max(0, _down100(income - spending))
-    calc = (f"income {rub(income)} (median of {len(months)} months) - envelopes {rub(spending)} "
-            f"= {rub(savings)} to savings; cushion kept at {rub(cushion)}")
+    savings = max(0, _down_dollar(income - spending))
+    calc = (f"income {usd(income)} (median of {len(months)} months) - envelopes {usd(spending)} "
+            f"= {usd(savings)} to savings; cushion kept at {usd(cushion)}")
     return BudgetPlan(month=month, based_on=months, income=income, envelopes=plans, savings=savings,
                       cushion_target=cushion, one_offs=one_offs, calc=calc)
 
@@ -354,7 +354,7 @@ def forecast(as_of: datetime, balance: int, events: list[Event], daily_flex: int
         names = []
         for e in sorted(by_day.get(d, []), key=lambda e: -e.amount):
             bal += e.amount
-            names.append(f"{e.name} {'+' if e.amount > 0 else '-'}{rub(abs(e.amount))}")
+            names.append(f"{e.name} {'+' if e.amount > 0 else '-'}{usd(abs(e.amount))}")
             if e.amount < 0 and e.kind != "purchase" and bal < 0 and f"{e.name}{d}" not in flagged:
                 flagged.add(f"{e.name}{d}")
                 gaps.append(Gap(date=d, event=e.name, amount=-e.amount, shortfall=-bal,
@@ -391,27 +391,27 @@ def gap_options(fc: Forecast, as_of: datetime, envelopes: dict[str, int] | None,
             if have > 0:
                 amt = min(need, have)
                 opts.append(Option(kind="move_envelope", amount=amt, covers=amt >= need,
-                                   title=f'Move {rub(amt)} from "{ENV[env_id].name}" to "Bills"',
+                                   title=f'Move {usd(amt)} from "{ENV[env_id].name}" to "Bills"',
                                    action={"src": env_id, "dst": "env_bills", "amount": amt}))
     else:
-        per_day = _up100(need / days)
+        per_day = _up_dollar(need / days)
         opts.append(Option(kind="spend_less", amount=need, covers=per_day <= daily_flex // 2,
-                           title=f"Spend {rub(per_day)} a day less on cafes and shopping until {gap.date}",
+                           title=f"Spend {usd(per_day)} a day less on cafes and shopping until {gap.date}",
                            action={"per_day": per_day, "until": gap.date.isoformat()}))
     for g in goals:
         opts.append(Option(kind="shift_goal", amount=g.amount, covers=g.amount >= need,
-                           title=f'Move this month\'s {rub(g.amount)} transfer to "{g.name}" after payday',
+                           title=f'Move this month\'s {usd(g.amount)} transfer to "{g.name}" after payday',
                            action={"goal_id": g.goal_id}))
     if leaks:
         for lk in leaks.leaks:
             if lk.counted:
                 opts.append(Option(kind="cancel_subscription", amount=lk.monthly, covers=False,
-                                   title=f"Cancel {lk.name}: {rub(lk.monthly)} a month less from now on",
+                                   title=f"Cancel {lk.name}: {usd(lk.monthly)} a month less from now on",
                                    action={"merchant": lk.merchant, "card_id": lk.card_id}, refs=lk.evidence[-1:]))
     if savings_balance >= need:
-        opts.append(Option(kind="from_savings", amount=_up100(need), covers=True,
-                           title=f"Transfer {rub(_up100(need))} from your savings account",
-                           action={"src": "savings", "dst": "env_bills", "amount": _up100(need)}))
+        opts.append(Option(kind="from_savings", amount=_up_dollar(need), covers=True,
+                           title=f"Transfer {usd(_up_dollar(need))} from your savings account",
+                           action={"src": "savings", "dst": "env_bills", "amount": _up_dollar(need)}))
     assert not any(o.kind in FORBIDDEN_OPTIONS for o in opts)
     return opts
 
@@ -439,7 +439,7 @@ def safe_to_spend(as_of: datetime, balance: int, events: list[Event], cushion: i
     free = balance - mandatory - goals - cushion
     per_day = max(0, free // days)
     per_env = {k: max(0, v // days) for k, v in (envelopes or {}).items() if ENV[k].kind == "flexible"}
-    calc = (f"({rub(balance)} balance - {rub(mandatory)} payments due - {rub(goals)} to goals - {rub(cushion)} "
+    calc = (f"({usd(balance)} balance - {usd(mandatory)} payments due - {usd(goals)} to goals - {usd(cushion)} "
             f"cushion) / {days} days to payday {payday}")
     return SafeToSpend(per_day=per_day, days_to_payday=days, payday=payday, balance=balance, mandatory_due=mandatory,
                        goals_due=goals, cushion=cushion, per_envelope=per_env, calc=calc)
@@ -487,28 +487,28 @@ def distribute_salary(amount: int, as_of: datetime, slots: list[IncomeSlot], pla
     days1, days2 = (p1 - today).days, (p2 - p1).days
     rate = {e.id: e.planned / 30.44 for e in plan.envelopes if e.kind == "flexible"}
     flex_next = sum(r * days2 for r in rate.values())
-    reserve = max(0, _up100(_due(events, p1, p2, "env_bills") + _due(events, p1, p2, "env_subs")
+    reserve = max(0, _up_dollar(_due(events, p1, p2, "env_bills") + _due(events, p1, p2, "env_subs")
                             + flex_next - nxt.amount))
     out: list[Transfer] = []
     bills = max(0, _due(events, today, p1, "env_bills") + reserve - balances.get("env_bills", 0))
-    out.append(Transfer(dst="env_bills", name="Bills", amount=_up100(bills), kind="reserve" if reserve else "envelope",
-                        planned=_up100(bills)))
+    out.append(Transfer(dst="env_bills", name="Bills", amount=_up_dollar(bills), kind="reserve" if reserve else "envelope",
+                        planned=_up_dollar(bills)))
     subs = max(0, _due(events, today, p1, "env_subs") - balances.get("env_subs", 0))
-    out.append(Transfer(dst="env_subs", name="Subscriptions", amount=_up100(subs), kind="envelope",
-                        planned=_up100(subs)))
+    out.append(Transfer(dst="env_subs", name="Subscriptions", amount=_up_dollar(subs), kind="envelope",
+                        planned=_up_dollar(subs)))
     for e in plan.envelopes:
         if e.kind == "flexible":
-            amt = max(0, _down100(rate[e.id] * days1 - max(0, balances.get(e.id, 0))))
+            amt = max(0, _down_dollar(rate[e.id] * days1 - max(0, balances.get(e.id, 0))))
             out.append(Transfer(dst=e.id, name=e.name, amount=amt, kind="envelope", planned=amt))
     reduced = amount < slot.amount * 0.95
     notes: list[str] = []
     k = min(1.0, amount / slot.amount) if slot.amount else 1.0
     for g in goals:
         if g.day == today.day:
-            amt = _down100(g.amount * k) if reduced else g.amount
+            amt = _down_dollar(g.amount * k) if reduced else g.amount
             out.append(Transfer(dst=g.goal_id, name=g.name, amount=amt, kind="goal", planned=g.amount))
     if reduced:
-        notes.append(f"salary {rub(amount)} is {rub(slot.amount - amount)} below usual {rub(slot.amount)}; "
+        notes.append(f"salary {usd(amount)} is {usd(slot.amount - amount)} below usual {usd(slot.amount)}; "
                      f"goal transfers scaled to {round(k * 100)}%")
     cushion = max(0, plan.cushion_target - balances.get("env_cushion", 0))
     left = amount - sum(t.amount for t in out)
@@ -528,14 +528,14 @@ def distribute_salary(amount: int, as_of: datetime, slots: list[IncomeSlot], pla
             for t in items:
                 t.amount = max(0, t.amount - int(math.ceil(cut * t.amount / pool)))
             left = amount - sum(t.amount for t in out)
-            notes.append(f"{'goal transfers' if kinds == ('goal',) else 'flexible envelopes'} cut by {rub(cut)}")
+            notes.append(f"{'goal transfers' if kinds == ('goal',) else 'flexible envelopes'} cut by {usd(cut)}")
         if left < 0:
             missing = -left
-            notes.append(f"bills are protected; {rub(missing)} still missing before {p1}")
+            notes.append(f"bills are protected; {usd(missing)} still missing before {p1}")
     if left > 0:
         out.append(Transfer(dst="acc_save", name="Savings", amount=left, kind="savings", planned=left))
     if reserve:
-        notes.append(f"{rub(reserve)} kept in Bills for payments the next income on {p1} will not cover")
+        notes.append(f"{usd(reserve)} kept in Bills for payments the next income on {p1} will not cover")
     return Distribution(income=amount, usual=slot.amount, period_end=p1, transfers=out, reduced=reduced,
                         missing=missing, notes=notes)
 
@@ -581,11 +581,11 @@ def can_afford(price: int, as_of: datetime, balance: int, events: list[Event], d
         sources.append((goal.goal.id, left))
         delay = int(math.ceil(left / goal.monthly * 30.44))
         left = 0
-    reasons = [f"a cash gap is already expected: {rub(g.shortfall)} missing for {g.event} on {g.date}"
+    reasons = [f"a cash gap is already expected: {usd(g.shortfall)} missing for {g.event} on {g.date}"
                for g in base.gaps[:1]]
     if new_gaps(fc):
         g = new_gaps(fc)[0]
-        reasons.append(f"buying now leaves {rub(g.shortfall)} missing for {g.event} on {g.date}")
+        reasons.append(f"buying now leaves {usd(g.shortfall)} missing for {g.event} on {g.date}")
         after = Event(date=payday, kind="purchase", name="purchase", amount=-price)
         later = new_gaps(forecast(as_of, balance, events + [after], daily_flex, horizon))
         if not later:
@@ -593,15 +593,15 @@ def can_afford(price: int, as_of: datetime, balance: int, events: list[Event], d
                           earliest=payday, reasons=reasons,
                           calc=f"after the income on {payday} the purchase fits without new gaps")
         return Afford(verdict="no", price=price, sources=sources, goal_delay_days=delay, reasons=reasons,
-                      calc=f"even after {payday} the purchase leaves {rub(later[0].shortfall)} missing "
+                      calc=f"even after {payday} the purchase leaves {usd(later[0].shortfall)} missing "
                            f"for {later[0].event} on {later[0].date}")
     if left > 0:
-        reasons.append(f"flexible envelopes are {rub(left)} short")
+        reasons.append(f"flexible envelopes are {usd(left)} short")
         return Afford(verdict="after_payday", price=price, sources=sources, earliest=payday, reasons=reasons,
-                      calc=f"envelopes cover {rub(price - left)} of {rub(price)}")
+                      calc=f"envelopes cover {usd(price - left)} of {usd(price)}")
     return Afford(verdict="yes", price=price, sources=sources, goal_delay_days=delay,
-                  calc=" + ".join(f"{ENV[s].name if s in ENV else 'goal'} {rub(a)}" for s, a in sources)
-                  + f" = {rub(price)}; lowest forecast balance {rub(fc.min_balance)}")
+                  calc=" + ".join(f"{ENV[s].name if s in ENV else 'goal'} {usd(a)}" for s, a in sources)
+                  + f" = {usd(price)}; lowest forecast balance {usd(fc.min_balance)}")
 
 
 # ---------------------------------------------------------------- 8.7 goals
@@ -662,7 +662,7 @@ def plan_goal(goal: Goal, txs: list[Tx], as_of: datetime) -> GoalPlan:
     if not dates:
         raise ValueError("deadline is too close")
     remaining = max(0, goal.target - goal.saved)
-    monthly = _up100(remaining / len(dates))
+    monthly = _up_dollar(remaining / len(dates))
     base = autobudget(txs, as_of, untouchable=goal.untouchable)
     surplus = base.savings
     need = max(0, monthly - surplus)
@@ -674,7 +674,7 @@ def plan_goal(goal: Goal, txs: list[Tx], as_of: datetime) -> GoalPlan:
         take = min(need, pool)
         for k, v in cuttable.items():
             if v and pool:
-                cuts[k] = _up100(take * v / pool)
+                cuts[k] = _up_dollar(take * v / pool)
     covered = surplus + sum(cuts.values())
     feasible = covered >= monthly
     checks: list[MonthCheck] = []
@@ -688,9 +688,9 @@ def plan_goal(goal: Goal, txs: list[Tx], as_of: datetime) -> GoalPlan:
     feasible = feasible and all(c.ok for c in checks)
     effective = monthly if feasible else min(monthly, covered)
     proj = projected_date(remaining, effective, dates[0])
-    calc = (f"({rub(goal.target)} - {rub(goal.saved)} saved) / {len(dates)} payments = {rub(monthly)} a month; "
-            f"{rub(min(surplus, monthly))} from the usual surplus"
-            + (f", {rub(sum(cuts.values()))} from flexible envelopes" if cuts else ""))
+    calc = (f"({usd(goal.target)} - {usd(goal.saved)} saved) / {len(dates)} payments = {usd(monthly)} a month; "
+            f"{usd(min(surplus, monthly))} from the usual surplus"
+            + (f", {usd(sum(cuts.values()))} from flexible envelopes" if cuts else ""))
     return GoalPlan(goal=goal.model_copy(update={"monthly": monthly}), monthly=monthly, contributions=len(dates),
                     from_surplus=min(surplus, monthly), cuts=cuts, feasible=feasible, projected_date=proj,
                     months=checks, calc=calc)
@@ -710,7 +710,7 @@ def savings_to_goal(plan: GoalPlan, extra_monthly: int, start: date, source: str
     old = projected_date(remaining, plan.monthly, start)
     new = projected_date(remaining, plan.monthly + extra_monthly, start)
     return SavingsBoost(extra_monthly=extra_monthly, old_date=old, new_date=new, days_earlier=(old - new).days,
-                        calc=f"{source}: +{rub(extra_monthly)} a month -> goal \"{plan.goal.name}\" "
+                        calc=f"{source}: +{usd(extra_monthly)} a month -> goal \"{plan.goal.name}\" "
                              f"{(old - new).days} days earlier ({old} -> {new})")
 
 
@@ -753,7 +753,7 @@ def month_review(month: str, txs: list[Tx], plan: BudgetPlan, series: list[Serie
         if not prev:
             break
         usual = int(statistics.median(per[m].get(c, 0) for m in prev))
-        if usual and actual > usual * 1.4 and actual - usual > 200_000:
+        if usual and actual > usual * 1.4 and actual - usual > from_rub(2_000):
             mtx = [t for t in debits(txs) if month_key(t.ts) == month and t.category == c]
             late = [t for t in mtx if t.ts.hour >= 23 or t.ts.hour < 4]
             pct = round((actual / usual - 1) * 100)
@@ -762,7 +762,7 @@ def month_review(month: str, txs: list[Tx], plan: BudgetPlan, series: list[Serie
                 note += f", {len(late)} transactions after 23:00"
             anomalies.append(Anomaly(category=c, actual=actual, usual=usual, pct=pct, note=note,
                                      tx_ids=[t.id for t in (late or mtx)]))
-    changes = [f"{s.name}: {rub(s.previous_amount)} -> {rub(s.amount)}" for s in series
+    changes = [f"{s.name}: {usd(s.previous_amount)} -> {usd(s.amount)}" for s in series
                if s.changed_on and month_key(s.changed_on) == month and s.previous_amount]
     suggestions: dict[str, int] = {}
     last3 = [_month_add(month, -i) for i in range(0, 3)]
@@ -771,7 +771,7 @@ def month_review(month: str, txs: list[Tx], plan: BudgetPlan, series: list[Serie
             continue
         med = statistics.median(spent_by_envelope(txs, m).get(e.id, 0) for m in last3)
         if abs(med - e.planned) > 0.2 * e.planned:
-            suggestions[e.id] = _up100(med)
+            suggestions[e.id] = _up_dollar(med)
     return MonthReview(month=month, rows=rows, anomalies=anomalies, price_changes=changes, suggestions=suggestions)
 
 

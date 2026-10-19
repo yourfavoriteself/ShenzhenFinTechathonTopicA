@@ -37,7 +37,7 @@ def stub_responder(req: dict) -> str:
     d = json.loads(req["user"])
     body, subject = d["body"], d["subject"]
     text = f"{subject}\n{body}"
-    amount = re.search(r"amount due:?\s*([\d\s ]+(?:[.,]\d{2})?)", text, re.I)
+    amount = re.search(r"amount due:?\s*\$?\s*(\d[\d\s ,]*(?:\.\d{2})?)", text, re.I)
     due = re.search(r"due date:?\s*(\d{2})\.(\d{2})\.(\d{4})", text, re.I)
     account = re.search(r"\b(\d{20})\b", body)
     first = body.strip().splitlines()[0].strip() if body.strip() else None
@@ -46,6 +46,6 @@ def stub_responder(req: dict) -> str:
                                   "trial" if re.search(r"trial", text, re.I) else "other")
     out = {"kind": kind, "payee_name": first if kind == "bill" else None,
            "account": account.group(1) if account else None,
-           "amount": amount.group(1).strip().replace(" ", "") if amount else None,
+           "amount": re.sub(r"[\s ,]", "", amount.group(1)) if amount else None,
            "due": f"{due.group(3)}-{due.group(2)}-{due.group(1)}" if due else None, "confidence": 0.95}
     return json.dumps(out)

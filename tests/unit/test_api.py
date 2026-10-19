@@ -2,6 +2,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from kernel.api import create_app
+from kernel.money import from_rub
 from tests.unit.test_pipeline import env, new_planner, pay  # noqa: F401
 
 
@@ -25,7 +26,7 @@ def test_full_flow_over_http(api):
                json={"device_alg": dev.alg, "device_key": dev.public_b64, "device_sig": sig, "standing": True})
     assert r.json()["outcome"] == "executed" and len(ex.calls) == 1
     ms = c.get("/clients/cl_1/mandates").json()
-    assert len(ms) == 1 and ms[0]["spent"] == 29900 and "Melodify" in ms[0]["can"][0]
+    assert len(ms) == 1 and ms[0]["spent"] == from_rub(299) and "Melodify" in ms[0]["can"][0]
     assert c.post(f"/mandates/{ms[0]['id']}/revoke").json()["revoked"] == [ms[0]["id"]]
     assert c.get("/clients/cl_1/mandates").json() == []
     assert c.get("/journal/verify").json()["ok"]

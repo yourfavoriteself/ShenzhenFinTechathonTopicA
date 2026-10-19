@@ -44,6 +44,7 @@ class Kernel:
         self.directory: Directory = directory or InMemoryDirectory()
         self.funds: Funds = funds or InMemoryFunds()
         self.executor = executor
+        self.investing: Any = None          # InvestDesk when a broker is connected
         self.pipeline = Pipeline(self)
         self.vault = Vault(self.clock)
         self.memory = SuspiciousMemory()

@@ -16,7 +16,7 @@ from pydantic import BaseModel, Field
 from kernel.clock import SimClock
 from kernel.mandate import new_id
 from kernel.merchants import MerchantDirectory
-from kernel.money import rub
+from kernel.money import usd
 from kernel.statements import Balance, CardOnFile, Category, Direction, Tx, TxKind
 
 
@@ -282,7 +282,7 @@ class SandboxBank:
             raise BankError("amount must be positive")
         acc, env, card_id = self._source(client_id, funding_source)
         if env is not None and env.balance < amount:
-            raise Declined(f'not enough in envelope "{env.name}": {rub(env.balance)}')
+            raise Declined(f'not enough in envelope "{env.name}": {usd(env.balance)}')
         name, cat = self._name(payee)
         m = self.merchants.get(payee)
         if kind is None:
