@@ -6,7 +6,7 @@
 [![Python](https://img.shields.io/badge/python-3.14-101828)](requirements.txt)
 [![License](https://img.shields.io/badge/license-MIT-667085)](LICENSE)
 [![Docs](https://img.shields.io/badge/docs-technical%20documentation-101828)](docs/technical_documentation.pdf)
-[![Video](https://img.shields.io/badge/demo-3%3A18-1d4ed8)](https://github.com/yourfavoriteself/ShenzhenFinTechathonTopicA/releases/download/v1.0/guardian_demo.mp4)
+[![Video](https://img.shields.io/badge/demo-3%3A18-1d4ed8)](#demo-video)
 
 > **SUBMISSION**: 2026 Shenzhen FinTechathon, International Track, Topic A: Personal Finance Assistant, theme *AI as a Financial Participant*. The six submission materials are attached to release [v1.0](https://github.com/yourfavoriteself/ShenzhenFinTechathonTopicA/releases/tag/v1.0) and indexed in [`docs/README.md`](docs/README.md).
 
@@ -16,9 +16,9 @@ The [technical documentation](docs/technical_documentation.pdf) describes the sy
 
 ## Demo video
 
-<a href="https://github.com/yourfavoriteself/ShenzhenFinTechathonTopicA/releases/download/v1.0/guardian_demo.mp4"><img src="docs/media/video_poster.png" alt="Watch the demo video, 3 minutes 29 seconds" width="100%"></a>
+https://github.com/user-attachments/assets/a378ff11-1623-4543-8d2f-6814d08748be
 
-One client, one month in a sandbox bank, recorded from the real interface ([download](https://github.com/yourfavoriteself/ShenzhenFinTechathonTopicA/releases/download/v1.0/guardian_demo.mp4), [captions](docs/media/guardian_demo_captions.json)).
+One client, one month in a sandbox bank, recorded from the real interface. The player above runs on GitHub; the same file is also attached to the release ([download mp4](https://github.com/yourfavoriteself/ShenzhenFinTechathonTopicA/releases/download/v1.0/guardian_demo.mp4), [captions](docs/media/guardian_demo_captions.json)).
 
 | Time | Chapter | Scenario |
 |---|---|---|
