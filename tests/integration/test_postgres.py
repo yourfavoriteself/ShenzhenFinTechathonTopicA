@@ -22,7 +22,8 @@ def svc(fresh_world, gateway):
         c.execute("DROP SCHEMA public CASCADE; CREATE SCHEMA public")
     svc = GuardianService(fresh_world(), gateway)
     applied = svc.connect_db(URL)
-    assert applied == ["001_schema.sql", "002_row_level_security.sql", "003_journal_append_only.sql"]
+    assert applied == ["001_schema.sql", "002_row_level_security.sql", "003_journal_append_only.sql",
+                       "004_journal_written_at.sql"]
     yield svc
     svc.db.close()
 
