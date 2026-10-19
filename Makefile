@@ -41,12 +41,14 @@ docs:
 	node docs/deck.js
 	$(PY) docs/brand.py
 
-# Demo video recorded from the UI (Playwright + ffmpeg); also refreshes the screenshots in docs/media
 diagram:
 	$(PY) docs/diagrams/architecture.py
 	xvfb-run -a drawio -x -f pdf --crop -o /tmp/architecture.pdf docs/diagrams/architecture.drawio
 	pdftoppm -r 150 -png -singlefile /tmp/architecture.pdf docs/diagrams/architecture
 
+# Demo video recorded from the UI (Playwright + ffmpeg); also refreshes the screenshots in docs/media.
+# guardian_demo.mp4 (no captions), guardian_demo_subtitled.mp4, guardian_demo.srt, docs/video_script.md
 video:
 	GUARDIAN_LLM_MODE=stub $(PY) -m scripts.record_demo --out docs/media
+	$(PY) docs/brand.py
 	$(PY) docs/brand.py --clips

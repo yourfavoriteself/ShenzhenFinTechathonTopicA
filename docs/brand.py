@@ -12,6 +12,9 @@ import subprocess
 import sys
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from kernel.money import usd  # noqa: E402
+
 ROOT = Path(__file__).resolve().parent.parent
 MEDIA = ROOT / "docs" / "media"
 
@@ -29,8 +32,7 @@ def _ev(name: str) -> dict:
 
 
 def _num(n: float | int) -> str:
-    s = f"{n:,}".replace(",", " ")
-    return s
+    return f"{n:,}"
 
 
 def hero() -> str:
@@ -64,15 +66,15 @@ def ledger() -> str:
     rt, evl, cost, demo, bud, tr = (_ev("redteam.json"), _ev("eval_report.json"), _ev("costs.json"),
                                     _ev("demo_summary.json"), _ev("budget_report.json"), _ev("trust_report.json"))
     st, ad, rr = rt["static"], rt["adaptive"], rt["retention"]
-    lost = st["without_kernel"]["lost_kop"] // 100
+    lost = st["without_kernel"]["lost_cents"]
     rows = [
         ("Static attacks stopped", f"{st['blocked']} / {st['attacks']}", "evidence/redteam.json"),
         ("Memory planting attacks stopped", f"{rr['blocked']} / {rr['attacks']}", "evidence/redteam.json"),
         ("Adaptive attacker, payments outside the mandate", f"{ad['with_kernel']['out_of_mandate_successes']} / {ad['with_kernel']['attempts']}", "evidence/redteam.json"),
-        ("Same attacks, agent without the kernel, lost", f"{_num(lost)} ₽", "evidence/redteam.json"),
+        ("Same attacks, agent without the kernel, lost", usd(lost), "evidence/redteam.json"),
         ("Functional tasks, EN RU ZH", f"{evl['functional']['passed']} / {evl['functional']['tasks']}", "evidence/eval_report.json"),
         ("Planted subscription leaks found", f"{bud['leaks']['found']} / {bud['leaks']['planted']}", "evidence/budget_report.json"),
-        ("Model cost, one client, first and next month", f"{cost['first_month']['cost_rub']:.2f} › {cost['next_month']['cost_rub']:.2f} ₽", "evidence/costs.json"),
+        ("Model cost, one client, first and next month", f"${cost['first_month']['cost_usd']:.4f} › ${cost['next_month']['cost_usd']:.4f}", "evidence/costs.json"),
         ("Faulty agent: actions executed, then quarantined", f"{tr['faulty_actions']['executed']} / {tr['faulty_actions']['proposed']} · {tr['strikes']} strikes", "evidence/trust_report.json"),
         ("Work on levels 0 and 1 (no large model)", f"{demo['cost']['share_level_0_1']} %", "evidence/demo_summary.json"),
         ("Signed journal entries in the demo month", f"{demo['journal']['entries']}", "evidence/demo_journal.jsonl"),
@@ -108,6 +110,7 @@ CLIPS = [
     ("05_pay_monthly", "Pay:", "Double charge:", 1.0), ("06_double_charge", "Double charge:", "Fake bill:", 1.0),
     ("07_fake_bill", "Fake bill:", "Payee risk:", 1.5), ("08_payee_risk", "Payee risk:", "Scam call:", 1.0),
     ("09_scam_call", "Scam call:", "One month later.", 3.0), ("10_earned_trust", "Reward:", "Trust:", 2.0),
+    ("11_invest", "Invest:", "Month for you:", 1.5),
 ]
 CHAT = "crop=720:690:16:72"   # the chat column of the 1440 x 900 recording
 
@@ -144,7 +147,7 @@ img {{ position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cove
 .t b {{ display: block; font-size: 40px; font-weight: 700; letter-spacing: -.02em; margin-bottom: 12px; }}
 .t .pill {{ background: rgba(255,255,255,.14); color: #e4e7ec; font-size: 18px; }}
 </style></head><body><img src="{src}"><div class="shade"></div><div class="play"></div>
-<div class="t"><b>Watch the demo</b><span class="pill">{mins}:{secs:02d} · recorded from the real interface · C1 to C10</span></div></body></html>"""
+<div class="t"><b>Watch the demo</b><span class="pill">{mins}:{secs:02d} · recorded from the real interface · C1 to C11</span></div></body></html>"""
 
 
 def render() -> None:
