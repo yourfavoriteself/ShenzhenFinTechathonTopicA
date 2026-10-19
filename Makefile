@@ -44,3 +44,4 @@ docs:
 # Demo video recorded from the UI (Playwright + ffmpeg); also refreshes the screenshots in docs/media
 video:
 	GUARDIAN_LLM_MODE=stub $(PY) -m scripts.record_demo --out docs/media
+	$(PY) docs/brand.py --clips
