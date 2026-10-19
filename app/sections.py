@@ -11,6 +11,7 @@ from typing import TYPE_CHECKING, Any
 
 from kernel.money import rub
 from kernel.passport import ROLE_ENDPOINTS, Role
+from kernel.trust import AGENT_CAP, PROMOTE_AFTER, START_LEVEL, STRIKE_LIMIT, AgentStatus
 
 if TYPE_CHECKING:
     from .service import GuardianService
@@ -113,14 +114,34 @@ def payments(svc: "GuardianService") -> dict[str, Any]:
 
 def trust(svc: "GuardianService") -> dict[str, Any]:
     t = svc.k.trust
+    t.refresh()
     return {"elevated_protection": t.elevated_protection,
             "levels": [{"category": c.value, "level": t.level(c), "streak": ct.streak}
                        for c, ct in t.categories.items()],
-            "history": [{"at": h.at.isoformat(), "category": h.category.value, "event": h.event.value,
-                         "from": h.level_before, "to": h.level_after} for h in t.history[-20:]][::-1],
-            "rules": "Level 0: a card for everything. Level 1: alone up to 1 000 ₽ inside a standing permission. "
-                     "Level 2: alone up to the permission's limit. Up after 5 verified results in a row; down on "
-                     "any mistake; to 0 on a scope violation."}
+            "agents": [{"agent": r.agent, "role": r.role, "model": r.model, "status": r.status.value,
+                        "until": r.until.isoformat() if r.until else None, "strikes": r.strikes,
+                        "verified": r.verified, "penalties": r.penalties, "cap": AGENT_CAP[r.status]}
+                       for r in t.agents.values()],
+            "history": [_trust_row(h) for h in t.history[-30:]][::-1],
+            "promotions": sum(1 for h in t.history if h.level_after is not None and h.level_after > h.level_before),
+            "demotions": sum(1 for h in t.history if h.level_after is not None and h.level_after < h.level_before),
+            "quarantines": sum(1 for h in t.history if h.status_after == AgentStatus.QUARANTINED),
+            "rules": f"Each kind of task starts at level {START_LEVEL}. Level 0: a card for everything. Level 1: "
+                     "alone up to 1 000 ₽ inside a standing permission. Level 2: alone up to the permission's limit. "
+                     f"Up after {PROMOTE_AFTER} verified results in a row; down one level on a mistake; to 0 on a "
+                     f"scope violation. Agents collect strikes (a scope violation is two); {STRIKE_LIMIT} strikes "
+                     "mean 24 hours of quarantine, then probation."}
+
+
+def _trust_row(h) -> dict[str, Any]:
+    if h.category is None:
+        what, change = h.event.split(".", 1)[1], f"{h.status_before.value} → {h.status_after.value}"
+    else:
+        what, change = h.event.replace("_", " "), f"{h.level_before} → {h.level_after}"
+    moved = (h.category is None) or h.level_after != h.level_before
+    return {"at": h.at.isoformat(), "category": h.category.value.replace("_", " ") if h.category else "agent",
+            "agent": (h.agent or "").split(":")[0], "event": what, "change": change, "moved": moved,
+            "strikes": h.strikes, "reason": h.reason}
 
 
 def agents(svc: "GuardianService") -> dict[str, Any]:

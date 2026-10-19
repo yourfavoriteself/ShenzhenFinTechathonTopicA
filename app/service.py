@@ -41,6 +41,7 @@ from kernel.pipeline import Decision, Outcome
 from kernel.refcheck import guarded
 from kernel.statements import Category
 from kernel.templates import Template, TemplateStore
+from kernel.trust import EVENT_TEXT, LEVEL1_LIMIT, AgentStatus, TrustChange, TrustEvent
 from sandbox.bank.wiring import connect, open_envelopes
 from sandbox.sites.portal import DEMO_LOGINS, PortalError, build_portal
 
@@ -48,6 +49,7 @@ MAIN_CARD = "card_1234"
 TRUSTED_PERSON = {"name": "Maria Morozova (daughter)", "phone": "+7 *** ***-56-78"}
 DEMO_PINS = ("2580", "0852")          # normal, duress
 MULE_ACCOUNT, ORDINARY_ACCOUNT = "40817810500001234567", "40817810500009998887"   # planted in the bank's graph
+FAULT_PAYEE = "tok_pixelplay"   # the demo's faulty planner cites a made-up invoice from this merchant
 SCAM_CALLER = {"number": "+7 495 ***-**-00", "caller_id": "\"Bank security service\""}
 MAIN_ACCOUNT, SAVINGS_ACCOUNT = "acc_main", "acc_save"
 EXPLAIN_SYSTEM = """You word short answers for a bank client. Rewrite the draft in plain, friendly English,
@@ -120,6 +122,9 @@ class GuardianService:
         self.k.pipeline.risk_checks.append(self.graph.check)
         self.k.pipeline.risk_checks.append(self.guard.check)
         self.k.trust.elevated_protection = self.world.profile.elevated_protection
+        self.k.trust.listeners.append(self._on_trust)
+        self.faults = 0
+        self._trust_notes: list[tuple[str, dict]] = []
         self.dispatcher, self.planner, self.reader = D.Dispatcher(self.gw), P.Planner(self.gw), R.Reader(self.gw)
         self.explain = explain
         self.items: list[Item] = []
@@ -268,6 +273,89 @@ class GuardianService:
                                        f"{SCAM_CALLER['caller_id']}. The call is in progress.",
                                data={"spoofed": spoofed, "note": "signal from the mobile operator; the bank does not "
                                                                  "hear the call"})]
+
+    def faulty_agent(self) -> list[Item]:
+        """Demo fault injection: the planner misbehaves the way a buggy or prompt-injected model would.
+
+        First it tries to stretch a standing permission; then it cites data that does not exist. The
+        kernel stops both and the planner collects strikes until it is quarantined.
+        """
+        with self.lock:
+            start = len(self.items)
+            sm = next((m for m in self.k.mandates.active(self.client) if m.mandate.payment), None) \
+                if self.faults % 2 == 0 else None
+            self.faults += 1
+            task = self.k.open_task(self.client, "(demo fault injection)", "fault")
+            s = session(self.k, self.gw, Role.PLANNER, P.Planner.LEVEL, P.SYSTEM, self.client, task.task_id)
+            if sm is not None:
+                m = sm.mandate
+                payee, cap = m.payment.allowed_payees[0], m.payment.amount_range.max
+                amount = cap * 10
+                self._emit("fault", f"Demo fault: the planner agent tries to pay {self._name(payee)} {rub(amount)} "
+                                    f"under your monthly permission of up to {rub(cap)}.", task_id=task.task_id)
+                p = IntentProposal(action=Action.PAY, mandate_id=m.id, memo="faulty planner",
+                                   payee=claim({"value": payee, "ref": self.k.bank_value(
+                                       f"bank:payee:{payee}", payee, "bank's merchant directory")}),
+                                   amount=claim({"value": amount, "ref": "agent:my_estimate"}),
+                                   funding_source=claim({"value": m.funding_source, "ref": self.k.bank_value(
+                                       f"bank:src:{m.funding_source}", m.funding_source, "your accounts")}))
+            else:
+                info = self.k.directory.payee(self.client, FAULT_PAYEE)
+                payee = info.token if info else FAULT_PAYEE
+                ref = "bank:invoice:INV-2026-11-0042"
+                self._emit("fault", f"Demo fault: the planner agent cites invoice {ref.rsplit(':', 1)[1]} to justify a "
+                                    f"payment to {self._name(payee)}. No such invoice exists.", task_id=task.task_id)
+                amount = (info.usual_amount if info and info.usual_amount else 34_400)
+                p = IntentProposal(action=Action.PAY, memo="faulty planner", references=[ref],
+                                   payee=claim({"value": payee, "ref": self.k.bank_value(
+                                       f"bank:payee:{payee}", payee, "bank's merchant directory")}),
+                                   amount=claim({"value": amount, "ref": self.k.bank_value(
+                                       f"bank:usual:{payee}", amount, "median of your last payments")}),
+                                   funding_source=claim({"value": MAIN_CARD, "ref": self.k.bank_value(
+                                       f"bank:src:{MAIN_CARD}", MAIN_CARD, "your cards")}))
+            d = propose(self.k, s, p)
+            self._decision(d, CardMeta(pending_id=d.pending_id or "", task_id=task.task_id, kind="fault"))
+            return self.items[start:]
+
+    def _on_trust(self, c: TrustChange) -> None:
+        """Tell the client when trust actually moves; quiet streak counting stays in the Trust tab."""
+        role = (c.agent or "").split(":")[0] or "an"
+        base = EVENT_TEXT.get(TrustEvent(c.event)) if c.category is not None else None
+        why = base + (f" ({c.reason})" if c.reason and c.reason != base else "") if base else c.reason
+        if c.category is not None:
+            if c.level_after == c.level_before:
+                if c.event != "verified_success" and c.strikes:
+                    self._trust_notes.append((f"Strike {c.strikes} of 3 for the {role} agent: it {why}.",
+                                              {"kind": "strike", "agent": c.agent}))
+                return
+            kind = c.category.value.replace("_", " ")
+            if c.level_after > c.level_before:
+                alone = (f"up to {rub(LEVEL1_LIMIT)}" if c.level_after == 1 else "up to the permission's limit")
+                text = (f"Trust raised: {kind} now at level {c.level_after} after 5 verified results in a row. "
+                        f"Inside a standing permission Guardian may act alone {alone}.")
+            else:
+                text = (f"Trust lowered: {kind} from level {c.level_before} to {c.level_after}, because the {role} "
+                        f"agent {why}." + (" Every action of this kind needs your card again."
+                                                if c.level_after == 0 else ""))
+                if c.strikes:
+                    text += f" Strike {c.strikes} of 3 for the {role} agent."
+            self._trust_notes.append((text, {"kind": "up" if c.level_after > c.level_before else "down",
+                                             "category": c.category.value, "level": c.level_after}))
+            return
+        if c.status_after == AgentStatus.QUARANTINED:
+            text = (f"The {role} agent is quarantined for 24 hours ({c.reason}). The kernel revoked its passports; "
+                    f"until {self.k.trust.agents[c.agent].until:%d %b, %H:%M} everything it proposes needs your card, "
+                    "then it is on probation.")
+        elif c.status_after == AgentStatus.PROBATION:
+            text = f"The {role} agent's quarantine is over: it is on probation until 5 verified results in a row."
+        else:
+            text = f"The {role} agent is trusted again: {c.reason}."
+        self._trust_notes.append((text, {"kind": c.status_after.value, "agent": c.agent}))
+
+    def _flush_trust(self) -> None:
+        notes, self._trust_notes = self._trust_notes, []
+        for text, data in notes:
+            self._emit("trust", text, data=data)
 
     def set_protection(self, elevated: bool) -> list[Item]:
         with self.lock:
@@ -1044,6 +1132,18 @@ class GuardianService:
         d = propose(self.k, s, p)
         self._decision(d, CardMeta(pending_id=d.pending_id or "", task_id=task.task_id, kind="gap"))
 
+    def _opt_undo(self, o: OptionMeta):
+        """The client reverses a payment an agent made alone: the bank disputes it, the agent is penalised."""
+        try:
+            dispute = self.bank.open_dispute(self.client, o.action["tx"], "client reversed a payment made by an agent")
+        except Exception as e:  # noqa: BLE001
+            self._emit("error", f"Could not reverse the payment: {e}")
+            return
+        self.k.reverse(o.action["intent"], "the client reversed the payment")
+        self._emit("notice", f"Reversal opened ({dispute.id}): the bank returns the money within 3 days. "
+                             "The agent that made the payment gets a penalty.")
+        self._flush_trust()
+
     def _opt_block(self, o: OptionMeta):
         task = self.k.open_task(self.client, o.title, "block")
         m = o.action["merchant"]
@@ -1075,6 +1175,11 @@ class GuardianService:
 
     def _decision(self, d: Decision, meta: CardMeta | None, *, confirmed: bool = False, standing: bool = False,
                   template_used: str | None = None):
+        self._show_decision(d, meta, confirmed=confirmed, standing=standing, template_used=template_used)
+        self._flush_trust()
+
+    def _show_decision(self, d: Decision, meta: CardMeta | None, *, confirmed: bool = False, standing: bool = False,
+                       template_used: str | None = None):
         task_id = meta.task_id if meta else None
         cost = self.gw.task_cost(task_id) if task_id else None
         steps = [{"step": s.step, "verdict": int(s.verdict), "reasons": s.reasons} for s in d.steps]
@@ -1094,16 +1199,22 @@ class GuardianService:
                 self._overspend_options(d)
             return
         if d.outcome == Outcome.EXECUTED:
+            opts = []
+            if d.notify_only and d.receipt and any(t.id == d.receipt.reference for t in self.bank.txs):
+                o = self._option("undo", "Undo: this was not what I wanted", {"intent": d.intent_id,
+                                                                               "tx": d.receipt.reference}, 0)
+                opts.append({"id": o.id, "title": o.title})
             self._emit("receipt", self._receipt_text(d, meta, confirmed), data={
                 **common, "reference": d.receipt.reference if d.receipt else None, "notify_only": d.notify_only,
-                "standing": standing}, task_id=task_id)
+                "standing": standing, "options": opts}, task_id=task_id)
             if meta is not None:
                 self.cards.pop(meta.pending_id, None)
                 self._after_execute(d, meta, standing)
             return
         verb = "stopped" if d.outcome == Outcome.DENIED else "could not complete"
+        hard = [r for st in d.steps if st.verdict == 2 for r in st.reasons] or d.reasons
         self._emit("denied" if d.outcome == Outcome.DENIED else "error",
-                   f"I {verb} this action: " + "; ".join(d.reasons[:3]), data=common, task_id=task_id)
+                   f"I {verb} this action: " + "; ".join(hard[:3]), data=common, task_id=task_id)
 
     def _receipt_text(self, d: Decision, meta: CardMeta | None, confirmed: bool) -> str:
         e = next((x for x in reversed(self.k.journal.entries) if x.event == "decision.executed"), None)

@@ -125,3 +125,8 @@ aside th { color: var(--muted); font-weight: 500; font-size: 12px; background: #
 aside h4, .tab h4 { font: 600 14px/1.4 var(--sans); }
 input[type=text], input[type=password], input[type=number], input:not([type]) { font: inherit; padding: 7px 10px; border: 1px solid #d0d5dd; border-radius: var(--r-sm); background: var(--panel); color: var(--ink); }
 input:focus-visible { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(29, 78, 216, .15); }
+.msg.fault { background: var(--panel); border: 1px dashed #d0d5dd; color: #344054; }
+.msg.trust { background: #eef4ff; border: 1px solid #c7d7fe; }
+.msg.trust.down, .msg.trust.strike, .msg.trust.quarantined { background: var(--medium); border-color: #fedf89; }
+.msg.trust.quarantined { background: var(--high); border-color: #fecdca; }
+.msg.trust::before { content: "Trust"; display: block; font-size: 11.5px; font-weight: 600; color: var(--muted); margin-bottom: 2px; }

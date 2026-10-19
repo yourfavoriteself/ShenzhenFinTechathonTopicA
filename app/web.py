@@ -168,6 +168,10 @@ def create_web_app(service: GuardianService | None = None) -> FastAPI:
     def call(b: CallBody):
         return _dump(svc.scam_call(b.active, b.spoofed))
 
+    @app.post("/api/demo/faulty_agent")
+    def faulty_agent():
+        return _dump(svc.faulty_agent())
+
     @app.post("/api/protection")
     def protection(b: ProtectionBody):
         return _dump(svc.set_protection(b.elevated))

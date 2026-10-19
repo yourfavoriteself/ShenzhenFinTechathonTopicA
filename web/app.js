@@ -230,7 +230,7 @@ function render(it) {
     case "receipt": return h("div", {class: "msg receipt" + (d.notify_only ? " notify" : "")},
       (d.notify_only ? "🔔 " : "✔ ") + it.text,
       d.verified ? h("ul", {class: "checks"}, d.verified.map((x) => h("li", {class: "ok"}, "✔ " + x))) : null,
-      d.reference ? h("div", {class: "meta"}, `ref ${d.reference}`) : null, costLine(d), steps(d));
+      d.reference ? h("div", {class: "meta"}, `ref ${d.reference}`) : null, costLine(d), steps(d), optionButtons(d.options));
     case "login": case "code": return secureForm(it);
     case "phone": return h("div", {class: "msg phone"}, "📱 " + it.text, h("div", {class: "meta"}, `to ${d.to} · on your phone, not in the bank`));
     case "denied": return h("div", {class: "msg denied"}, "⛔ " + it.text, steps(d));
@@ -243,6 +243,8 @@ function render(it) {
       d.case ? h("div", {class: "opts"},
         h("button", {class: "secondary", onclick: async (e) => { e.target.disabled = true; await run(api(`/api/holds/${d.hold}/analyst`, {approve: false, note: "demo analyst"})); }}, "Analyst: stop it"),
         h("button", {class: "secondary", onclick: async (e) => { e.target.disabled = true; await run(api(`/api/holds/${d.hold}/analyst`, {approve: true, note: "demo analyst"})); }}, "Analyst: release")) : null);
+    case "fault": return h("div", {class: "msg fault"}, "🧪 " + it.text);
+    case "trust": return h("div", {class: "msg trust " + (d.kind || "")}, it.text);
     case "trusted": return h("div", {class: "msg phone"}, "📱 " + it.text, h("div", {class: "meta"}, `to ${d.phone}`));
     case "trial": return h("div", {class: "msg notice"}, "⏰ " + it.text, optionButtons(d.options));
     case "options": return h("div", {class: "msg notice"}, it.text, optionButtons(d.options));
@@ -384,13 +386,21 @@ function renderSections(x) {
     p.agent_payments.length ? table(p.agent_payments, [["date", "Date"], ["to", "To"], ["amount", "Amount"], ["from", "From"]]) : empty("None yet."));
 
   const t = x.trust;
+  const status = (r) => r.status === "active" ? h("span", {class: "badge r0"}, "active")
+    : h("span", {class: "badge " + (r.status === "quarantined" ? "r2" : "r1")}, r.status + (r.until ? ` until ${r.until.slice(5, 16).replace("T", " ")}` : ""));
   fill($("#tab-trust"),
     h("div", {class: t.elevated_protection ? "alert" : "meta"}, t.elevated_protection ? "Elevated protection is on: every external payment needs your card." : t.rules),
-    table(t.levels, [[(l) => l.category.replace("_", " "), "Kind of task"], ["level", "Level"], ["streak", "Verified in a row"]]),
+    kpis(kpi(t.promotions, "promotions"), kpi(t.demotions, "demotions"), kpi(t.quarantines, "agents quarantined"),
+      kpi(t.agents.filter((r) => r.status !== "active").length, "agents limited now")),
+    h("h4", {}, "What agents may do alone, per kind of task"),
+    table(t.levels, [[(l) => l.category.replace("_", " "), "Kind of task"], [(l) => h("span", {class: "badge r" + (l.level === 2 ? 0 : l.level === 1 ? 1 : 2)}, "level " + l.level), "Level"], ["streak", "Verified in a row"]]),
     h("label", {class: "meta"}, h("input", {type: "checkbox", ...(t.elevated_protection ? {checked: ""} : {}),
       onchange: (e) => run(api("/api/protection", {elevated: e.target.checked}))}), " elevated protection (elderly, minors)"),
+    h("h4", {}, "Agents: rewards and penalties"),
+    t.agents.length ? table(t.agents, [["role", "Agent"], ["model", "Model"], [status, "Status"], ["verified", "Verified"], ["penalties", "Mistakes"], [(r) => `${r.strikes} / 3`, "Strikes"]]) : empty("No agents yet."),
     h("h4", {}, "History"),
-    t.history.length ? table(t.history, [[(r) => r.at.slice(5, 16).replace("T", " "), "When"], ["category", "Kind"], ["event", "Event"], [(r) => `${r.from} → ${r.to}`, "Level"]]) : empty("No changes yet."));
+    t.history.length ? table(t.history, [[(r) => r.at.slice(5, 16).replace("T", " "), "When"], ["category", "Kind"], ["agent", "Agent"],
+      [(r) => r.moved ? h("b", {}, r.change) : r.change, "Change"], ["reason", "Why"]]) : empty("No changes yet."));
 
   const a = x.agents;
   fill($("#tab-agents"),
@@ -475,6 +485,7 @@ function init() {
   $("#chips").append(...CHIPS.map((t) => h("button", {type: "button", onclick: () => send(t)}, t)));
   $("#ask").addEventListener("submit", (e) => { e.preventDefault(); const t = $("#text").value.trim(); if (t) send(t); });
   $("#wait15").addEventListener("click", () => run(api("/api/time/wait", {minutes: 15})));
+  $("#faulty").addEventListener("click", () => run(api("/api/demo/faulty_agent", {})));
   $("#scamcall").addEventListener("click", () => run(api("/api/demo/call", {active: true, spoofed: true})));
   document.querySelectorAll("[data-advance]").forEach((b) => b.addEventListener("click",
     () => run(api("/api/time/advance", {days: +b.dataset.advance}))));
