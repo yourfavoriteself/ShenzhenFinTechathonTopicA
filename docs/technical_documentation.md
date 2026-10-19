@@ -1,6 +1,7 @@
 ---
 title: "Guardian: Technical Documentation"
 subtitle: "2026 Shenzhen FinTechathon · International Track · Topic A: Personal Finance Assistant"
+author: "Kseniia Kuzmina, Nikita Stepanov"
 ---
 
 # 1. Summary

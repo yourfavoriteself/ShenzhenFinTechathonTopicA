@@ -43,11 +43,12 @@ const st = rt.static, ad = rt.adaptive, lg = rt.legacy_prototype, rr = rt.retent
 
 // 1 Title
 {
-  const s = slide(null, "Hello. We are the Guardian team. Our topic is A: an AI agent that pays, cancels and budgets for a bank client. "
+  const s = slide(null, "Hello. We are Kseniia Kuzmina and Nikita Stepanov, the Guardian team. Our topic is A: an AI agent that pays, cancels and budgets for a bank client. "
     + "In ten minutes: the problem, the idea, a month of the demo, how the kernel works, the security results, compliance, cost and what is next.", {bg: C.dark});
   s.addText("Guardian", {x: 0.6, y: 1.3, w: 8.8, h: 1.1, fontFace: HF, fontSize: 60, bold: true, color: C.white, margin: 0});
   s.addText("A bank-side safety kernel for AI payment agents", {x: 0.6, y: 2.4, w: 8.8, h: 0.6, fontFace: HF, fontSize: 24, color: "A7F3D0", margin: 0});
   s.addText("Agents propose. The kernel decides, checks and records.", {x: 0.6, y: 3.2, w: 8.8, h: 0.5, fontFace: BF, fontSize: 16, italic: true, color: C.white, margin: 0});
+  s.addText("Kseniia Kuzmina · Nikita Stepanov", {x: 0.6, y: 4.2, w: 8.8, h: 0.4, fontFace: BF, fontSize: 15, bold: true, color: C.white, margin: 0});
   s.addText("Shenzhen FinTechathon 2026 · International Track · Topic A", {x: 0.6, y: 4.6, w: 8.8, h: 0.4, fontFace: BF, fontSize: 13, color: "A7F3D0", margin: 0});
 }
 

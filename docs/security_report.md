@@ -1,6 +1,7 @@
 ---
 title: "Guardian: Security Report"
 subtitle: "Permission levels, controls, red-team results, known risks and compliance · 2026 Shenzhen FinTechathon, Topic A"
+author: "Kseniia Kuzmina, Nikita Stepanov"
 ---
 
 # 1. Summary

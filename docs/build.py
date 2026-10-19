@@ -17,6 +17,7 @@ body { font-family: "Noto Sans", "Noto Sans CJK SC", "DejaVu Sans", sans-serif; 
 header#title-block-header { border-bottom: 3px solid #10b981; margin-bottom: 18px; padding-bottom: 8px; }
 h1.title { font-size: 24pt; margin: 0 0 4px; color: #064e3b; }
 p.subtitle { font-size: 12pt; color: #4b5563; margin: 0; }
+p.author { font-size: 11pt; font-weight: 600; color: #065f46; margin: 6px 0 0; }
 h1 { font-size: 15pt; color: #064e3b; margin: 20px 0 8px; break-after: avoid; }
 h2 { font-size: 12.5pt; color: #065f46; margin: 14px 0 6px; break-after: avoid; }
 table { border-collapse: collapse; width: 100%; margin: 8px 0 12px; font-size: 9pt; break-inside: auto; }
