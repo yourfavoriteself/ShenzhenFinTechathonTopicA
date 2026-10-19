@@ -387,17 +387,19 @@ function renderSections(x) {
 
   const t = x.trust;
   const status = (r) => r.status === "active" ? h("span", {class: "badge r0"}, "active")
-    : h("span", {class: "badge " + (r.status === "quarantined" ? "r2" : "r1")}, r.status + (r.until ? ` until ${r.until.slice(5, 16).replace("T", " ")}` : ""));
+    : h("span", {}, h("span", {class: "badge " + (r.status === "quarantined" ? "r2" : "r1")}, r.status),
+      r.until ? h("div", {class: "meta"}, "until " + r.until.slice(5, 16).replace("T", " ")) : null);
+  const agent = (r) => h("span", {}, h("b", {}, r.role), h("div", {class: "meta"}, r.model));
   fill($("#tab-trust"),
     h("div", {class: t.elevated_protection ? "alert" : "meta"}, t.elevated_protection ? "Elevated protection is on: every external payment needs your card." : t.rules),
     kpis(kpi(t.promotions, "promotions"), kpi(t.demotions, "demotions"), kpi(t.quarantines, "agents quarantined"),
       kpi(t.agents.filter((r) => r.status !== "active").length, "agents limited now")),
     h("h4", {}, "What agents may do alone, per kind of task"),
-    table(t.levels, [[(l) => l.category.replace("_", " "), "Kind of task"], [(l) => h("span", {class: "badge r" + (l.level === 2 ? 0 : l.level === 1 ? 1 : 2)}, "level " + l.level), "Level"], ["streak", "Verified in a row"]]),
+    table(t.levels, [[(l) => l.category.replace("_", " "), "Kind of task"], [(l) => h("span", {class: "badge" + (l.level === 2 ? " r0" : l.level === 0 ? " r2" : "")}, "level " + l.level), "Level"], ["streak", "Verified in a row"]]),
     h("label", {class: "meta"}, h("input", {type: "checkbox", ...(t.elevated_protection ? {checked: ""} : {}),
       onchange: (e) => run(api("/api/protection", {elevated: e.target.checked}))}), " elevated protection (elderly, minors)"),
     h("h4", {}, "Agents: rewards and penalties"),
-    t.agents.length ? table(t.agents, [["role", "Agent"], ["model", "Model"], [status, "Status"], ["verified", "Verified"], ["penalties", "Mistakes"], [(r) => `${r.strikes} / 3`, "Strikes"]]) : empty("No agents yet."),
+    t.agents.length ? table(t.agents, [[agent, "Agent"], [status, "Status"], ["verified", "Verified"], ["penalties", "Mistakes"], [(r) => `${r.strikes} / 3`, "Strikes"]]) : empty("No agents yet."),
     h("h4", {}, "History"),
     t.history.length ? table(t.history, [[(r) => r.at.slice(5, 16).replace("T", " "), "When"], ["category", "Kind"], ["agent", "Agent"],
       [(r) => r.moved ? h("b", {}, r.change) : r.change, "Change"], ["reason", "Why"]]) : empty("No changes yet."));

@@ -14,7 +14,7 @@ import re
 import tempfile
 from pathlib import Path
 
-from app.sections import all_sections
+from app.sections import _trust_row as _row, all_sections
 from app.service import GuardianService
 from data.generator import build_world
 from kernel.crypto import DeviceKey
@@ -69,6 +69,10 @@ class Demo:
                 self.say(f"  kernel  ✔ {it.text}{extra}")
                 for v in d.get("verified", []):
                     self.say(f"            verified: {v}")
+            elif it.type == "trust":
+                self.say(f"  kernel  ⚖ [trust] {it.text}")
+            elif it.type == "fault":
+                self.say(f"  demo    ⚠ {it.text}")
             elif it.type in ("denied", "error", "held", "case"):
                 self.say(f"  kernel  ! [{it.type}] {it.text[:300]}")
                 for r in (d.get("reasons") or [])[:5]:
@@ -189,6 +193,34 @@ class Demo:
         self.chat("Pay for Melodify")
         self.chat("Month review")
 
+        self.head("Earned trust: rewards and penalties")
+        items = self.chat("Find leaks in my subscriptions")
+        row = next(r for i in items if i.type == "leaks" for r in i.data["leaks"] if r.get("option"))
+        self.say(f"  client  ☛ Block {row['name']}")
+        self.sign(self.show(s.choose(row["option"])))
+        self.say("  demo: a faulty planner (as a buggy or prompt-injected model would behave)")
+        self.show(s.faulty_agent())
+        self.show(s.faulty_agent())
+
+
+def trust_report(svc, tr: dict) -> dict:
+    """Rewards and penalties of the demo month, checked against the journal."""
+    k = svc.k
+    journal = [e for e in k.journal.entries if e.event in ("trust.changed", "agent.passports_revoked")]
+    tasks = {t for t, info in k.tasks.items() if info.kind == "fault"}
+    faults = {e.data["intent_id"] for e in k.journal.entries if e.event == "intent.proposed"
+              and k.passports.get(e.passport_id or "").task_id in tasks}
+    executed = [e for e in k.journal.entries if e.event == "decision.executed" and e.data.get("intent") in faults]
+    return {"rules": tr["rules"], "levels": tr["levels"], "agents": tr["agents"],
+            "promotions": tr["promotions"], "demotions": tr["demotions"], "quarantines": tr["quarantines"],
+            "strikes": sum(2 if h.event == "scope_violation" else 1 for h in k.trust.history
+                           if h.agent and h.category is not None and h.event != "verified_success"),
+            "passports_revoked": sum(len(e.data["passports"]) for e in journal
+                                     if e.event == "agent.passports_revoked"),
+            "faulty_actions": {"proposed": len(faults), "executed": len(executed)},
+            "journal_entries": len(journal),
+            "moves": [r for r in map(_row, k.trust.history) if r["moved"]]}
+
 
 def main() -> None:
     ap = argparse.ArgumentParser()
@@ -220,6 +252,8 @@ def main() -> None:
                             "denied": len(sec["security"]["denied"])},
                "stages": sec["compliance"]["stages"], "passports": sec["agents"]["by_role"]}
     (a.out / "demo_summary.json").write_text(json.dumps(summary, ensure_ascii=False, indent=1, default=str))
+    (a.out / "trust_report.json").write_text(json.dumps(trust_report(d.svc, sec["trust"]), ensure_ascii=False,
+                                                        indent=1, default=str))
     print("\n".join(d.lines[-6:]))
 
 

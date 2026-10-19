@@ -167,8 +167,6 @@ class TrustLedger:
                                strikes=rec.strikes if rec else None, reason=reason or EVENT_TEXT[event]))
         if move is not None:
             self._status(rec, *move, pid)
-            if move[0] == AgentStatus.QUARANTINED:
-                rec.strikes = 0
         return ct.level
 
     def _agent_event(self, rec: AgentRecord, event: TrustEvent) -> tuple[AgentStatus, str] | None:
@@ -193,6 +191,8 @@ class TrustLedger:
 
     def _status(self, rec: AgentRecord, status: AgentStatus, reason: str, passport_id: str | None) -> None:
         before, rec.status = rec.status, status
+        if status == AgentStatus.PROBATION:
+            rec.strikes = 0
         rec.until = self._clock.now() + QUARANTINE if status == AgentStatus.QUARANTINED else None
         self._emit(TrustChange(at=self._clock.now(), category=None, event=f"agent.{status.value}",
                                agent=rec.agent, passport_id=passport_id, strikes=rec.strikes,

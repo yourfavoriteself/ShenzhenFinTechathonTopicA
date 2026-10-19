@@ -299,12 +299,46 @@ def film(f: Film, svc) -> None:
     f.say("Pay for Melodify")
     f.wait("within your standing permission")
     f.show(p.locator(".msg.receipt").last)
-    f.caption("The repeat payment runs inside the standing mandate: a notification, no card, no model call.", "Next month", 5)
+    f.caption("The repeat payment runs inside the standing mandate: a notification, no card, no model call. "
+              "One tap undoes it, and that counts against the agent.", "Next month", 5)
+
+    f.slate("Earned trust", ["Agents start at level 1. Verified results raise trust; mistakes lower it at once.",
+                             "Three strikes put an agent in quarantine: passports revoked, a card for everything."], 4)
+    f.say("Find leaks in my subscriptions")
+    f.wait("448 ₽ a month")
+    leaks = p.locator(".msg", has_text="448 ₽ a month").last
+    for name in ("TuneWave", "PixelPlay"):
+        f.click("Block", leaks.locator("tr", has_text=name))
+        f.confirm(f.card(f"Block future charges {name}"))
+        f.wait(f"Future charges from {name} are blocked")
+    raised = p.locator(".msg.trust", has_text="Trust raised").last
+    raised.wait_for()
+    f.show(raised)
+    f.caption("The fifth verified result in a row. Subscriptions move to level 2: inside a standing permission "
+              "Guardian may now act alone up to its limit.", "Reward", 6)
+    f.shot("10_trust_raised")
+    p.click("#faulty")
+    lowered = p.locator(".msg.trust", has_text="Trust lowered").last
+    lowered.wait_for()
+    f.show(lowered)
+    f.caption("A faulty planner asks for ten times the permission. The kernel stops it, subscriptions fall "
+              "straight to level 0, and the planner gets two strikes.", "Penalty", 7)
+    p.click("#faulty")
+    quarantine = p.locator(".msg.trust", has_text="quarantined for 24 hours").last
+    quarantine.wait_for()
+    f.show(quarantine)
+    f.caption("Then it cites an invoice that does not exist. Strike three: 24 hours of quarantine, its passports are "
+              "revoked, then probation until five clean results.", "Quarantine", 7)
+    f.shot("11_quarantine")
+    f.tab("Trust", 0)
+    f.caption("The Trust tab: what agents may do alone, per kind of task.", "Trust", 4)
+    f.show(p.locator("#tab-trust h4", has_text="Agents: rewards and penalties"))
+    f.caption("Each agent's record, and every change with its reason. All of it is in the signed journal.", "", 6)
+    f.shot("09_trust", chat=False)
 
     for name, text, hold in [
         ("Month for you", "The month: saved per month, done, asked, stopped.", 4),
         ("Permissions", "Every live mandate and the vault entries: revocable at any time.", 4),
-        ("Trust", "Trust grows only with results the kernel verified.", 3),
         ("Agents at work", "Each agent gets a passport with the least it needs.", 3),
         ("Cost", "Most work runs on levels 0 and 1: rules, templates and the small model.", 4),
         ("Red-team", "Red-team: 39 of 39 static attacks stopped; adaptive attacker 0 of 360 outside the mandate.", 5),

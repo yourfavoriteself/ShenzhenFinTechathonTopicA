@@ -92,13 +92,13 @@ def test_agent_strikes_quarantine_probation_and_back(registry, clock):
     assert t.agent(p).strikes == 2 and t.agent(p).status == AgentStatus.ACTIVE
     t.record(Category.BILLS, TrustEvent.FABRICATED_NUMBER, p)
     rec = t.agent(p)
-    assert rec.status == AgentStatus.QUARANTINED and rec.strikes == 0 and rec.penalties == 2
+    assert rec.status == AgentStatus.QUARANTINED and rec.strikes == 3 and rec.penalties == 2
     assert t.level(Category.BILLS, p) == 0 and t.auto_limit(Category.OWN_TRANSFERS, 50_000, p) == 0
     assert t.level(Category.OWN_TRANSFERS, other) == 1
     assert [h.event for h in t.history][-1] == "agent.quarantined"
     clock.advance(hours=25)
     t.refresh()
-    assert t.agent(p).status == AgentStatus.PROBATION
+    assert t.agent(p).status == AgentStatus.PROBATION and t.agent(p).strikes == 0
     t.categories[Category.OWN_TRANSFERS].level = 2
     assert t.level(Category.OWN_TRANSFERS, p) == 1
     for _ in range(CLEAN_RUN):
