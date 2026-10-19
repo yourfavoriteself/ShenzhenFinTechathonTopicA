@@ -1,0 +1,96 @@
+{
+ "rules": "Each kind of task starts at level 1. Level 0: a card for everything. Level 1: alone up to 1 000 ₽ inside a standing permission. Level 2: alone up to the permission's limit. Up after 5 verified results in a row; down one level on a mistake; to 0 on a scope violation. Agents collect strikes (a scope violation is two); 3 strikes mean 24 hours of quarantine, then probation.",
+ "levels": [
+  {
+   "category": "subscriptions",
+   "level": 0,
+   "streak": 0
+  },
+  {
+   "category": "bills",
+   "level": 1,
+   "streak": 2
+  },
+  {
+   "category": "own_transfers",
+   "level": 1,
+   "streak": 1
+  },
+  {
+   "category": "external_payments",
+   "level": 1,
+   "streak": 1
+  },
+  {
+   "category": "websites",
+   "level": 1,
+   "streak": 0
+  }
+ ],
+ "agents": [
+  {
+   "agent": "dispatcher:kernel-code:ff80aa24",
+   "role": "dispatcher",
+   "model": "kernel-code",
+   "status": "active",
+   "until": null,
+   "strikes": 0,
+   "verified": 8,
+   "penalties": 0,
+   "cap": 2
+  },
+  {
+   "agent": "planner:claude-sonnet-5-5:8711c862",
+   "role": "planner",
+   "model": "claude-sonnet-5-5",
+   "status": "quarantined",
+   "until": "2026-11-18T10:16:00+03:00",
+   "strikes": 3,
+   "verified": 1,
+   "penalties": 2,
+   "cap": 0
+  }
+ ],
+ "promotions": 1,
+ "demotions": 1,
+ "quarantines": 1,
+ "strikes": 3,
+ "passports_revoked": 2,
+ "faulty_actions": {
+  "proposed": 2,
+  "executed": 0
+ },
+ "journal_entries": 13,
+ "moves": [
+  {
+   "at": "2026-11-17T10:16:00+03:00",
+   "category": "subscriptions",
+   "agent": "dispatcher",
+   "event": "verified success",
+   "change": "1 → 2",
+   "moved": true,
+   "strikes": 0,
+   "reason": "had its result verified by the bank"
+  },
+  {
+   "at": "2026-11-17T10:16:00+03:00",
+   "category": "subscriptions",
+   "agent": "planner",
+   "event": "scope violation",
+   "change": "2 → 0",
+   "moved": true,
+   "strikes": 2,
+   "reason": "amount outside allowed range"
+  },
+  {
+   "at": "2026-11-17T10:16:00+03:00",
+   "category": "agent",
+   "agent": "planner",
+   "event": "quarantined",
+   "change": "active → quarantined",
+   "moved": true,
+   "strikes": 3,
+   "reason": "3 strikes"
+  }
+ ]
+}

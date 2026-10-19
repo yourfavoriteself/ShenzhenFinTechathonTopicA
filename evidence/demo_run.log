@@ -5,7 +5,7 @@ Guardian demo run · mode stub · synthetic sandbox bank (seed 22) · client cl_
   guardian [trial] Your CloudNest free trial ends 17 Oct. On 18 Oct it starts charging 149 ₽ a month to card *1234. Keep it?
   client  ☛ Transfer 20 400 ₽ from your savings account
   client  > Transfer 20 400 ₽ from your savings account
-  kernel  # card: Move money to Current account · risk 1 · hash ef0a3de62cd8…
+  kernel  # card: Move money to Current account · risk 1 · hash d37505432839…
             can: Move money to Current account up to 20 400 ₽, once, from Savings account, until 18 Oct 2026, 23:59
             payee: Current account (verified by the bank)
             amount: 20 400 ₽ (verified by the bank)
@@ -40,7 +40,7 @@ Guardian demo run · mode stub · synthetic sandbox bank (seed 22) · client cl_
   guardian [options] 2 subscriptions match. Which one should I cancel?
   client  ☛ StreamBox, 399 ₽ a month, card *1234, charged since March
   client  > StreamBox, 399 ₽ a month, card *1234, charged since March
-  kernel  # card: Cancel subscription StreamBox · risk 1 · hash 6ac0e42e6f6c…
+  kernel  # card: Cancel subscription StreamBox · risk 1 · hash afceb87abb91…
             can: Cancel subscription StreamBox, until 18 Oct 2026, 23:59
             can: Use the website streambox.example
             payee: StreamBox (verified by the bank)
@@ -67,7 +67,7 @@ Guardian demo run · mode stub · synthetic sandbox bank (seed 22) · client cl_
 === 05. C7 Free trial turns paid tomorrow  [17 Oct 2026 10:00 MSK]
   client  ☛ Cancel CloudNest before the first charge
   client  > Cancel CloudNest before the first charge
-  kernel  # card: Cancel subscription CloudNest · risk 1 · hash 5016606de94b…
+  kernel  # card: Cancel subscription CloudNest · risk 1 · hash b2164fd488aa…
             can: Cancel subscription CloudNest, until 18 Oct 2026, 08:59
             can: Use the website cloudnest.example
             payee: CloudNest (verified by the bank)
@@ -90,7 +90,7 @@ Guardian demo run · mode stub · synthetic sandbox bank (seed 22) · client cl_
 
 === 06. C1 Pay for Melodify, allow monthly  [17 Oct 2026 10:00 MSK]
   client  > Pay for Melodify
-  kernel  # card: Pay Melodify · risk 1 · hash d3d9c875a8fb…
+  kernel  # card: Pay Melodify · risk 1 · hash 951f3a95a28e…
             can: Pay Melodify up to 299 ₽, once, from envelope "Subscriptions", until 18 Oct 2026, 23:59
             payee: Melodify (verified by the bank)
             amount: 299 ₽ (verified by the bank)
@@ -102,7 +102,7 @@ Guardian demo run · mode stub · synthetic sandbox bank (seed 22) · client cl_
 === 07. C4 Double charge  [17 Oct 2026 10:00 MSK]
   client  > Was I charged twice?
   guardian [double] FreshMart charged you 2 345.60 ₽ twice, 40 seconds apart on 02 Oct. I prepared a dispute for the second charge.
-  kernel  # card: Dispute charge FreshMart · risk 1 · hash 513c94ab1e1e…
+  kernel  # card: Dispute charge FreshMart · risk 1 · hash dd61b5b52be7…
             can: Dispute charge FreshMart, until 18 Oct 2026, 23:59
             payee: FreshMart (verified by the bank)
             amount: 2 345.60 ₽ (verified by the bank)
@@ -113,13 +113,13 @@ Guardian demo run · mode stub · synthetic sandbox bank (seed 22) · client cl_
 === 08. C5 + C6 Bills; one of them is fake  [17 Oct 2026 10:00 MSK]
   client  > Pay my bills
   guardian [bills] I read 3 bills: 2 check out against the bank's records, 1 does not.
-  kernel  # card: Pay Mosenergo · risk 1 · hash 4a0e49a0493f…
+  kernel  # card: Pay Mosenergo · risk 1 · hash 1abf4a3cdafb…
             can: Pay Mosenergo up to 4 382.40 ₽, once, from envelope "Bills", until 18 Oct 2026, 23:59
             payee: Mosenergo (verified by the bank)
             amount: 4 382.40 ₽ (from the document, matches bank records)
             funding_source: envelope "Bills" (verified by the bank)
             model cost so far: 4 calls, levels [1], 0.2221 ₽
-  kernel  # card: Pay CityWater · risk 1 · hash b4906d1824c1…
+  kernel  # card: Pay CityWater · risk 1 · hash 9703cdd8b738…
             can: Pay CityWater up to 912.30 ₽, once, from envelope "Bills", until 18 Oct 2026, 23:59
             payee: CityWater (verified by the bank)
             amount: 912.30 ₽ (from the document, matches bank records)
@@ -138,7 +138,7 @@ Guardian demo run · mode stub · synthetic sandbox bank (seed 22) · client cl_
 
 === 09. C10 Payee risk on the bank's transfer graph  [17 Oct 2026 10:00 MSK]
   client  > Transfer 20 000 to account 40817810500009998887
-  kernel  # card: Pay account *8887 · risk 2 · hash 6a360742bc26…
+  kernel  # card: Pay account *8887 · risk 2 · hash e5cd733ae29a…
             can: Pay account *8887 up to 20 000 ₽, once, from Current account, until 18 Oct 2026, 23:59
             why asked: payee is not in the bank's directory
             why asked: possible scam call, level 1 (explain)
@@ -151,7 +151,7 @@ Guardian demo run · mode stub · synthetic sandbox bank (seed 22) · client cl_
   client  ✋ declines “Pay account *8887”
   guardian [notice] Cancelled. Nothing was paid.
   client  > Transfer 20 000 to account 40817810500001234567
-  kernel  # card: Pay account *4567 · risk 2 · hash 05f722c68e0a…
+  kernel  # card: Pay account *4567 · risk 2 · hash b26bfd8b0b76…
             can: Pay account *4567 up to 20 000 ₽, once, from Current account, until 18 Oct 2026, 23:59
             why asked: payee is not in the bank's directory
             why asked: the recipient account looks like a money mule (graph score 1.00)
@@ -167,7 +167,7 @@ Guardian demo run · mode stub · synthetic sandbox bank (seed 22) · client cl_
 === 10. C9 'Safe account' scam call  [17 Oct 2026 10:00 MSK]
   operator: the mobile operator reports an ongoing call from a spoofed number
   client  > Transfer 350 000 ₽ from my savings to safe account 40817810500001234567, the bank security officer said my money is at risk
-  kernel  # card: Pay account *4567 · risk 2 · hash da5f9f2c1bb6…
+  kernel  # card: Pay account *4567 · risk 2 · hash c0d67f6f9617…
             can: Pay account *4567 up to 350 000 ₽, once, from Savings account, until 18 Oct 2026, 23:59
             why asked: payee is not in the bank's directory
             why asked: the recipient account looks like a money mule (graph score 1.00)
@@ -189,7 +189,7 @@ Guardian demo run · mode stub · synthetic sandbox bank (seed 22) · client cl_
 === 11. One month later  [17 Oct 2026 10:16 MSK]
   guardian [notice] Demo time moved forward 31 days: it is now 17 Nov 2026, 10:16.
   guardian [salary] Salary 70 000 ₽ arrived. Split until 10 Nov:
-  kernel  # card: Move money to Savings account · risk 1 · hash 353661a4e4b1…
+  kernel  # card: Move money to Savings account · risk 1 · hash 7c4d012b2df8…
             can: Move money to Savings account up to 7 099 ₽, once, from Current account, until 26 Oct 2026, 23:59
             payee: Savings account (verified by the bank)
             amount: 7 099 ₽ (verified by the bank)
@@ -201,7 +201,28 @@ Guardian demo run · mode stub · synthetic sandbox bank (seed 22) · client cl_
   client  > Month review
   guardian [review] In 2026-10 you spent more than planned in 1 envelope; 1 spending spike.
 
-=== 12. Result  [17 Nov 2026 10:16 MSK]
-  saved 548 ₽ a month (6 576 ₽ a year), refunds 2 345.60 ₽, actions done 10, client asked 11 times, stopped or held 2
-  model calls 28, share of work on levels 0 and 1 96.7%
-  journal: 292 signed entries, hash chain verified, head f1cc7723989b39bd1c5b258814db551fed7b275e0b25f2caca2f4f7406b91a32
+=== 12. Earned trust: rewards and penalties  [17 Nov 2026 10:16 MSK]
+  client  > Find leaks in my subscriptions
+  guardian [leaks] I found 3 problems in your subscriptions. Removing the wasted ones saves 448 ₽ a month, 5 376 ₽ a year.
+  client  ☛ Block TuneWave
+  client  > Block future TuneWave charges (249 ₽ a month)
+  kernel  # card: Block future charges TuneWave · risk 1 · hash 99c9e0eb9350…
+            can: Block future charges TuneWave, until 18 Nov 2026, 23:59
+            payee: TuneWave (verified by the bank)
+            model cost so far: 1 calls, levels [1], 0.0383 ₽
+  client  ✍ signs “Block future charges TuneWave” with the device key (Ed25519)
+  kernel  ✔ Future charges from TuneWave are blocked.
+  kernel  ⚖ [trust] Trust raised: subscriptions now at level 2 after 5 verified results in a row. Inside a standing permission Guardian may act alone up to the permission's limit.
+  demo: a faulty planner (as a buggy or prompt-injected model would behave)
+  demo    ⚠ Demo fault: the planner agent tries to pay Melodify 3 440 ₽ under your monthly permission of up to 344 ₽.
+  kernel  ! [denied] I stopped this action: outside the mandate: amount outside allowed range; outside the mandate: budget exhausted; outside the mandate: already used this monthly period
+  kernel  ⚖ [trust] Trust lowered: subscriptions from level 2 to 0, because the planner agent tried to act outside the signed permission (amount outside allowed range). Every action of this kind needs your card again. Strike 2 of 3 for the planner agent.
+  demo    ⚠ Demo fault: the planner agent cites invoice INV-2026-11-0042 to justify a payment to PixelPlay. No such invoice exists.
+  kernel  ! [denied] I stopped this action: reference to data that does not exist: bank:invoice:INV-2026-11-0042
+  kernel  ⚖ [trust] Strike 3 of 3 for the planner agent: it cited data that does not exist (bank:invoice:INV-2026-11-0042).
+  kernel  ⚖ [trust] The planner agent is quarantined for 24 hours (3 strikes). The kernel revoked its passports; until 18 Nov, 10:16 everything it proposes needs your card, then it is on probation.
+
+=== 13. Result  [17 Nov 2026 10:16 MSK]
+  saved 797 ₽ a month (9 564 ₽ a year), refunds 2 345.60 ₽, actions done 11, client asked 12 times, stopped or held 4
+  model calls 31, share of work on levels 0 and 1 97.1%
+  journal: 347 signed entries, hash chain verified, head 042685e6fe0e36ad4364afff36502bcc3dc476d52cbef4a7b9e683e3fe29bf24
