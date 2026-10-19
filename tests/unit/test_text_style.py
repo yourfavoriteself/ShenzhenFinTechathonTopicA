@@ -6,7 +6,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 TEXT = {".md", ".py", ".js", ".html", ".css", ".json", ".jsonl", ".log", ".txt", ".toml", ".yml", ".yaml", ".sol",
         ".drawio", ".sql", ".cfg", ".example"}
-BANNED = {"—": "em dash", "–": "en dash", "−": "minus sign", "―": "horizontal bar"}
+BANNED = {"\u2014": "em dash", "\u2013": "en dash", "\u2212": "minus sign", "\u2015": "horizontal bar"}
 
 
 def _files():

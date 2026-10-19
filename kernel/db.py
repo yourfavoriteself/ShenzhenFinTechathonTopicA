@@ -118,7 +118,7 @@ class Database:
 
     def chains(self) -> list[str]:
         with self.as_client(self.client_id) as c:
-            return [r[0] for r in c.execute("SELECT chain FROM journal GROUP BY chain ORDER BY min(ts)")]
+            return [r[0] for r in c.execute("SELECT chain FROM journal GROUP BY chain ORDER BY min(written_at), min(ts)")]
 
     def journal(self, chain: str | None = None) -> list[JournalEntry]:
         with self.as_client(self.client_id) as c:
