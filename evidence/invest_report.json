@@ -49,9 +49,9 @@
   "positions": [
    {
     "symbol": "SPY",
-    "qty": "0.017356289",
+    "qty": "0.013124737",
     "market_value_cents": 1013,
-    "avg_entry_cents": 57616,
+    "avg_entry_cents": 76192,
     "value": "$10.13"
    }
   ],
@@ -68,8 +68,8 @@
  "filled": [
   {
    "order": "sim-0001",
-   "price": 57616,
-   "qty": "0.017356289",
+   "price": 76192,
+   "qty": "0.013124737",
    "symbol": "SPY"
   }
  ]

@@ -3,7 +3,7 @@
  "journal": {
   "entries": 437,
   "ok": true,
-  "head": "92dc49af2d7ce9c5413d49a97c60e5e0caca66bdb21562f2b55cdfa40b55bed9",
+  "head": "7306b03ea81f07ed3bdc14eec0b94ca037462cdf3c73775bff2ed1b296123c93",
   "public_key": "oW/0FK+7YEeIXIur+DLYtdGlJs/5VpzWWioyCG0H8Ic="
  },
  "month": {
@@ -51,7 +51,7 @@
   "cases": 1,
   "holds": [
    {
-    "id": "hold_0f63ea7bf7eb",
+    "id": "hold_f05a418ef33e",
     "level": 4,
     "status": "rejected",
     "duress": false,

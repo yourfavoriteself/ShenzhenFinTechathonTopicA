@@ -5,7 +5,7 @@ Guardian demo run · mode stub · synthetic sandbox bank (seed 22) · client cl_
   guardian [trial] Your CloudNest free trial ends 17 Oct. On 18 Oct it starts charging $1.80 a month to card *1234. Keep it?
   client  ☛ Transfer $246 from your savings account
   client  > Transfer $246 from your savings account
-  kernel  # card: Move money to Current account · risk 1 · hash 861801c64701…
+  kernel  # card: Move money to Current account · risk 1 · hash d4f5d54844b3…
             can: Move money to Current account up to $246, once, from Savings account, until 18 Oct 2026, 23:59
             payee: Current account (verified by the bank)
             amount: $246 (verified by the bank)
@@ -40,7 +40,7 @@ Guardian demo run · mode stub · synthetic sandbox bank (seed 22) · client cl_
   guardian [options] 2 subscriptions match. Which one should I cancel?
   client  ☛ StreamBox, $4.82 a month, card *1234, charged since March
   client  > StreamBox, $4.82 a month, card *1234, charged since March
-  kernel  # card: Cancel subscription StreamBox · risk 1 · hash e0fea60e6ece…
+  kernel  # card: Cancel subscription StreamBox · risk 1 · hash ba997fe36e01…
             can: Cancel subscription StreamBox, until 18 Oct 2026, 23:59
             can: Use the website streambox.example
             payee: StreamBox (verified by the bank)
@@ -67,7 +67,7 @@ Guardian demo run · mode stub · synthetic sandbox bank (seed 22) · client cl_
 === 05. C7 Free trial turns paid tomorrow  [17 Oct 2026 10:00 MSK]
   client  ☛ Cancel CloudNest before the first charge
   client  > Cancel CloudNest before the first charge
-  kernel  # card: Cancel subscription CloudNest · risk 1 · hash 45b47b7ab333…
+  kernel  # card: Cancel subscription CloudNest · risk 1 · hash 6f25a71f5bf3…
             can: Cancel subscription CloudNest, until 18 Oct 2026, 08:59
             can: Use the website cloudnest.example
             payee: CloudNest (verified by the bank)
@@ -90,7 +90,7 @@ Guardian demo run · mode stub · synthetic sandbox bank (seed 22) · client cl_
 
 === 06. C1 Pay for Melodify, allow monthly  [17 Oct 2026 10:00 MSK]
   client  > Pay for Melodify
-  kernel  # card: Pay Melodify · risk 1 · hash 345bc45ee982…
+  kernel  # card: Pay Melodify · risk 1 · hash ad1a26164968…
             can: Pay Melodify up to $3.61, once, from envelope "Subscriptions", until 18 Oct 2026, 23:59
             payee: Melodify (verified by the bank)
             amount: $3.61 (verified by the bank)
@@ -102,7 +102,7 @@ Guardian demo run · mode stub · synthetic sandbox bank (seed 22) · client cl_
 === 07. C4 Double charge  [17 Oct 2026 10:00 MSK]
   client  > Was I charged twice?
   guardian [double] FreshMart charged you $28.31 twice, 40 seconds apart on 02 Oct. I prepared a dispute for the second charge.
-  kernel  # card: Dispute charge FreshMart · risk 1 · hash 772c5101d896…
+  kernel  # card: Dispute charge FreshMart · risk 1 · hash 45bf0da64229…
             can: Dispute charge FreshMart, until 18 Oct 2026, 23:59
             payee: FreshMart (verified by the bank)
             amount: $28.31 (verified by the bank)
@@ -113,13 +113,13 @@ Guardian demo run · mode stub · synthetic sandbox bank (seed 22) · client cl_
 === 08. C5 + C6 Bills; one of them is fake  [17 Oct 2026 10:00 MSK]
   client  > Pay my bills
   guardian [bills] I read 3 bills: 2 check out against the bank's records, 1 does not.
-  kernel  # card: Pay Mosenergo · risk 1 · hash a90ce8db89d9…
+  kernel  # card: Pay Mosenergo · risk 1 · hash 91563322c5d5…
             can: Pay Mosenergo up to $52.90, once, from envelope "Bills", until 18 Oct 2026, 23:59
             payee: Mosenergo (verified by the bank)
             amount: $52.90 (from the document, matches bank records)
             funding_source: envelope "Bills" (verified by the bank)
             model cost so far: 4 calls, levels [1], $0.002204
-  kernel  # card: Pay CityWater · risk 1 · hash 17ecc9846ad0…
+  kernel  # card: Pay CityWater · risk 1 · hash 8a3940f2cf68…
             can: Pay CityWater up to $11.01, once, from envelope "Bills", until 18 Oct 2026, 23:59
             payee: CityWater (verified by the bank)
             amount: $11.01 (from the document, matches bank records)
@@ -138,7 +138,7 @@ Guardian demo run · mode stub · synthetic sandbox bank (seed 22) · client cl_
 
 === 09. C10 Payee risk on the bank's transfer graph  [17 Oct 2026 10:00 MSK]
   client  > Transfer $241.40 to account 40817810500009998887
-  kernel  # card: Pay account *8887 · risk 2 · hash a01d8a08f9ed…
+  kernel  # card: Pay account *8887 · risk 2 · hash b0a633eb0acd…
             can: Pay account *8887 up to $241.40, once, from Current account, until 18 Oct 2026, 23:59
             why asked: payee is not in the bank's directory
             why asked: possible scam call, level 1 (explain)
@@ -151,7 +151,7 @@ Guardian demo run · mode stub · synthetic sandbox bank (seed 22) · client cl_
   client  ✋ declines “Pay account *8887”
   guardian [notice] Cancelled. Nothing was paid.
   client  > Transfer $241.40 to account 40817810500001234567
-  kernel  # card: Pay account *4567 · risk 2 · hash c7a4852f508f…
+  kernel  # card: Pay account *4567 · risk 2 · hash 773d8dc544b7…
             can: Pay account *4567 up to $241.40, once, from Current account, until 18 Oct 2026, 23:59
             why asked: payee is not in the bank's directory
             why asked: the recipient account looks like a money mule (graph score 1.00)
@@ -167,7 +167,7 @@ Guardian demo run · mode stub · synthetic sandbox bank (seed 22) · client cl_
 === 10. C9 'Safe account' scam call  [17 Oct 2026 10:00 MSK]
   operator: the mobile operator reports an ongoing call from a spoofed number
   client  > Transfer $4,224.48 from my savings to safe account 40817810500001234567, the bank security officer said my money is at risk
-  kernel  # card: Pay account *4567 · risk 2 · hash 3d69d775a5b1…
+  kernel  # card: Pay account *4567 · risk 2 · hash 9396009bd296…
             can: Pay account *4567 up to $4,224.48, once, from Savings account, until 18 Oct 2026, 23:59
             why asked: payee is not in the bank's directory
             why asked: the recipient account looks like a money mule (graph score 1.00)
@@ -188,7 +188,7 @@ Guardian demo run · mode stub · synthetic sandbox bank (seed 22) · client cl_
 
 === 11. C11 Invest on a US exchange from the investment envelope  [17 Oct 2026 10:16 MSK]
   client  > Invest $10 a month in SPY
-  kernel  # card: Invest in SPDR S&P 500 ETF Trust (SPY) · risk 1 · hash 67873e7df7ae…
+  kernel  # card: Invest in SPDR S&P 500 ETF Trust (SPY) · risk 1 · hash 02d97d1b3c35…
             can: Invest in SPDR S&P 500 ETF Trust (SPY) up to $10, once, from investment envelope (broker sandbox), until 18 Oct 2026, 23:59
             payee: SPDR S&P 500 ETF Trust (SPY) (verified by the bank)
             amount: $10 (from your message)
@@ -202,9 +202,9 @@ Guardian demo run · mode stub · synthetic sandbox bank (seed 22) · client cl_
 
 === 12. One month later  [17 Oct 2026 10:16 MSK]
   guardian [notice] Demo time moved forward 31 days: it is now 17 Nov 2026, 10:16.
-  guardian [notice] Your order sim-0001 filled: 0.017356289 shares of SPY at $576.16.
+  guardian [notice] Your order sim-0001 filled: 0.013124737 shares of SPY at $761.92.
   guardian [salary] Salary $844.90 arrived. Split until 10 Nov:
-  kernel  # card: Move money to Savings account · risk 1 · hash 920c1b789eef…
+  kernel  # card: Move money to Savings account · risk 1 · hash ae8ccd892ccc…
             can: Move money to Savings account up to $85.82, once, from Current account, until 26 Oct 2026, 23:59
             payee: Savings account (verified by the bank)
             amount: $85.82 (verified by the bank)
@@ -216,7 +216,7 @@ Guardian demo run · mode stub · synthetic sandbox bank (seed 22) · client cl_
   client  > Invest $10 in SPY
   kernel  ✔ Order placed: $10 of SPDR S&P 500 ETF Trust (SPY) from your investment envelope (broker sandbox, order sim-0002, accepted; the market is closed, the order waits for the next open). The bank read the order back from the broker (within your standing permission, no confirmation needed). (notification only, inside a standing permission)
   client  > Show my portfolio
-  guardian [portfolio] Investment envelope: $30 left of $50. Holdings: 0.017356289 SPY ($10.13). Allowed: SPY, VTI, QQQ, BND, up to $25 an order, buys only, no options, crypto, margin or short selling.
+  guardian [portfolio] Investment envelope: $30 left of $50. Holdings: 0.013124737 SPY ($10.13). Allowed: SPY, VTI, QQQ, BND, up to $25 an order, buys only, no options, crypto, margin or short selling.
   client  > Month review
   guardian [review] In 2026-10 you spent more than planned in 1 envelope; 1 spending spike.
 
@@ -225,7 +225,7 @@ Guardian demo run · mode stub · synthetic sandbox bank (seed 22) · client cl_
   guardian [leaks] I found 3 problems in your subscriptions. Removing the wasted ones saves $5.41 a month, $64.92 a year.
   client  ☛ Block TuneWave
   client  > Block future TuneWave charges ($3.01 a month)
-  kernel  # card: Block future charges TuneWave · risk 1 · hash a886bb5044ab…
+  kernel  # card: Block future charges TuneWave · risk 1 · hash 0baa5a2085b5…
             can: Block future charges TuneWave, until 18 Nov 2026, 23:59
             payee: TuneWave (verified by the bank)
             model cost so far: 1 calls, levels [1], $0.000383
@@ -244,4 +244,4 @@ Guardian demo run · mode stub · synthetic sandbox bank (seed 22) · client cl_
 === 14. Result  [17 Nov 2026 10:16 MSK]
   saved $9.63 a month ($115.56 a year), refunds $28.31, actions done 13, client asked 13 times, stopped or held 6
   model calls 34, share of work on levels 0 and 1 97.6%
-  journal: 437 signed entries, hash chain verified, head 92dc49af2d7ce9c5413d49a97c60e5e0caca66bdb21562f2b55cdfa40b55bed9
+  journal: 437 signed entries, hash chain verified, head 7306b03ea81f07ed3bdc14eec0b94ca037462cdf3c73775bff2ed1b296123c93
