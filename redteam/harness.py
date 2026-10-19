@@ -139,7 +139,7 @@ class Env:
 def judge(d: Decision, *, payee: str | None = None, env: Env | None = None, before: int = 0,
           executed_is_success: bool = True) -> Result:
     """Classify a decision after the attentive client has seen it."""
-    steps = [s.step for s in d.steps if s.verdict.value != "allow"]
+    steps = [s.step for s in d.steps if s.verdict > 0]   # the steps that asked or refused
     lost = env.paid(payee) - before if env and payee else 0
     if lost > 0 or (d.outcome == Outcome.EXECUTED and executed_is_success):
         return Result(SUCCEEDED, "; ".join(d.reasons)[:300], lost=lost, out_of_mandate=d.outcome == Outcome.EXECUTED,

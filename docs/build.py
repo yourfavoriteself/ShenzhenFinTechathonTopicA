@@ -53,11 +53,11 @@ def fill_security(src: Path) -> Path:
     root = src.resolve().parent.parent
     sys.path.insert(0, str(root))
     from app.sections import CODE, VI_AP2
-    from kernel.money import rub
+    from kernel.money import usd
     rt = json.loads((root / "evidence/redteam.json").read_text())
     ev = json.loads((root / "evidence/eval_report.json").read_text())
     st, rr, ad, lg = rt["static"], rt["retention"], rt["adaptive"], rt["legacy_prototype"]
-    attacks = _table([[a["id"], a["title"], a["outcome"], ", ".join(a["stopped_by"]), rub(a["without_kernel"]["lost_kop"])]
+    attacks = _table([[a["id"], a["title"], a["outcome"], ", ".join(a["stopped_by"]), usd(a["without_kernel"]["lost_cents"])]
                       for a in rt["attacks"]], ["#", "Attack", "Outcome", "Stopped by", "Lost without the kernel"],
                      [2, 14, 3, 7, 4])
     adaptive = _table([[g["title"], g["attempts"], g["successes"], " ".join(map(str, g["success_curve"])),
@@ -68,8 +68,8 @@ def fill_security(src: Path) -> Path:
         outcomes[a["outcome"]] = outcomes.get(a["outcome"], 0) + 1
     vals = {
         "STATIC_N": st["attacks"], "STATIC_STOPPED": st["blocked"], "STATIC_WK": st["without_kernel"]["succeeded"],
-        "STATIC_WK_LOST": rub(st["without_kernel"]["lost_kop"]), "RET_N": rr["attacks"], "RET_STOPPED": rr["blocked"],
-        "RET_WK": rr["without_kernel"]["succeeded"], "RET_WK_LOST": rub(rr["without_kernel"]["lost_kop"]),
+        "STATIC_WK_LOST": usd(st["without_kernel"]["lost_cents"]), "RET_N": rr["attacks"], "RET_STOPPED": rr["blocked"],
+        "RET_WK": rr["without_kernel"]["succeeded"], "RET_WK_LOST": usd(rr["without_kernel"]["lost_cents"]),
         "AD_ROUNDS": ad["rounds"], "AD_WIDTH": ad["width"], "AD_GOALS": len(ad["goals"]),
         "AD_OOM": ad["with_kernel"]["out_of_mandate_successes"], "AD_ATTEMPTS": ad["with_kernel"]["attempts"],
         "LG_STOPPED": lg["prevented"], "LG_BOUNDED": lg["bounded"], "EV_STOPPED": ev["attacks"]["stopped"],
