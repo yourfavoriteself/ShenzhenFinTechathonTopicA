@@ -13,4 +13,5 @@ anthropic==0.103.1
 psycopg==3.3.4
 psycopg-binary==3.3.4
 pypdf==6.11.0
+PyYAML==6.0.3
 playwright==1.63.0

@@ -1,0 +1,55 @@
+# Models and providers for the LLM gateway (kernel/llm_gateway.py).
+#
+# No keys here, ever. Each provider only names the environment variables that hold its key
+# and its endpoint; put the values into .env or the environment (see .env.example).
+# Every model setting below can be overridden from the environment without editing this file:
+#   GUARDIAN_MODELS_FILE=path/to/other.yaml     use another file
+#   GUARDIAN_MODEL_L1=claude-haiku-4-5-20251001  model of a level (L1, L2, L3)
+#   GUARDIAN_PROVIDER_L1=openai_compat           provider of a level
+#   GUARDIAN_PRICE_L1_IN=0.3, GUARDIAN_PRICE_L1_OUT=1.2, GUARDIAN_EFFORT_L1=false
+#   GUARDIAN_MODEL_L1=openai_compat:deepseek-chat:0.3:1.2   short form: provider:model:in:out
+
+providers:
+  anthropic:
+    api_key_env: ANTHROPIC_API_KEY
+    base_url_env: ANTHROPIC_BASE_URL       # optional gateway; when empty, default_base_url is used
+    default_base_url: https://api.anthropic.com
+  openai_compat:                           # any OpenAI compatible endpoint (DeepSeek, Qwen)
+    api_key_env: OPENAI_COMPAT_API_KEY
+    base_url_env: OPENAI_COMPAT_BASE_URL
+
+# Level 0 is kernel code and never reaches a model. Requests start at the lowest level that fits
+# and escalate on schema failures, low confidence or refusals.
+# Prices are USD per million tokens, kept on the high side so the spend cap is never exceeded;
+# check them against the provider's price list before a live run.
+# effort: whether the model accepts the effort setting.
+levels:
+  1:
+    provider: anthropic
+    model: claude-haiku-4-5
+    in_usd: 1.0
+    out_usd: 5.0
+    effort: false
+  2:
+    provider: anthropic
+    model: claude-sonnet-5-5
+    in_usd: 3.0
+    out_usd: 15.0
+    effort: true
+  3:
+    provider: anthropic
+    model: claude-opus-5-5
+    in_usd: 5.0
+    out_usd: 25.0
+    effort: true
+
+# Prompt cache pricing as a share of the input price.
+cache:
+  write_factor: 1.25
+  read_factor: 0.1
+
+# Our earlier prototype (guardian/) talks to one OpenAI compatible model; it is off without a key.
+legacy_prototype:
+  model: gpt-4.1-mini
+  api_key_env: OPENAI_API_KEY
+  base_url_env: OPENAI_BASE_URL

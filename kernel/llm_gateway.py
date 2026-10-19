@@ -1,7 +1,8 @@
 """LLM gateway: the only way any component reaches a model.
 
 Model ladder: level 1 (small), 2 (medium), 3 (large, escalation only); level 0 is kernel code and
-never gets here. Requests start at the cheapest level and escalate on facts: a response that fails
+never gets here. Models, prices and the names of the key variables come from config/models.yaml and
+the environment (kernel/model_config.py); keys are read from the environment only. Requests start at the cheapest level and escalate on facts: a response that fails
 its schema, low confidence, or a refusal. The gateway holds the API keys, enforces a hard spend
 cap in rubles plus a per-task budget, refuses any prompt that contains a card number or a vault
 secret, and records responses so that every demo can be replayed without keys.
@@ -14,7 +15,6 @@ from __future__ import annotations
 import json
 import os
 import re
-from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
 from typing import Any, Callable
@@ -22,7 +22,9 @@ from typing import Any, Callable
 import httpx
 from pydantic import BaseModel, ValidationError
 
+from . import model_config
 from .crypto import obj_hash
+from .model_config import ConfigError, MissingKey, ModelSpec, ProviderSpec  # noqa: F401  (re-exported)
 
 
 class Mode(str, Enum):
@@ -32,27 +34,6 @@ class Mode(str, Enum):
     LIVE = "live"
 
 
-@dataclass(frozen=True)
-class ModelSpec:
-    provider: str          # anthropic | openai_compat
-    model: str
-    in_usd: float          # per million input tokens
-    out_usd: float         # per million output tokens
-
-    @property
-    def supports_effort(self) -> bool:
-        return self.provider == "anthropic" and "haiku" not in self.model
-
-
-# Prices are kept on the high side so the cap is never exceeded; check them against the
-# current price list before a live run.
-DEFAULT_LADDER = {
-    1: ModelSpec("anthropic", "claude-haiku-4-5", 1.0, 5.0),
-    2: ModelSpec("anthropic", "claude-sonnet-5-5", 3.0, 15.0),
-    3: ModelSpec("anthropic", "claude-opus-5-5", 5.0, 25.0),
-}
-CACHE_WRITE_FACTOR = 1.25
-CACHE_READ_FACTOR = 0.1
 MAX_LEVEL = 3
 
 
@@ -156,20 +137,23 @@ class LLMGateway:
     def __init__(self, mode: Mode | str | None = None, *, budget_rub: float | None = None,
                  task_budget_rub: float | None = None, usd_rub: float | None = None,
                  runs_dir: Path | None = None, spend_path: Path | None = None,
-                 ladder: dict[int, ModelSpec] | None = None):
+                 ladder: dict[int, ModelSpec] | None = None, config: model_config.ModelConfig | None = None):
         env = os.environ
+        self.config = config or model_config.load()
         self.mode = Mode(mode or env.get("GUARDIAN_LLM_MODE", "replay"))
         self.usd_rub = usd_rub or float(env.get("GUARDIAN_USD_RUB", "100"))
         self.task_budget_rub = task_budget_rub or float(env.get("GUARDIAN_TASK_BUDGET_RUB", "50"))
         self.runs_dir = runs_dir or Path(env.get("GUARDIAN_RUNS_DIR", Path(__file__).parent.parent / "evidence/runs/llm"))
         self.ledger = SpendLedger(spend_path or Path(env.get("GUARDIAN_SPEND_FILE", "~/.guardian/spend.json")).expanduser(),
                                   budget_rub or float(env.get("GUARDIAN_TOKEN_BUDGET_RUB", "2000")))
-        self.ladder = ladder or _ladder_from_env(DEFAULT_LADDER)
+        self.ladder = ladder or dict(self.config.levels)
         self.replay_fallback = env.get("GUARDIAN_REPLAY_FALLBACK", "stub") == "stub"
         self.guard = SecretGuard()
         self.stubs: dict[str, Responder] = {}
+        cfg = self.config.providers
         self.providers: dict[str, Callable[[ModelSpec, dict[str, Any]], dict[str, Any]]] = {
-            "anthropic": _call_anthropic, "openai_compat": _call_openai_compat}
+            "anthropic": lambda spec, req: _call_anthropic(spec, req, cfg["anthropic"]),
+            "openai_compat": lambda spec, req: _call_openai_compat(spec, req, cfg["openai_compat"])}
         self.log: list[LLMResult] = []
         self.sent: list[dict[str, Any]] = []   # every prompt that passed the guard, for leak audits
 
@@ -277,21 +261,10 @@ class LLMGateway:
                          cost_rub=round(self._cost(spec, inp, out, 0, 0), 4), estimated=True, **base)
 
     def _cost(self, spec: ModelSpec, inp: float, out: float, cache_read: float, cache_write: float) -> float:
-        usd = (inp * spec.in_usd + cache_read * spec.in_usd * CACHE_READ_FACTOR
-               + cache_write * spec.in_usd * CACHE_WRITE_FACTOR + out * spec.out_usd) / 1_000_000
+        c = self.config
+        usd = (inp * spec.in_usd + cache_read * spec.in_usd * c.cache_read_factor
+               + cache_write * spec.in_usd * c.cache_write_factor + out * spec.out_usd) / 1_000_000
         return usd * self.usd_rub
-
-
-def _ladder_from_env(default: dict[int, ModelSpec]) -> dict[int, ModelSpec]:
-    """GUARDIAN_MODEL_L1="openai_compat:deepseek-chat:0.3:1.2" overrides a level."""
-    ladder = dict(default)
-    for lvl in (1, 2, 3):
-        if v := os.environ.get(f"GUARDIAN_MODEL_L{lvl}"):
-            provider, model, *prices = v.split(":")
-            base = default[lvl]
-            ladder[lvl] = ModelSpec(provider, model, float(prices[0]) if prices else base.in_usd,
-                                    float(prices[1]) if len(prices) > 1 else base.out_usd)
-    return ladder
 
 
 def _extract_json(text: str) -> Any:
@@ -301,10 +274,10 @@ def _extract_json(text: str) -> Any:
     return json.loads(text[start:end + 1])
 
 
-def _call_anthropic(spec: ModelSpec, req: dict[str, Any]) -> dict[str, Any]:
+def _call_anthropic(spec: ModelSpec, req: dict[str, Any], provider: ProviderSpec) -> dict[str, Any]:
     import anthropic
 
-    client = anthropic.Anthropic()
+    client = anthropic.Anthropic(api_key=provider.api_key(), base_url=provider.base_url())
     kwargs: dict[str, Any] = {}
     if spec.supports_effort:
         kwargs["output_config"] = {"effort": req["effort"]}
@@ -321,10 +294,12 @@ def _call_anthropic(spec: ModelSpec, req: dict[str, Any]) -> dict[str, Any]:
             "cache_read": u.cache_read_input_tokens or 0, "cache_write": u.cache_creation_input_tokens or 0}
 
 
-def _call_openai_compat(spec: ModelSpec, req: dict[str, Any]) -> dict[str, Any]:
-    base = os.environ["OPENAI_COMPAT_BASE_URL"].rstrip("/")
-    r = httpx.post(f"{base}/chat/completions", timeout=120,
-                   headers={"Authorization": f"Bearer {os.environ['OPENAI_COMPAT_API_KEY']}"},
+def _call_openai_compat(spec: ModelSpec, req: dict[str, Any], provider: ProviderSpec) -> dict[str, Any]:
+    base = provider.base_url()
+    if not base:
+        raise MissingKey(f"provider {provider.name}: set {provider.base_url_env} in the environment or .env")
+    r = httpx.post(f"{base.rstrip('/')}/chat/completions", timeout=120,
+                   headers={"Authorization": f"Bearer {provider.api_key()}"},
                    json={"model": spec.model, "max_tokens": req["max_tokens"], "temperature": 0,
                          "messages": [{"role": "system", "content": req["system"]},
                                       {"role": "user", "content": req["user"]}]})
