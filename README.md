@@ -1,7 +1,7 @@
 # Guardian: a bank kernel for AI payment agents
 
 [![CI](https://github.com/yourfavoriteself/ShenzhenFinTechathonTopicA/actions/workflows/ci.yml/badge.svg)](https://github.com/yourfavoriteself/ShenzhenFinTechathonTopicA/actions/workflows/ci.yml)
-[![Tests](https://img.shields.io/badge/tests-388%20passing-067647)](.github/workflows/ci.yml)
+[![Tests](https://img.shields.io/badge/tests-389%20passing-067647)](.github/workflows/ci.yml)
 [![Red-team](https://img.shields.io/badge/red--team-48%2F48%20stopped-067647)](evidence/redteam.json)
 [![Python](https://img.shields.io/badge/python-3.14-101828)](requirements.txt)
 [![License](https://img.shields.io/badge/license-MIT-667085)](LICENSE)
@@ -256,7 +256,7 @@ All amounts are in US dollars. The synthetic bank was first written in rubles an
 | Earned trust in the demo month | 1 promotion, 1 demotion, 3 strikes, 1 quarantine with 2 passports revoked; **0 / 2** faulty agent actions executed | [`trust_report.json`](evidence/trust_report.json) |
 | Investing in the demo month | $10 SPY order signed with a monthly plan, filled at the next open; the second month's order placed alone inside the plan; an off list stock (GME) and an option stopped by the broker step | [`invest_report.json`](evidence/invest_report.json) |
 | The whole demo month | $9.63 a month saved, 13 tasks done, 13 questions, 6 actions stopped or held (2 attacks, 2 off list orders, 2 faulty agent actions), 437 signed journal entries, chain verified | [`demo_run.log`](evidence/demo_run.log) |
-| Automated tests | 388 pass in CI (unit, end to end in Chromium, red-team, evaluation, PostgreSQL, local chain) plus 5 contract tests in Foundry | [CI](.github/workflows/ci.yml) |
+| Automated tests | 389 pass in CI (unit, end to end in Chromium, red-team, evaluation, PostgreSQL, local chain) plus 5 contract tests in Foundry | [CI](.github/workflows/ci.yml) |
 
 The graph model is trained and tested on graphs from our own generator, so real bank data will score lower. The numbers show that the pipeline works, not field accuracy.
 
