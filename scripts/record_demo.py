@@ -29,14 +29,14 @@ CAPTION_JS = """([title, text]) => {
   if (!c) {
     c = document.createElement('div');
     c.id = 'demo-caption';
-    c.style.cssText = 'position:fixed;left:40px;bottom:22px;z-index:9999;max-width:1060px;'
-      + 'background:#1b1712;color:#f6f1e7;font:400 21px/1.4 Georgia,"Noto Serif",serif;padding:12px 22px 13px 20px;'
-      + 'border-left:6px solid #b8321c;border-radius:2px;box-shadow:6px 6px 0 rgba(27,23,18,.18);text-align:left;pointer-events:none';
+    c.style.cssText = 'position:fixed;left:40px;bottom:24px;z-index:9999;max-width:1060px;'
+      + 'background:rgba(16,24,40,.94);color:#ffffff;font:400 20px/1.45 Inter,system-ui,sans-serif;padding:12px 20px 13px;'
+      + 'border-radius:12px;box-shadow:0 8px 24px rgba(16,24,40,.25);text-align:left;pointer-events:none';
     document.body.append(c);
   }
   c.replaceChildren();
   if (title) { const b = document.createElement('div'); b.textContent = title;
-    b.style.cssText = 'font:600 12px/1.4 system-ui,sans-serif;letter-spacing:.14em;text-transform:uppercase;color:#e58a6f;margin-bottom:3px'; c.append(b); }
+    b.style.cssText = 'font:600 13px/1.4 Inter,system-ui,sans-serif;color:#98a2b3;margin-bottom:2px'; c.append(b); }
   const t = document.createElement('div'); t.textContent = text; c.append(t);
   c.style.display = text ? 'block' : 'none';
 }"""
@@ -45,18 +45,18 @@ SLATE_JS = """([title, lines]) => {
   let s = document.getElementById('demo-slate');
   if (!title) { if (s) s.remove(); return; }
   if (!s) { s = document.createElement('div'); s.id = 'demo-slate'; document.body.append(s); }
-  s.style.cssText = 'position:fixed;inset:0;z-index:10000;background:#f3eee4;color:#1b1712;display:flex;flex-direction:column;'
-    + 'align-items:flex-start;justify-content:center;padding:0 140px;font-family:Georgia,"Noto Serif",serif;text-align:left';
+  s.style.cssText = 'position:fixed;inset:0;z-index:10000;background:#f4f5f7;color:#101828;display:flex;flex-direction:column;'
+    + 'align-items:flex-start;justify-content:center;padding:0 140px;font-family:Inter,system-ui,sans-serif;text-align:left';
   s.replaceChildren();
-  const seal = document.createElement('div'); seal.textContent = '\u5b88';
-  seal.style.cssText = 'width:92px;height:92px;display:grid;place-items:center;background:#b8321c;color:#fff8ee;border-radius:4px;'
-    + 'font:700 58px/1 "Noto Serif CJK SC","WenQuanYi Zen Hei",serif;box-shadow:inset 0 0 0 5px #b8321c,inset 0 0 0 8px #fff8ee;margin-bottom:34px';
-  s.append(seal);
+  const logo = document.createElement('div'); logo.textContent = '\u5b88';
+  logo.style.cssText = 'width:84px;height:84px;display:grid;place-items:center;background:#c2361f;color:#ffffff;border-radius:20px;'
+    + 'font:600 50px/1 "Noto Sans CJK SC","WenQuanYi Zen Hei",sans-serif;margin-bottom:36px';
+  s.append(logo);
   const h = document.createElement('div'); h.textContent = title;
-  h.style.cssText = 'font-size:68px;font-weight:600;margin-bottom:22px;padding-bottom:20px;border-bottom:2px solid #1b1712;min-width:640px';
+  h.style.cssText = 'font-size:64px;font-weight:700;letter-spacing:-.03em;margin-bottom:24px';
   s.append(h);
   for (const l of lines) { const p = document.createElement('div'); p.textContent = l;
-    p.style.cssText = 'font:400 25px/1.45 system-ui,sans-serif;color:#4a4339;margin:5px 0;max-width:1100px'; s.append(p); }
+    p.style.cssText = 'font:400 25px/1.45 Inter,system-ui,sans-serif;color:#475467;margin:5px 0;max-width:1100px'; s.append(p); }
 }"""
 
 HIDE_CHIPS = "#chips { display: none !important; } #feed { padding-bottom: 120px; }"
@@ -109,7 +109,7 @@ class Film:
         self.page.evaluate(CAPTION_JS, ["", ""])
         self.page.screenshot(path=str(self.shots / f"{name}.png"))
         if chat:
-            self.page.screenshot(path=str(self.shots / f"{name}_chat.png"), clip={"x": 15, "y": 62, "width": 725, "height": 740})
+            self.page.screenshot(path=str(self.shots / f"{name}_chat.png"), clip={"x": 16, "y": 72, "width": 720, "height": 730})
 
     def say(self, text: str) -> None:
         self.page.fill("#text", "")
