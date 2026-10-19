@@ -23,13 +23,13 @@ SHARE = Decimal("0.000000001")
 
 # symbol: (name, class, exchange, fractionable, base price in cents)
 ASSETS: dict[str, tuple[str, str, str, bool, int]] = {
-    "SPY": ("SPDR S&P 500 ETF Trust", "us_equity", "ARCA", True, 58_000),
-    "VTI": ("Vanguard Total Stock Market ETF", "us_equity", "ARCA", True, 29_000),
-    "QQQ": ("Invesco QQQ Trust", "us_equity", "NASDAQ", True, 50_000),
-    "BND": ("Vanguard Total Bond Market ETF", "us_equity", "NASDAQ", True, 7_200),
-    "GME": ("GameStop Corp", "us_equity", "NYSE", True, 2_500),
+    "SPY": ("SPDR S&P 500 ETF Trust", "us_equity", "ARCA", True, 76_700),
+    "VTI": ("Vanguard Total Stock Market ETF", "us_equity", "ARCA", True, 37_550),
+    "QQQ": ("Invesco QQQ Trust", "us_equity", "NASDAQ", True, 71_850),
+    "BND": ("Vanguard Total Bond Market ETF", "us_equity", "NASDAQ", True, 7_060),
+    "GME": ("GameStop Corp", "us_equity", "NYSE", True, 2_650),
     "TLSS": ("Transportation and Logistics Systems", "us_equity", "OTC", False, 2),
-    "SPY261218C00600000": ("SPY Dec 18 2026 600 Call", "us_option", "OPRA", False, 1_850),
+    "SPY261218C00600000": ("SPY Dec 18 2026 600 Call", "us_option", "OPRA", False, 16_950),
     "BTC/USD": ("Bitcoin", "crypto", "CRYPTO", True, 6_500_000),
 }
 

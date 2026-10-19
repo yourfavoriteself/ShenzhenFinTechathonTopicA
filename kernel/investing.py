@@ -144,6 +144,6 @@ def _limit_value(o: Order) -> int:
 
 
 def _cited(i: Intent) -> int | None:
-    """A price the agent cites in the memo ("at $585.20"): the kernel compares it with its own quote."""
+    """A price the agent cites in the memo ("at $767.20"): the kernel compares it with its own quote."""
     m = re.search(r"\bat \$([\d,]+(?:\.\d{1,2})?)", i.memo)
     return int(round(float(m.group(1).replace(",", "")) * 100)) if m else None
