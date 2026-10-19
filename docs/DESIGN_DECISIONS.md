@@ -48,7 +48,7 @@ The choices that shaped Guardian, each with the problem behind it and what we ga
 
 ## 7. Envelopes are the money source
 
-**Problem.** "Pay up to 4 400 ₽" says nothing about what the money was meant for.
+**Problem.** "Pay up to $53.11" says nothing about what the money was meant for.
 
 **Decision.** A mandate names its source: "from the Bills envelope". The client understands that limit, the bank can enforce it, and the budget stays true without extra bookkeeping.
 
@@ -70,7 +70,7 @@ The choices that shaped Guardian, each with the problem behind it and what we ga
 
 **Decision.** Level 0 is rules, templates and kernel code. Level 1 is a small model for reading documents and for the critic. Level 2 plans new tasks, level 3 is kept for rare hard cases. A solved task becomes a template, so the repeat needs no model at all. The gateway enforces a hard budget and refuses prompts that carry secrets.
 
-**Result.** 97.1 % of the demo month runs on levels 0 and 1; the second month costs 63 % less than the first.
+**Result.** 97.6 % of the demo month runs on levels 0 and 1; the second month costs 63 % less than the first.
 
 ## 11. A rehearsal before every payment
 
@@ -94,4 +94,4 @@ The choices that shaped Guardian, each with the problem behind it and what we ga
 
 **Problem.** Synthetic data makes it easy to report perfect scores.
 
-**Decision.** We publish what the scores are measured on and where they will be lower: the transfer graph model is trained and tested on our own generator, the cost is an estimate until live runs, and the security report lists fourteen known risks with what limits each one.
+**Decision.** We publish what the scores are measured on and where they will be lower: the transfer graph model is trained and tested on our own generator, the cost is an estimate until live runs, and the security report lists fifteen known risks with what limits each one.

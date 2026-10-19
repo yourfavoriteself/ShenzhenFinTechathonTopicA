@@ -7,10 +7,10 @@ const pptxgen = require("pptxgenjs");
 const root = path.resolve(__dirname, "..");
 const ev = (f) => JSON.parse(fs.readFileSync(path.join(root, "evidence", f), "utf8"));
 const rt = ev("redteam.json"), evl = ev("eval_report.json"), cost = ev("costs.json"), demo = ev("demo_summary.json");
-const bud = ev("budget_report.json"), graph = ev("risk_graph.json"), tr = ev("trust_report.json");
+const bud = ev("budget_report.json"), graph = ev("risk_graph.json"), tr = ev("trust_report.json"), inv = ev("invest_report.json");
 const media = (f) => path.join(root, "docs", "media", f);
-const num = (n) => String(n).replace(/\B(?=(\d{3})+(?!\d))/g, "\u00a0");
-const rub = (kop) => num(Math.floor(kop / 100)) + "." + String(kop % 100).padStart(2, "0") + " ₽";
+const num = (n) => String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+const usd = (c) => (c < 0 ? "-$" : "$") + num(Math.floor(Math.abs(c) / 100)) + (Math.abs(c) % 100 ? "." + String(Math.abs(c) % 100).padStart(2, "0") : "");
 
 const C = {dark: "101828", mid: "1D4ED8", accent: "1D4ED8", soft: "F2F4F7", ink: "101828", grey: "667085", line: "E4E7EC",
   red: "B42318", amber: "B54708", white: "FFFFFF", paper: "F4F5F7", cream: "FFFFFF", brand: "C2361F",
@@ -18,7 +18,7 @@ const C = {dark: "101828", mid: "1D4ED8", accent: "1D4ED8", soft: "F2F4F7", ink:
 const HF = "Inter", BF = "Inter", LOGO_FONT = "Noto Sans CJK SC";
 const R = pres => pres.shapes.ROUNDED_RECTANGLE;
 const pngSize = (f) => { const b = fs.readFileSync(f); return [b.readUInt32BE(16), b.readUInt32BE(20)]; };
-const TOTAL = 13;
+const TOTAL = 14;
 let page = 0;
 
 const pres = new pptxgen();
@@ -75,7 +75,7 @@ const st = rt.static, ad = rt.adaptive, lg = rt.legacy_prototype, rr = rt.retent
     "Agents can now pay. That brings three new problems. First, intent: a model can get the payee or the amount wrong, and nobody can prove what the client actually approved. "
     + "Second, manipulation: a fake bill, a hidden instruction for AI agents in a document, or a scam call can turn the agent against its owner. "
     + "Third, accountability: when something goes wrong, there is no record of who authorised what. "
-    + `To make it concrete: we ran our ${st.attacks} attacks against an agent without our kernel. ${st.without_kernel.succeeded} succeeded and it lost ${rub(st.without_kernel.lost_kop)}.`);
+    + `To make it concrete: we ran our ${st.attacks} attacks against an agent without our kernel. ${st.without_kernel.succeeded} succeeded and it lost ${usd(st.without_kernel.lost_cents)}.`);
   const items = [
     ["Intent", "A model can pick the wrong payee or amount. The client cannot prove what they approved."],
     ["Manipulation", "Fake bills, hidden instructions for AI agents, look-alike merchants, 'safe account' scam calls."],
@@ -91,7 +91,7 @@ const st = rt.static, ad = rt.adaptive, lg = rt.legacy_prototype, rr = rt.retent
   s.addText("Same attacks, agent without the kernel", {x: 6.3, y: 1.45, w: 3.0, h: 0.6, fontFace: BF, fontSize: 13, color: C.cream, margin: 0});
   s.addText(`${st.without_kernel.succeeded} / ${st.attacks}`, {x: 6.3, y: 2.05, w: 3.0, h: 0.8, fontFace: HF, fontSize: 44, bold: true, color: "FDA29B", margin: 0});
   s.addText("attacks succeeded", {x: 6.3, y: 2.8, w: 3.0, h: 0.35, fontFace: BF, fontSize: 13, color: C.cream, margin: 0});
-  s.addText(rub(st.without_kernel.lost_kop), {x: 6.3, y: 3.3, w: 3.0, h: 0.6, fontFace: HF, fontSize: 26, bold: true, color: "FDA29B", margin: 0});
+  s.addText(usd(st.without_kernel.lost_cents), {x: 6.3, y: 3.3, w: 3.0, h: 0.6, fontFace: HF, fontSize: 26, bold: true, color: "FDA29B", margin: 0});
   s.addText("lost from the sandbox client", {x: 6.3, y: 3.9, w: 3.0, h: 0.35, fontFace: BF, fontSize: 13, color: C.cream, margin: 0});
 }
 
@@ -127,8 +127,8 @@ const st = rt.static, ad = rt.adaptive, lg = rt.legacy_prototype, rr = rt.retent
     + `Over the month Guardian saved ${m.saved_per_month} a month, did ${m.done} things, asked ${m.asked} times and stopped ${m.stopped}. `
     + `The whole run is in the evidence folder: ${demo.journal.entries} signed journal entries, chain verified.`);
   const sc = [
-    ["C1", "Pay, allow monthly", "standing, ≤ 344 ₽"], ["C2", "Cancel a subscription", "merchant API + card block"],
-    ["C3", "Find leaks", "847 ₽ a month"], ["C4", "Double charge", "dispute opened"],
+    ["C1", "Pay, allow monthly", "standing, ≤ $5"], ["C2", "Cancel a subscription", "merchant API + card block"],
+    ["C3", "Find leaks", "$10.23 a month"], ["C4", "Double charge", "dispute opened"],
     ["C5", "Pay bills", "checked against bank records"], ["C6", "Fake bill", "stopped, case to analysts"],
     ["C7", "Trial turns paid", "cancelled before charge"], ["C8", "Budget and goal", "envelopes, safe-to-spend"],
     ["C9", "Scam call", "pause → analyst hold"], ["C10", "Risky payee", "transfer-graph model"],
@@ -194,7 +194,7 @@ const st = rt.static, ad = rt.adaptive, lg = rt.legacy_prototype, rr = rt.retent
     ["Provenance", "CLIENT · BANK · UNTRUSTED. A value from a bill or a web page can never set the payee or the amount."],
     ["Critic", "A second model sees only the client's words and the card, not the documents an attacker controls."],
     ["Shadow run", "The payment is rehearsed in a copy of the bank; if money moves differently, it is denied."],
-    ["Trust levels 0, 1, 2", "Level 1 limit 1 000 ₽; promotion after 5 verified results in a row. Autonomy stages 1 and 2, stage 3 not offered."],
+    ["Trust levels 0, 1, 2", "Level 1 limit $12.07; promotion after 5 verified results in a row. Autonomy stages 1 and 2, stage 3 not offered."],
   ];
   notes.forEach(([h, t], i) => {
     const x = 0.5 + (i % 2) * 4.6, y = 3.4 + Math.floor(i / 2) * 0.95;
@@ -207,13 +207,13 @@ const st = rt.static, ad = rt.adaptive, lg = rt.legacy_prototype, rr = rt.retent
 {
   const fa = tr.faulty_actions;
   const s = slide("Earned trust: rewards and penalties",
-    "Autonomy is earned, and it is lost faster than it is earned. Every kind of task starts at level 1: inside a standing permission an agent may act alone up to 1 000 rubles. "
+    "Autonomy is earned, and it is lost faster than it is earned. Every kind of task starts at level 1: inside a standing permission an agent may act alone up to $12.07. "
     + "Five results in a row that the kernel verified in the bank raise it to level 2. One mistake lowers it a level, and acting outside the signed permission drops it straight to zero. "
     + "The second axis is the agent itself: its role, model and the hash of its instructions. A mistake is a strike, a scope violation two. Three strikes mean 24 hours of quarantine: "
     + "the kernel revokes its passports and everything it proposes needs a card. Then probation until five clean results. The client can also press Undo on any payment made alone, and that counts too. "
     + `In the demo the fifth verified result promotes subscriptions; then a faulty planner tries twice, is stopped twice, and is quarantined. ${fa.executed} of ${fa.proposed} faulty actions executed. Every change is in the signed journal.`);
   s.addText("Per kind of task", {x: 0.5, y: 1.15, w: 4.4, h: 0.4, fontFace: HF, fontSize: 17, bold: true, color: C.mid, margin: 0});
-  [["2", "alone up to the permission's cap", C.mint, "B7E4D9"], ["1", "alone up to 1 000 ₽ · the start", C.blue, "C7D7FE"],
+  [["2", "alone up to the permission's cap", C.mint, "B7E4D9"], ["1", "alone up to $12.07 · the start", C.blue, "C7D7FE"],
    ["0", "a card for everything", C.sand, "FEDF89"]].forEach(([lvl, t, fill, line], i) => {
     const y = 1.65 + i * 0.6;
     s.addShape(R(pres), {x: 0.5, y, w: 2.9, h: 0.5, rectRadius: 0.08, fill: {color: fill}, line: {color: line, width: 1}});
@@ -241,7 +241,46 @@ const st = rt.static, ad = rt.adaptive, lg = rt.legacy_prototype, rr = rt.retent
   stat(s, 7.4, 3.65, 2.1, `${fa.executed}/${fa.proposed}`, "faulty agent actions executed");
 }
 
-// 9 Budget and graph
+// 9 Investing on a US exchange
+{
+  const lim = inv.limits, pf = inv.portfolio;
+  const c11 = rt.attacks.filter((a) => a.source === "C11");
+  const s = slide("Investing: the agent proposes, the kernel trades",
+    "The client says: invest ten dollars a month in SPY. The agent can only propose the order. The kernel's broker step fetches its own quote and asset record from the broker "
+    + `and checks the order against the client's investment mandate: a short list of broad funds, plain tickers only, so no options, crypto, penny stocks, short selling or margin; ${usd(lim.min_notional_cents)} to ${usd(lim.max_notional_cents)} an order inside a ${usd(pf.envelope)} investment envelope; `
+    + `any price the agent cites must be within ${lim.corridor_pct} percent of the market; one order per fund a day. The client signs the first order and can allow a monthly plan. `
+    + "The kernel picks the order type by the market session: a market order in regular hours, a limit order in pre market and after hours, otherwise the order waits for the open. "
+    + "Then it reads the order back from the broker and journals the fill. The demo uses a sandbox broker with US market hours; the same code runs on an Alpaca paper account. "
+    + `In the red-team, ${c11.filter((a) => a.blocked).length} of ${c11.length} attacks on orders are stopped.`);
+  s.addText("Broker step: the kernel's own quote", {x: 0.5, y: 1.15, w: 4.4, h: 0.4, fontFace: HF, fontSize: 16, bold: true, color: C.mid, margin: 0});
+  [["What", lim.allowlist.join(", ") + " only; no options, crypto, OTC or shorts"],
+   ["How much", `${usd(lim.min_notional_cents)} to ${usd(lim.max_notional_cents)} in dollars, inside the ${usd(pf.envelope)} envelope`],
+   ["Price", `fresh quote; a cited price within ${lim.corridor_pct}% of it`],
+   ["How often", `${lim.max_orders_per_symbol_per_day} order per security a day`],
+   ["Result", "order read back from the broker, fill journaled"]].forEach(([h, t], i) => {
+    const y = 1.6 + i * 0.4;
+    s.addShape(R(pres), {x: 0.5, y, w: 4.4, h: 0.34, rectRadius: 0.06, fill: {color: C.paper}, line: {color: C.paper}});
+    s.addText([{text: h + "  ", options: {bold: true, color: C.ink}}, {text: t, options: {color: C.ink}}],
+      {x: 0.6, y, w: 4.25, h: 0.34, fontFace: BF, fontSize: 9.5, valign: "middle", margin: 0});
+  });
+  s.addText("Order type by market session", {x: 5.1, y: 1.15, w: 4.4, h: 0.4, fontFace: HF, fontSize: 16, bold: true, color: C.mid, margin: 0});
+  [["Regular hours, 9:30 to 16:00 New York", "market order for the dollar amount", C.mint, "B7E4D9"],
+   ["Pre market from 4:00, after hours until 20:00", "limit order at the quote + 0.5%, extended hours", C.blue, "C7D7FE"],
+   ["Closed", "market order queued for the open", C.sand, "FEDF89"]].forEach(([h, t, fill, line], i) => {
+    const y = 1.6 + i * 0.58;
+    s.addShape(R(pres), {x: 5.1, y, w: 4.4, h: 0.5, rectRadius: 0.08, fill: {color: fill}, line: {color: line, width: 1}});
+    s.addText([{text: h, options: {bold: true, breakLine: true}}, {text: t, options: {color: C.grey}}],
+      {x: 5.22, y, w: 4.2, h: 0.5, fontFace: BF, fontSize: 10, color: C.ink, valign: "middle", margin: 0});
+  });
+  s.addText("Demo: sandbox broker. Live: Alpaca paper, GUARDIAN_BROKER=alpaca.",
+    {x: 5.1, y: 3.37, w: 4.4, h: 0.25, fontFace: BF, fontSize: 9.5, color: C.grey, margin: 0});
+  stat(s, 0.5, 3.75, 2.1, String(pf.orders.length), "orders placed in the demo month, each read back");
+  stat(s, 2.8, 3.75, 2.1, String(inv.stopped.length), "off-list requests stopped (a meme stock, an option)", C.red);
+  stat(s, 5.1, 3.75, 2.1, `${c11.filter((a) => a.blocked).length}/${c11.length}`, "red-team attacks on orders stopped");
+  stat(s, 7.4, 3.75, 2.1, String(inv.filled.length), "fill journaled at the next open");
+}
+
+// 10 Budget and graph
 {
   const leaks = bud.leaks, fc = bud.budget_forecast, gaps = bud.cash_gaps;
   const s = slide("Budget and payee risk: measured, not claimed",
@@ -264,22 +303,22 @@ const st = rt.static, ad = rt.adaptive, lg = rt.legacy_prototype, rr = rt.retent
     {x: 5.1, y: 4.65, w: 4.4, h: 0.5, fontFace: BF, fontSize: 10.5, color: C.grey, margin: 0});
 }
 
-// 10 Security
+// 11 Security
 {
   const s = slide("Red-team: what an attacker gets",
-    `We attacked the kernel four ways. ${st.attacks} static attacks: fake bills, injected instructions, swapped payees, look-alike merchants, replayed signatures, over-limit requests. All ${st.blocked} stopped. `
+    `We attacked the kernel four ways. ${st.attacks} static attacks: fake bills, injected instructions, swapped payees, look-alike merchants, replayed signatures, over-limit requests, off-list investment orders. All ${st.blocked} stopped. `
     + `${rr.attacks} attacks that try to plant something in the assistant's memory for later: all stopped. `
     + `An adaptive attacker that learns from the kernel's answers, ${ad.rounds} rounds, ${ad.with_kernel.attempts} attempts: zero payments outside the mandate. `
-    + `And the earlier prototype's suite: ${lg.prevented} of ${lg.attacks} prevented, one bounded by the limit. Without the kernel the same static set lost ${rub(st.without_kernel.lost_kop)}.`);
+    + `And the earlier prototype's suite: ${lg.prevented} of ${lg.attacks} prevented, one bounded by the limit. Without the kernel the same static set lost ${usd(st.without_kernel.lost_cents)}.`);
   stat(s, 0.5, 1.3, 2.1, `${st.blocked}/${st.attacks}`, "static attacks stopped");
   stat(s, 2.8, 1.3, 2.1, `${rr.blocked}/${rr.attacks}`, "memory-planting attacks stopped");
   stat(s, 5.1, 1.3, 2.1, `${ad.with_kernel.out_of_mandate_successes}/${ad.with_kernel.attempts}`, `adaptive attacker's tries outside the mandate`);
   stat(s, 7.4, 1.3, 2.1, `${lg.prevented}/${lg.attacks}`, `earlier prototype's suite, ${lg.bounded} bounded by the limit`);
   s.addText("Without the kernel", {x: 0.5, y: 2.95, w: 4, h: 0.4, fontFace: HF, fontSize: 16, bold: true, color: C.ink, margin: 0});
   s.addText([{text: `${st.without_kernel.succeeded}/${st.attacks} succeeded · `, options: {color: C.red, bold: true}},
-    {text: rub(st.without_kernel.lost_kop) + " lost", options: {color: C.red, bold: true}}],
+    {text: usd(st.without_kernel.lost_cents) + " lost", options: {color: C.red, bold: true}}],
   {x: 0.5, y: 3.35, w: 4.4, h: 0.45, fontFace: HF, fontSize: 18, margin: 0});
-  s.addText("Known risks are listed openly in the security report (K1 to K14): a compromised client device, a colluding analyst, synthetic training data, no SD-JWT yet.",
+  s.addText("Known risks are listed openly in the security report (K1 to K15): a compromised client device, a colluding analyst, synthetic training data, no SD-JWT yet.",
     {x: 0.5, y: 3.95, w: 4.4, h: 0.9, fontFace: BF, fontSize: 12, color: C.grey, margin: 0});
   const by = {};
   rt.attacks.forEach((a) => { by[a.outcome] = (by[a.outcome] || 0) + 1; });
@@ -290,10 +329,10 @@ const st = rt.static, ad = rt.adaptive, lg = rt.legacy_prototype, rr = rt.retent
     showLegend: false});
 }
 
-// 11 Compliance
+// 12 Compliance
 {
-  const s = slide("Compliance: 智能体支付应用自律公约 · VI / AP2",
-    "Compliance. The self-regulatory code for agent payment apps has three stages; we implement stage one and two, and we do not offer stage three. "
+  const s = slide("Compliance: the agent payment convention · VI / AP2",
+    "Compliance. The Self-Regulatory Convention for Agent Payment Applications has three stages; we implement stage one and two, and we do not offer stage three. "
     + "Whoever provides the payment service is responsible: Guardian is a bank module, only the bank's executor moves money. "
     + "Know your agent: every agent has a passport checked at every step. Withdrawal of authorisation is one press. Records are immutable and anchored. "
     + "There is a human fallback and stricter rules for the elderly. And the assistant sells nothing. "
@@ -310,7 +349,7 @@ const st = rt.static, ad = rt.adaptive, lg = rt.legacy_prototype, rr = rt.retent
     ["No inducement to spend", "No credit or upsell; offers in model text replaced"],
   ];
   const hdr = (t) => ({text: t, options: {bold: true, color: C.white, fill: {color: C.ink}}});
-  s.addTable([[hdr("公约 requirement"), hdr("Guardian")], ...rows.map(([a, b]) => [a, b])],
+  s.addTable([[hdr("Convention requirement"), hdr("Guardian")], ...rows.map(([a, b]) => [a, b])],
     {x: 0.5, y: 1.2, w: 5.6, colW: [2.2, 3.4], fontFace: BF, fontSize: 10, color: C.ink, border: {type: "solid", pt: 0.5, color: C.line}, fill: {color: C.white}, rowH: 0.36, margin: 0.05});
   const vi = [["Intent mandate", "Standing permission with limits"], ["Cart / payment mandate", "One-time mandate per card"],
     ["Constraints", "payees, amount range, budget, recurrence, + origins, money source"], ["Delegation", "Child grants, rights only narrow"],
@@ -319,28 +358,28 @@ const st = rt.static, ad = rt.adaptive, lg = rt.legacy_prototype, rr = rt.retent
     {x: 6.35, y: 1.2, w: 3.2, colW: [1.25, 1.95], fontFace: BF, fontSize: 10, color: C.ink, border: {type: "solid", pt: 0.5, color: C.line}, fill: {color: C.white}, rowH: 0.36, margin: 0.05});
 }
 
-// 12 Cost
+// 13 Cost
 {
   const f = cost.first_month, n = cost.next_month, pj = cost.projection;
   const s = slide("Cost: most of the work needs no large model",
     "Cost. Models sit on a three-level ladder: rules and templates cost nothing, then a small model, then larger ones only when risk is high. "
-    + `For one client's typical month the first month costs ${f.cost_rub.toFixed(2)} rubles in tokens; the next month ${n.cost_rub.toFixed(2)}, ${cost.saving_pct} percent less, because the repeat payment and the repeated check run from templates with no model call. `
-    + `In the full demo ${demo.cost.share_level_0_1} percent of the work stays on levels zero and one. At the next-month rate a million clients cost about ${num(Math.round(pj.rub_per_month / 1000) * 1000)} rubles a month. `
+    + `For one client's typical month the first month costs $${f.cost_usd.toFixed(4)} in tokens; the next month $${n.cost_usd.toFixed(4)}, ${cost.saving_pct} percent less, because the repeat payment and the repeated check run from templates with no model call. `
+    + `In the full demo ${demo.cost.share_level_0_1} percent of the work stays on levels zero and one. At the next-month rate a million clients cost about $${num(Math.round(pj.usd_per_month / 1000) * 1000)} a month. `
     + "These are token counts on the real prompts with stub answers; a live run will replace the estimate.");
   const tasks = f.tasks.map((t) => t.task);
   s.addChart(pres.charts.BAR, [
-    {name: "First month", labels: tasks, values: f.tasks.map((t) => t.cost_rub)},
-    {name: "Next month", labels: tasks, values: n.tasks.map((t) => t.cost_rub)},
+    {name: "First month", labels: tasks, values: f.tasks.map((t) => t.cost_usd)},
+    {name: "Next month", labels: tasks, values: n.tasks.map((t) => t.cost_usd)},
   ], {x: 0.4, y: 1.15, w: 5.6, h: 3.9, barDir: "bar", barGrouping: "clustered", chartColors: ["D0D5DD", C.accent],
     catAxisLabelFontSize: 10, valAxisLabelFontSize: 9, valGridLine: {color: "E4E7EC", size: 0.5}, catGridLine: {style: "none"},
-    showLegend: true, legendPos: "b", legendFontSize: 10, showTitle: true, title: "₽ per task, one client", titleFontSize: 12, titleColor: C.ink,
+    showLegend: true, legendPos: "b", legendFontSize: 10, showTitle: true, title: "US dollars per task, one client", titleFontSize: 12, titleColor: C.ink,
     catAxisOrientation: "maxMin"});
-  stat(s, 6.3, 1.2, 3.2, `${f.cost_rub.toFixed(2)} → ${n.cost_rub.toFixed(2)} ₽`, `one client's month, ${Math.round(cost.saving_pct)}% less in the second`);
+  stat(s, 6.3, 1.2, 3.2, `$${f.cost_usd.toFixed(4)} → $${n.cost_usd.toFixed(4)}`, `one client's month, ${Math.round(cost.saving_pct)}% less in the second`);
   stat(s, 6.3, 2.65, 3.2, `${demo.cost.share_level_0_1}%`, "of work on levels 0 and 1 (rules, templates, small model)");
-  stat(s, 6.3, 4.1, 3.2, `≈ ${num(Math.round(pj.rub_per_month / 1000) * 1000)} ₽`, "a month for 1 million clients");
+  stat(s, 6.3, 4.1, 3.2, `≈ $${num(Math.round(pj.usd_per_month / 1000) * 1000)}`, "a month for 1 million clients");
 }
 
-// 13 Results and next
+// 14 Results and next
 {
   const fn = evl.functional, at = evl.attacks;
   const s = slide("Results and what comes next",
