@@ -1,12 +1,12 @@
 # Guardian: a bank kernel for AI payment agents
 
 [![CI](https://github.com/yourfavoriteself/ShenzhenFinTechathonTopicA/actions/workflows/ci.yml/badge.svg)](https://github.com/yourfavoriteself/ShenzhenFinTechathonTopicA/actions/workflows/ci.yml)
-[![Tests](https://img.shields.io/badge/tests-389%20passing-067647)](.github/workflows/ci.yml)
+[![Tests](https://img.shields.io/badge/tests-390%20passing-067647)](.github/workflows/ci.yml)
 [![Red-team](https://img.shields.io/badge/red--team-48%2F48%20stopped-067647)](evidence/redteam.json)
 [![Python](https://img.shields.io/badge/python-3.14-101828)](requirements.txt)
 [![License](https://img.shields.io/badge/license-MIT-667085)](LICENSE)
 [![Docs](https://img.shields.io/badge/docs-technical%20documentation-101828)](docs/technical_documentation.pdf)
-[![Video](https://img.shields.io/badge/demo-3%3A49-1d4ed8)](#demo-video)
+[![Video](https://img.shields.io/badge/demo-4%3A33-1d4ed8)](#demo-video)
 
 > **SUBMISSION**: 2026 Shenzhen FinTechathon, International Track, Topic A: Personal Finance Assistant, theme *AI as a Financial Participant*. The six submission materials are attached to release [v1.0](https://github.com/yourfavoriteself/ShenzhenFinTechathonTopicA/releases/tag/v1.0) and indexed in [`docs/README.md`](docs/README.md).
 
@@ -14,30 +14,42 @@ Guardian is a personal finance assistant that does the money chores (pays, cance
 
 The [technical documentation](docs/technical_documentation.pdf) describes the system in full; the [security report](docs/security_report.pdf) covers the threat model and the red-team.
 
+## 中文简介
+
+**一句话：AI 代理可以提出任何支付建议，但资金只能在客户签署的授权范围内流动，而且银行能够证明这一点。**
+
+Guardian 是一个个人理财助手，可以帮客户支付、取消订阅、发起争议、做预算、为目标储蓄，以及在美国交易所投资。它的核心是银行内部一个小而确定的**安全内核**：代理和大语言模型只负责*提出*意图；内核负责决策，通过银行自己的执行器执行，事后核对银行记录，并把每一步写入签名哈希链日志。客户在自己的设备上用设备密钥签署内核生成的卡片，所见即所签。
+
+- 红队测试：48 次静态攻击全部拦截，损失 $0；没有内核时 48 次全部成功，损失 $6,546.63。
+- 自适应攻击者 360 次尝试中 0 次越出授权范围。
+- 投资场景（C11）：内核用自己的报价核验订单；在 Alpaca 模拟账户上真实下单并成交。
+- 演示视频附有中文字幕：[`guardian_demo.zh.srt`](docs/media/guardian_demo.zh.srt)。
+
 ## Demo video
 
-https://github.com/user-attachments/assets/e4c789a5-cf67-42f6-b6f5-ec7cdd62f8ff
+https://github.com/user-attachments/assets/28c5fc72-b9a7-47b7-a26e-88833357c1fc
 
-One client, one month in a sandbox bank, recorded from the real interface. The player above runs on GitHub; the same file is also attached to the release ([download mp4](https://github.com/yourfavoriteself/ShenzhenFinTechathonTopicA/releases/download/v1.0/guardian_demo.mp4), 4:37).
+One client, one month in a sandbox bank, recorded from the real interface. The player above runs on GitHub; the same file is also attached to the release ([download mp4](https://github.com/yourfavoriteself/ShenzhenFinTechathonTopicA/releases/download/v1.0/guardian_demo.mp4), 4:33).
 
 | Time | Chapter | Scenario |
 |---|---|---|
-| 0:07 | A month for you: the chat and the kernel's panel |  |
-| 0:13 | Cash gap and the first signed card | C8 |
-| 0:31 | Budget, goal and safe to spend | C8 |
+| 0:00 | The thesis in one sentence |  |
+| 0:08 | A month for you: the chat and the kernel's panel |  |
+| 0:14 | Cash gap and the first signed card | C8 |
+| 0:32 | Budget, goal and safe to spend | C8 |
 | 0:54 | Leaks in subscriptions | C3 |
 | 1:02 | Cancel through the merchant's API, protected form, three way check | C2 |
-| 1:27 | Pay and allow monthly | C1 |
-| 1:33 | Double charge and dispute | C4 |
-| 1:38 | Bills and a fake bill | C5, C6 |
-| 1:50 | Payee risk on the transfer graph | C10 |
-| 1:57 | Scam call: pause, hold, analyst | C9 |
-| 2:37 | One month later: the standing permission at work | C1 |
-| 2:42 | Earned trust: a reward, a penalty and a quarantine for a faulty agent |  |
-| 3:28 | Investing on a US exchange: a signed monthly plan, a meme stock stopped | C11 |
-| 4:02 | Tour: month, permissions, agents, cost, red-team, compliance, journal |  |
+| 1:25 | Pay and allow monthly | C1 |
+| 1:31 | Double charge and dispute | C4 |
+| 1:36 | Bills and a fake bill | C5, C6 |
+| 1:47 | Payee risk on the transfer graph | C10 |
+| 1:55 | Scam call: pause, hold, analyst | C9 |
+| 2:26 | One month later: the standing permission at work | C1 |
+| 2:39 | Earned trust: a reward, a penalty and a quarantine for a faulty agent |  |
+| 3:25 | Investing on a US exchange: a signed monthly plan, a meme stock stopped | C11 |
+| 3:58 | Tour: month, permissions, agents, cost, red-team, compliance, journal |  |
 
-The video has no voice and no captions over the interface. A backup copy with subtitles in a band under the picture is [`guardian_demo_subtitled.mp4`](docs/media/guardian_demo_subtitled.mp4) (also in the [release](https://github.com/yourfavoriteself/ShenzhenFinTechathonTopicA/releases/download/v1.0/guardian_demo_subtitled.mp4)); the subtitles alone are in [`guardian_demo.srt`](docs/media/guardian_demo.srt), and the voiceover script with timecodes is [`docs/video_script.md`](docs/video_script.md).
+The video has no voice and no captions over the interface. A backup copy with subtitles in a band under the picture is [`guardian_demo_subtitled.mp4`](docs/media/guardian_demo_subtitled.mp4) (also in the [release](https://github.com/yourfavoriteself/ShenzhenFinTechathonTopicA/releases/download/v1.0/guardian_demo_subtitled.mp4)); the subtitles alone are in [`guardian_demo.srt`](docs/media/guardian_demo.srt) and in Chinese in [`guardian_demo.zh.srt`](docs/media/guardian_demo.zh.srt), and the voiceover script with timecodes is [`docs/video_script.md`](docs/video_script.md).
 
 ## Requirements
 
@@ -79,14 +91,14 @@ Key benefits:
 - **The job gets done, not just advised.** Guardian finds the problem, asks once, acts, and checks the result with the bank or the merchant.
 - **What you see is what you sign.** The card is drawn by the kernel from bank data, and the device key signs its hash. Payee, amount, period, money source and merchant are fixed in a mandate in the shape of Mastercard Verifiable Intent and AP2.
 - **No secrets in any model.** Merchant sign in goes through a bank form with domain and certificate checks, credentials stay in the bank vault, and the model gateway refuses prompts with card numbers or secrets.
-- **Repeat work is almost free.** A solved task becomes a template; one client's month costs $0.0072 in tokens the first time and $0.0027 after that.
+- **Repeat work is almost free.** A solved task becomes a template; one client's month costs $0.0114 in tokens the first time and $0.0043 after that, measured with real models.
 
 ### Protecting against attacks
 
 We attack the kernel as if the agent were already on the attacker's side: a valid passport, doing whatever it is told. Below is the summary; the method, every attack and fifteen known risks are in the [security report](docs/security_report.pdf).
 
 <div align="center">
-  <img src="docs/media/ledger.png" width="80%" alt="Key results: 48 of 48 static attacks stopped, 5 of 5 memory planting attacks, 0 of 360 adaptive attempts outside the mandate, $6,546.63 lost without the kernel, 48 of 48 functional tasks, 5 of 5 leaks found, cost $0.0072 then $0.0027, 0 of 2 faulty agent actions executed with 3 strikes, 97.6 percent of work on levels 0 and 1, 437 signed journal entries">
+  <img src="docs/media/ledger.png" width="80%" alt="Key results: 48 of 48 static attacks stopped, 5 of 5 memory planting attacks, 0 of 360 adaptive attempts outside the mandate, $6,546.63 lost without the kernel, 48 of 48 functional tasks, 5 of 5 leaks found, cost $0.0114 then $0.0043, 0 of 2 faulty agent actions executed with 3 strikes, 97.6 percent of work on levels 0 and 1, 437 signed journal entries">
 </div>
 
 ### Use cases
@@ -252,11 +264,12 @@ All amounts are in US dollars. The synthetic bank was first written in rubles an
 | Spending forecast on held-out months (July to September) | WAPE 27.2 % overall; bills 4.2 %, subscriptions 2.5 % | [`budget_report.json`](evidence/budget_report.json) |
 | Payee risk on the bank's transfer graph (held-out synthetic graphs) | ROC-AUC 1.0, precision 0.993, recall 0.944, no false alarms on employers, merchants or landlords | [`risk_graph.json`](evidence/risk_graph.json) |
 | Journal anchoring on a local devnet | 4 checkpoints; a rewritten entry and a cut tail are both caught | [`anchors.json`](evidence/anchors.json) |
-| Token cost of one client's month (real prompts, stub answers) | $0.0072 the first month, $0.0027 the next (63 % less); about $2,700 a month for a million clients | [`costs.json`](evidence/costs.json) |
+| Token cost of one client's month, measured live with real models | $0.0114 the first month, $0.0043 the next (63 % less); about $4,300 a month for a million clients. Stub estimate: $0.0072 and $0.0027 | [`costs_live.json`](evidence/costs_live.json), [`costs.json`](evidence/costs.json) |
+| Functional evaluation with real models (Claude Haiku 4.5, Sonnet 5.5) | **44 / 48** for $0.11. The 4 misses fail safe: the live critic stops an action the client did not ask for in so many words (a dispute after a question, a price above the usual) where a card was expected. No money moved outside a mandate | [`live_runs.json`](evidence/live_runs.json) |
 | Earned trust in the demo month | 1 promotion, 1 demotion, 3 strikes, 1 quarantine with 2 passports revoked; **0 / 2** faulty agent actions executed | [`trust_report.json`](evidence/trust_report.json) |
 | Investing in the demo month | $10 SPY order signed with a monthly plan, filled at the next open; the second month's order placed alone inside the plan; an off list stock (GME) and an option stopped by the broker step | [`invest_report.json`](evidence/invest_report.json) |
 | The whole demo month | $9.63 a month saved, 13 tasks done, 13 questions, 6 actions stopped or held (2 attacks, 2 off list orders, 2 faulty agent actions), 437 signed journal entries, chain verified | [`demo_run.log`](evidence/demo_run.log) |
-| Automated tests | 389 pass in CI (unit, end to end in Chromium, red-team, evaluation, PostgreSQL, local chain) plus 5 contract tests in Foundry | [CI](.github/workflows/ci.yml) |
+| Automated tests | 390 pass in CI (unit, end to end in Chromium, red-team, evaluation, PostgreSQL, local chain) plus 5 contract tests in Foundry | [CI](.github/workflows/ci.yml) |
 
 The graph model is trained and tested on graphs from our own generator, so real bank data will score lower. The numbers show that the pipeline works, not field accuracy.
 

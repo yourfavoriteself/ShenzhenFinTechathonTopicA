@@ -303,14 +303,16 @@ The LLM gateway is the only path to a model. It:
 
 Modes: `replay` (default; falls back to deterministic stubs when no recording exists), `stub`, `record`, `live`.
 
-Cost of one client's month, from `evidence/costs.json`, comes from token counts on the real prompts and stub answers priced at list prices. Live runs replace the estimate.
+Cost of one client's month, from `evidence/costs_live.json`, is measured on a live run with real models (Claude Haiku 4.5 on level 1, Claude Sonnet 5.5 on level 2, Claude Opus 5.5 on level 3) at list prices. The stub estimate in `evidence/costs.json` ($0.0072, then $0.0027) stays as the reproducible baseline.
 
 | | Model calls | Big-model calls | Tokens | Cost |
 |---|---|---|---|---|
-| First month (seven tasks) | 13 | 1 | 4 350 | $0.0072 |
-| Next month (same tasks) | 7 | 0 | 1 913 | $0.0027 (63 % less) |
+| First month (seven tasks) | 13 | 1 | 5 362 | $0.0114 |
+| Next month (same tasks) | 7 | 0 | 2 585 | $0.0043 (63 % less) |
 
-The repeated Melodify payment and the repeated double-charge check use no model at all. At the next-month rate a million clients cost about $2,700 a month in model tokens. In the full demo run 97.6 % of the work happens at levels 0 and 1.
+The repeated Melodify payment and the repeated double-charge check use no model at all. At the next-month rate a million clients cost about $4,300 a month in model tokens. In the full demo run 97.6 % of the work happens at levels 0 and 1.
+
+**Live run with real models** (`scripts/live_report.py`, `evidence/live_runs.json`). The functional evaluation with real models passes 44 of 48 tasks for $0.11 (120 calls, 111 on level 1, 9 on level 2). All four misses go the safe way: the live critic stops an action the client did not ask for in so many words, where the evaluation expected a card. "Was I charged twice?" is a question, so the critic refuses to open a dispute on it; a Melodify price of $6.02 against the usual $3.61 is stopped instead of shown for signing. No money moved outside a mandate. We also tried real models as the adaptive attacker: Claude Sonnet 5.5 and Opus 5.5 declined the attacker role for five of the six goals, and the four attempts they wrote for the sixth were all denied. The seeded mutation search remains our adaptive attacker.
 
 # 8. Data, persistence and anchoring
 
@@ -387,7 +389,7 @@ docker compose up --build         # app + PostgreSQL 18, http://localhost:8000
 
 - The bank, merchants, telecom and transfer graph are sandboxes with synthetic data. Real data will be noisier, especially for the graph model.
 - Cancellation uses merchant APIs. Merchants without an API would need a separate, strictly sandboxed integration, which we did not build.
-- Costs are estimated on stub answers until live runs are recorded. The multi-model red-team (DeepSeek, Qwen) was not run without keys.
+- Live runs are one month of one client; the live critic is stricter than the stub and stops four tasks the evaluation expected as cards. The vendor models declined to act as the adaptive attacker for most goals, so the adaptive numbers come from the seeded mutation search. The multi-model red-team (DeepSeek, Qwen) was not run.
 - Mandates are signed JSON. SD-JWT selective disclosure from Verifiable Intent is not implemented.
 - Investing runs on a sandbox broker or Alpaca paper trading, never with real money. The sandbox broker ignores exchange holidays; the allowlist and limits are demo values, not advice.
 - Anchoring was demonstrated on a local devnet. Sepolia needs a funded test key.

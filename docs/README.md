@@ -6,14 +6,14 @@ The six materials of the submission, all generated from this repository.
 |---|---|---|---|
 | 1 | Technical documentation | [`technical_documentation.pdf`](technical_documentation.pdf) (source [`.md`](technical_documentation.md)), architecture diagram [`diagrams/architecture.png`](diagrams/architecture.png) ([`.drawio`](diagrams/architecture.drawio)) | `make docs` |
 | 2 | Presentation, ≤ 10 minutes, with speaker notes | [`presentation.pptx`](presentation.pptx), [`presentation.pdf`](presentation.pdf) | `make docs` (`node docs/deck.js`, numbers read from `evidence/`) |
-| 3 | Demo video, ≤ 5 minutes | [`media/guardian_demo.mp4`](media/guardian_demo.mp4) (4:37, recorded from the real UI, no voice); backup with subtitles [`media/guardian_demo_subtitled.mp4`](media/guardian_demo_subtitled.mp4), subtitles [`media/guardian_demo.srt`](media/guardian_demo.srt), voiceover script [`video_script.md`](video_script.md), caption timeline [`media/guardian_demo_captions.json`](media/guardian_demo_captions.json) | `make video` (`scripts/record_demo.py`) |
+| 3 | Demo video, ≤ 5 minutes | [`media/guardian_demo.mp4`](media/guardian_demo.mp4) (4:33, recorded from the real UI, no voice); backup with subtitles [`media/guardian_demo_subtitled.mp4`](media/guardian_demo_subtitled.mp4), subtitles [`media/guardian_demo.srt`](media/guardian_demo.srt) and in Chinese [`media/guardian_demo.zh.srt`](media/guardian_demo.zh.srt), voiceover script [`video_script.md`](video_script.md), caption timeline [`media/guardian_demo_captions.json`](media/guardian_demo_captions.json) | `make video` (`scripts/record_demo.py`) |
 | 4 | Code with README and tests | the repository; [`../README.md`](../README.md) | `make test` |
 | 5 | Security report: permission levels, known risks, Self-Regulatory Convention for Agent Payment Applications and VI / AP2 tables | [`security_report.pdf`](security_report.pdf) (source [`security_report.src.md`](security_report.src.md), filled from `evidence/`) | `make docs` |
 | 6 | Execution evidence: sandbox logs and video | [`../evidence/`](../evidence/README.md): `demo_run.log`, `demo_journal.jsonl`, `demo_summary.json`, `trust_report.json`, `invest_report.json`, reports, `alpaca_paper.json` (a live order on an Alpaca paper account); the video above | `make evidence`, `make video` |
 
 The demo video plays on GitHub:
 
-https://github.com/user-attachments/assets/e4c789a5-cf67-42f6-b6f5-ec7cdd62f8ff
+https://github.com/user-attachments/assets/28c5fc72-b9a7-47b7-a26e-88833357c1fc
 
 Also here: [`DESIGN_DECISIONS.md`](DESIGN_DECISIONS.md), the choices behind the design and what each one cost us.
 

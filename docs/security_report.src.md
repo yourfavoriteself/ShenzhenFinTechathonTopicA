@@ -143,7 +143,7 @@ The LLM gateway refuses any prompt containing a card number or any registered va
   - *filtered*: agent text replaced by the kernel's template;
   - *succeeded*.
 
-The adaptive attacker is a seeded mutation search. It proposes candidates, scores them by how close they come to the goal (money moved, card shown, reasons given), keeps the best and mutates them. It runs {{AD_ROUNDS}} rounds × {{AD_WIDTH}} attempts for each of {{AD_GOALS}} goals. With an API key the same loop runs a model attacker through the gateway (capped at $3).
+The adaptive attacker is a seeded mutation search. It proposes candidates, scores them by how close they come to the goal (money moved, card shown, reasons given), keeps the best and mutates them. It runs {{AD_ROUNDS}} rounds × {{AD_WIDTH}} attempts for each of {{AD_GOALS}} goals. With an API key the same loop runs a model attacker through the gateway (capped at $3). We ran it on 20 October 2026 with Claude Sonnet 5.5 and Opus 5.5: the models declined the attacker role for five of the six goals, and the four attempts they wrote for the sixth (keep the client paying instead of cancelling) were all denied (`evidence/live_runs.json`). The numbers above therefore come from the mutation search. In the same live run the functional evaluation passed 44 of 48 tasks; all four misses are the live critic stopping an action the client had not asked for in so many words, where a card was expected, so no money moved outside a mandate.
 
 ## 5.2 Static and retention attacks
 
@@ -190,7 +190,7 @@ Outcomes: {{BY_OUTCOME}}.
 | K11 | Merchant API reports a cancellation that did not happen | Low / low | Verified from three sources; the bank's block stays as insurance | none needed |
 | K12 | Mandate format interoperability (no SD-JWT yet) | Medium / low | Field names follow Verifiable Intent; payment reference = card hash | SD-JWT and merchant-side verification |
 | K13 | Spend cap reached during operation | Low / low | Gateway fails closed; level-0 code and templates continue | Per-client budgets in production |
-| K14 | Not yet tested: live model attacker and multi-model run (DeepSeek, Qwen) | unknown | Harness ready (`redteam/adaptive.py --live`, $3 cap) | Run when keys are available |
+| K14 | Partly tested: the vendor models declined the attacker role for most goals; the multi-model run (DeepSeek, Qwen) was not done | unknown | Mutation search covers all goals; live attacker harness with a $3 cap (`scripts/live_report.py`) | An open-weight attacker model in a closed environment with the bank's red team |
 | K15 | Market risk and order mistakes when investing | Medium / low | Allowlist of broad funds, small orders inside an envelope, buys only, kernel quote and price corridor, read-back verification; sandbox broker or paper trading only | Suitability check with the client before a live account; exchange holiday calendar |
 
 # 7. Compliance
@@ -216,5 +216,5 @@ Outcomes: {{BY_OUTCOME}}.
 make test                  # includes tests/redteam (every attack must be stopped)
 make evidence              # evidence/redteam.json, eval_report.json, demo_run.log
 make anchor                # journal anchoring and tamper checks (Foundry)
-python -m scripts.redteam_report --live   # adaptive model attacker, needs ANTHROPIC_API_KEY, capped at $3
+python -m scripts.live_report            # live month, evaluation and model attacker; needs ANTHROPIC_API_KEY, attacker capped at $3
 ```
