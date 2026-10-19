@@ -11,26 +11,33 @@ import sys
 from pathlib import Path
 
 CSS = """
-@page { size: A4; margin: 18mm 16mm 18mm 16mm; }
-body { font-family: "Noto Sans", "Noto Sans CJK SC", "DejaVu Sans", sans-serif; font-size: 10.5pt; line-height: 1.45;
-       color: #1f2937; max-width: none; margin: 0; padding: 0; }
-header#title-block-header { border-bottom: 3px solid #10b981; margin-bottom: 18px; padding-bottom: 8px; }
-h1.title { font-size: 24pt; margin: 0 0 4px; color: #064e3b; }
-p.subtitle { font-size: 12pt; color: #4b5563; margin: 0; }
-p.author { font-size: 11pt; font-weight: 600; color: #065f46; margin: 6px 0 0; }
-h1 { font-size: 15pt; color: #064e3b; margin: 20px 0 8px; break-after: avoid; }
-h2 { font-size: 12.5pt; color: #065f46; margin: 14px 0 6px; break-after: avoid; }
-table { border-collapse: collapse; width: 100%; margin: 8px 0 12px; font-size: 9pt; break-inside: auto; }
-th, td { border: 1px solid #d1d5db; padding: 4px 6px; vertical-align: top; text-align: left; }
-th { background: #ecfdf5; }
+@page { size: A4; }
+body { font-family: "Noto Sans", "Noto Sans CJK SC", "DejaVu Sans", sans-serif; font-size: 10.3pt; line-height: 1.5;
+       color: #1b1712; max-width: none; margin: 0; padding: 0; }
+header#title-block-header { position: relative; border-top: 6px solid #1b1712; border-bottom: 1px solid #1b1712;
+       margin-bottom: 22px; padding: 16px 0 12px 74px; }
+header#title-block-header::before { content: "\\5b88"; position: absolute; left: 0; top: 18px; width: 56px; height: 56px;
+       display: grid; place-items: center; background: #b8321c; color: #fff8ee; border-radius: 3px;
+       font: 700 34px/1 "Noto Serif CJK SC", "WenQuanYi Zen Hei", serif; box-shadow: inset 0 0 0 3px #b8321c, inset 0 0 0 5px #fff8ee; }
+h1, h2, h1.title { font-family: Georgia, "Noto Serif", "DejaVu Serif", serif; font-weight: 600; }
+h1.title { font-size: 25pt; margin: 0 0 4px; color: #1b1712; }
+p.subtitle { font-size: 12pt; color: #4a4339; margin: 0; font-style: italic; font-family: Georgia, "Noto Serif", serif; }
+p.author { font-size: 9.5pt; font-weight: 600; color: #b8321c; margin: 8px 0 0; letter-spacing: .08em; text-transform: uppercase; }
+h1 { font-size: 15.5pt; color: #1b1712; margin: 24px 0 8px; padding-bottom: 3px; border-bottom: 1px solid #d9cfbd; break-after: avoid; }
+h2 { font-size: 12.3pt; color: #9e2a16; margin: 16px 0 6px; break-after: avoid; }
+a { color: #9e2a16; }
+table { border-collapse: collapse; width: 100%; margin: 8px 0 14px; font-size: 9pt; break-inside: auto;
+        border-top: 1.5px solid #1b1712; border-bottom: 1.5px solid #1b1712; }
+th, td { border: none; border-bottom: 1px solid #e2d9c8; padding: 4px 6px; vertical-align: top; text-align: left; }
+th { background: transparent; border-bottom: 1px solid #1b1712; font-size: 8.3pt; text-transform: uppercase; letter-spacing: .05em; color: #4a4339; }
 tr { break-inside: avoid; }
-code { font-family: "DejaVu Sans Mono", monospace; font-size: 8.8pt; background: #f3f4f6; padding: 0 2px; }
-pre { background: #f3f4f6; padding: 8px; font-size: 8.3pt; white-space: pre-wrap; border-radius: 4px; }
-pre code { background: none; }
+code { font-family: "DejaVu Sans Mono", monospace; font-size: 8.6pt; background: #f1ebe0; padding: 0 2px; }
+pre { background: #1b1712; color: #f6f1e7; padding: 9px 11px; font-size: 8.2pt; white-space: pre-wrap; border-radius: 2px; }
+pre code { background: none; color: inherit; }
 img { max-width: 100%; }
-figure { margin: 8px 0; text-align: center; }
-figcaption { font-size: 9pt; color: #6b7280; }
-blockquote { border-left: 3px solid #10b981; margin: 8px 0; padding: 2px 10px; color: #374151; }
+figure { margin: 10px 0; text-align: center; }
+figcaption { font-size: 9pt; color: #6f675b; font-style: italic; font-family: Georgia, serif; }
+blockquote { border-left: 4px solid #b8321c; margin: 10px 0; padding: 4px 12px; color: #1b1712; background: #f4ece0; }
 """
 
 
@@ -94,8 +101,10 @@ def build(md: Path) -> Path:
         page.goto(html.resolve().as_uri())
         page.pdf(path=str(pdf), format="A4", print_background=True, display_header_footer=True,
                  header_template="<span></span>",
-                 footer_template='<div style="font-size:8px;color:#9ca3af;width:100%;text-align:center">'
-                                 'Guardian · <span class="pageNumber"></span> / <span class="totalPages"></span></div>',
+                 footer_template='<div style="font:8px Georgia,serif;color:#6f675b;width:100%;margin:0 14mm;display:flex;'
+                                 'justify-content:space-between;border-top:0.5px solid #d9cfbd;padding-top:3px">'
+                                 '<span style="color:#b8321c;letter-spacing:.1em">GUARDIAN</span>'
+                                 '<span><span class="pageNumber"></span> of <span class="totalPages"></span></span></div>',
                  margin={"top": "16mm", "bottom": "16mm", "left": "14mm", "right": "14mm"})
         b.close()
     html.unlink()
