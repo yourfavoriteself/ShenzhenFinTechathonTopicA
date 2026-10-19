@@ -75,6 +75,7 @@ def report(mode: str = "stub") -> dict:
     return {
         "mode": mode, "estimated": any(r.estimated for r in gw.log),
         "ladder": {lvl: spec.model for lvl, spec in gw.ladder.items()},
+        "ladder_source": gw.config.source,
         "first_month": first, "next_month": second,
         "saving_pct": round(100 * (1 - second["cost_rub"] / first["cost_rub"]), 1) if first["cost_rub"] else 0,
         "calls_by_level": by_level,

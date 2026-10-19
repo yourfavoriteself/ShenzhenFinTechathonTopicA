@@ -6,6 +6,11 @@
   "2": "claude-sonnet-5-5",
   "3": "claude-opus-5-5"
  },
+ "ladder_source": {
+  "1": "file",
+  "2": "file",
+  "3": "file"
+ },
  "first_month": {
   "tasks": [
    {

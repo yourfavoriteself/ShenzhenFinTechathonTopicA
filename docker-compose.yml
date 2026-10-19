@@ -3,7 +3,7 @@ services:
     image: postgres:18.4-alpine
     environment:
       POSTGRES_USER: guardian
-      POSTGRES_PASSWORD: guardian
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-guardian}
       POSTGRES_DB: guardian
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U guardian"]
@@ -16,7 +16,7 @@ services:
       - path: .env
         required: false
     environment:
-      DATABASE_URL: postgresql://guardian:guardian@db:5432/guardian
+      DATABASE_URL: postgresql://guardian:${POSTGRES_PASSWORD:-guardian}@db:5432/guardian
     ports:
       - "8000:8000"
     depends_on:
