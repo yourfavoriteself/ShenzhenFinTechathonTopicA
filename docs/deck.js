@@ -6,7 +6,7 @@ const pptxgen = require("pptxgenjs");
 
 const root = path.resolve(__dirname, "..");
 const ev = (f) => JSON.parse(fs.readFileSync(path.join(root, "evidence", f), "utf8"));
-const rt = ev("redteam.json"), evl = ev("eval_report.json"), cost = ev("costs.json"), demo = ev("demo_summary.json");
+const rt = ev("redteam.json"), evl = ev("eval_report.json"), cost = fs.existsSync(path.join(root, "evidence", "costs_live.json")) ? ev("costs_live.json") : ev("costs.json"), demo = ev("demo_summary.json");
 const bud = ev("budget_report.json"), graph = ev("risk_graph.json"), tr = ev("trust_report.json"), inv = ev("invest_report.json");
 const media = (f) => path.join(root, "docs", "media", f);
 const num = (n) => String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
@@ -18,7 +18,8 @@ const C = {dark: "101828", mid: "1D4ED8", accent: "1D4ED8", soft: "F2F4F7", ink:
 const HF = "Inter", BF = "Inter", LOGO_FONT = "Noto Sans CJK SC";
 const R = pres => pres.shapes.ROUNDED_RECTANGLE;
 const pngSize = (f) => { const b = fs.readFileSync(f); return [b.readUInt32BE(16), b.readUInt32BE(20)]; };
-const TOTAL = 14;
+const TOTAL = 15;
+const THESIS = "An AI agent may propose any payment, but money moves only inside what the client signed, and the bank can prove it.";
 let page = 0;
 
 const pres = new pptxgen();
@@ -60,11 +61,12 @@ const st = rt.static, ad = rt.adaptive, lg = rt.legacy_prototype, rr = rt.retent
 // 1 Title
 {
   const s = slide(null, "Hello. We are Kseniia Kuzmina and Nikita Stepanov, the Guardian team. Our topic is A: an AI agent that pays, cancels and budgets for a bank client. "
-    + "In ten minutes: the problem, the idea, a month of the demo, how the kernel works, the security results, compliance, cost and what is next.", {bg: C.paper});
+    + "Our whole project in one sentence: " + THESIS + " "
+    + "In ten minutes: the problem, the idea, three scenes from the demo, how the kernel works, the security results, cost and a pilot with a bank.", {bg: C.paper});
   seal(s, 0.7, 1.05, 1.15);
   s.addText("Guardian", {x: 0.7, y: 2.4, w: 8.6, h: 1.0, fontFace: HF, fontSize: 58, bold: true, color: C.ink, margin: 0});
-  s.addText("A bank-side safety kernel for AI payment agents", {x: 0.7, y: 3.6, w: 8.6, h: 0.5, fontFace: HF, fontSize: 22, color: C.ink, margin: 0});
-  s.addText("Agents propose. The kernel decides, checks and records.", {x: 0.7, y: 4.1, w: 8.6, h: 0.4, fontFace: BF, fontSize: 15, color: C.grey, margin: 0});
+  s.addText("A bank-side safety kernel for AI payment agents", {x: 0.7, y: 3.35, w: 8.6, h: 0.45, fontFace: HF, fontSize: 20, color: C.grey, margin: 0});
+  s.addText(THESIS, {x: 0.7, y: 3.8, w: 8.6, h: 0.75, fontFace: HF, fontSize: 17, bold: true, color: C.ink, valign: "top", margin: 0});
   s.addText("Kseniia Kuzmina  ·  Nikita Stepanov", {x: 0.7, y: 4.75, w: 5.5, h: 0.3, fontFace: BF, fontSize: 12, bold: true, color: C.ink, margin: 0});
   s.addText("Shenzhen FinTechathon 2026 · International Track · Topic A", {x: 4.6, y: 4.75, w: 4.9, h: 0.3, fontFace: BF, fontSize: 11, color: C.grey, align: "right", margin: 0});
 }
@@ -149,18 +151,23 @@ const st = rt.static, ad = rt.adaptive, lg = rt.legacy_prototype, rr = rt.retent
   });
 }
 
-// 5 Screens
+// 5 Three scenes
 {
-  const s = slide("What the client sees",
-    "Here is the real interface. On the left, a card. The kernel renders it, every field has its source, and you hold to sign with the device key. "
-    + "On the right, the fake bill. It imitates Mosenergo, the account is not Mosenergo's, it uses pressure and has a hidden instruction for AI agents, and it is linked to an earlier phishing email. "
-    + "The scam call, where the ladder goes from explain to ask to a pause and then holds the money for a person at the bank, is in the demo video.");
-  const items = [["01_card_chat.png", "A card: every field with its source, signed with the device key"],
-    ["06_fake_bill_chat.png", "A fake bill: stopped with reasons, case sent to analysts"]];
-  items.forEach(([f, t], i) => {
-    const x = 1.0 + i * 4.6, w = 3.4;
-    shot(s, f, x, 1.3, w, w * 730 / 720);
-    s.addText(t, {x: x - 0.5, y: 1.3 + w * 730 / 720 + 0.04, w: w + 1.0, h: 0.3, fontFace: HF, fontSize: 11, color: C.ink, align: "center", margin: 0});
+  const lo = ev("alpaca_paper.json").orders[0];
+  const s = slide("Three scenes to remember",
+    "If you remember three scenes from our demo, let it be these. "
+    + "One: a payment the client can prove. The kernel renders the card, every field has its source, the client signs it with the device key, and next month the same payment runs alone under a standing permission. "
+    + "Two: an attack that goes nowhere. A fake bill imitates the electricity company, the account is not theirs, and it carries a hidden instruction for AI agents. The kernel stops it with reasons and sends the case to analysts. "
+    + `Three: real money logic on a real exchange. The client asks to invest ten dollars a month in SPY; the kernel checks the order with its own quote and places it. On an Alpaca paper account the order filled at $${(lo.filled_avg_price_cents / 100).toFixed(2)}. `
+    + "Everything else in the demo, the budget, the scam call, earned trust, is the same kernel doing the same thing.");
+  const items = [["01_card_chat.png", "1  A payment the client can prove", "card, device signature, then a standing permission"],
+    ["06_fake_bill_chat.png", "2  An attack that goes nowhere", "fake bill with a hidden instruction: stopped, case to analysts"],
+    ["12_invest_chat.png", "3  A real exchange, in a mandate", `SPY on Alpaca paper, filled at $${(lo.filled_avg_price_cents / 100).toFixed(2)}`]];
+  items.forEach(([f, h, t], i) => {
+    const x = 0.5 + i * 3.1, w = 2.8;
+    shot(s, f, x, 1.2, w, w * 730 / 720);
+    s.addText(h, {x, y: 1.2 + w * 730 / 720 + 0.08, w, h: 0.3, fontFace: HF, fontSize: 12, bold: true, color: C.ink, margin: 0});
+    s.addText(t, {x, y: 1.2 + w * 730 / 720 + 0.38, w, h: 0.4, fontFace: BF, fontSize: 10, color: C.grey, valign: "top", margin: 0});
   });
 }
 
@@ -366,38 +373,78 @@ const st = rt.static, ad = rt.adaptive, lg = rt.legacy_prototype, rr = rt.retent
     "Cost. Models sit on a three-level ladder: rules and templates cost nothing, then a small model, then larger ones only when risk is high. "
     + `For one client's typical month the first month costs $${f.cost_usd.toFixed(4)} in tokens; the next month $${n.cost_usd.toFixed(4)}, ${cost.saving_pct} percent less, because the repeat payment and the repeated check run from templates with no model call. `
     + `In the full demo ${demo.cost.share_level_0_1} percent of the work stays on levels zero and one. At the next-month rate a million clients cost about $${num(Math.round(pj.usd_per_month / 1000) * 1000)} a month. `
-    + "These are token counts on the real prompts with stub answers; a live run will replace the estimate.");
+    + (cost.mode === "live"
+      ? `These numbers are measured on a live run with real models: ${cost.ladder["1"]} on level one, ${cost.ladder["2"]} and ${cost.ladder["3"]} above it.`
+      : "These are token counts on the real prompts with stub answers; a live run will replace the estimate."));
   const tasks = f.tasks.map((t) => t.task);
   s.addChart(pres.charts.BAR, [
     {name: "First month", labels: tasks, values: f.tasks.map((t) => t.cost_usd)},
     {name: "Next month", labels: tasks, values: n.tasks.map((t) => t.cost_usd)},
   ], {x: 0.4, y: 1.15, w: 5.6, h: 3.9, barDir: "bar", barGrouping: "clustered", chartColors: ["D0D5DD", C.accent],
     catAxisLabelFontSize: 10, valAxisLabelFontSize: 9, valGridLine: {color: "E4E7EC", size: 0.5}, catGridLine: {style: "none"},
-    showLegend: true, legendPos: "b", legendFontSize: 10, showTitle: true, title: "US dollars per task, one client", titleFontSize: 12, titleColor: C.ink,
+    showLegend: true, legendPos: "b", legendFontSize: 10, showTitle: true, title: cost.mode === "live" ? "US dollars per task, one client, measured live" : "US dollars per task, one client", titleFontSize: 12, titleColor: C.ink,
     catAxisOrientation: "maxMin"});
   stat(s, 6.3, 1.2, 3.2, `$${f.cost_usd.toFixed(4)} → $${n.cost_usd.toFixed(4)}`, `one client's month, ${Math.round(cost.saving_pct)}% less in the second`);
   stat(s, 6.3, 2.65, 3.2, `${demo.cost.share_level_0_1}%`, "of work on levels 0 and 1 (rules, templates, small model)");
   stat(s, 6.3, 4.1, 3.2, `≈ $${num(Math.round(pj.usd_per_month / 1000) * 1000)}`, "a month for 1 million clients");
 }
 
-// 14 Results and next
+// 14 Pilot with a bank
+{
+  const pj = cost.projection;
+  const s = slide("Pilot with a bank: who pays, how, what we measure",
+    "How this reaches real clients. The customer is the bank, not the client: Guardian runs inside the bank as the gate for its agent channel. "
+    + "The bank gets three things: fraud losses it does not pay out, a safe way to let third party AI assistants act for its clients, and audit evidence for the regulator. "
+    + "We propose a pilot in three stages. First, shadow mode for about three months: the kernel sees real agent requests and fraud cases, decides, but does not act, and we compare its decisions with the fraud team's. "
+    + "Second, the bank's own employees with real money and small caps. Third, a few thousand volunteer clients, starting with subscriptions and bills, then investing. "
+    + `We measure what the bank cares about: attacks stopped compared with its fraud team, how often a card asks the client without need, zero payments outside a mandate, and cost per client, which today is about $${pj.usd_per_client_per_month.toFixed(4)} a month in tokens.`);
+  const cols = [
+    ["Who pays", C.blue, [
+      "The bank: Guardian is the gate of its agent channel, a fee per active client a month",
+      "Fraud losses not paid out",
+      "Third party AI assistants admitted safely",
+      "Audit evidence for the regulator"]],
+    ["Stages", C.violet, [
+      "1  Shadow, about 3 months: decide, do not act; compare with the fraud team",
+      "2  Employees: real money, small caps, device signatures",
+      "3  Volunteer clients: subscriptions and bills, then investing"]],
+    ["What we measure", C.mint, [
+      "Attacks stopped vs the fraud team",
+      "Cards that asked without need",
+      "Payments outside a mandate: 0",
+      `Token cost per client: $${pj.usd_per_client_per_month.toFixed(4)} a month`]],
+  ];
+  cols.forEach(([h, fill, rows], i) => {
+    const x = 0.5 + i * 3.1;
+    s.addShape(R(pres), {x, y: 1.25, w: 2.9, h: 3.75, rectRadius: 0.12, fill: {color: fill}, line: {color: fill}});
+    s.addText(h, {x: x + 0.2, y: 1.38, w: 2.5, h: 0.4, fontFace: HF, fontSize: 16, bold: true, color: C.dark, margin: 0});
+    s.addText(rows.map((t, k) => ({text: t, options: {bullet: !/^\d/.test(t), breakLine: k < rows.length - 1}})),
+      {x: x + 0.2, y: 1.85, w: 2.55, h: 3.05, fontFace: BF, fontSize: 11.5, color: C.ink, valign: "top", margin: 0, paraSpaceAfter: 7});
+  });
+}
+
+// 15 Results and next
 {
   const fn = evl.functional, at = evl.attacks;
   const s = slide("Results and what comes next",
     `To sum up. ${fn.passed} of ${fn.tasks} functional tasks pass in English, Russian and Chinese, ${at.stopped} of ${at.attacks} attacks in the evaluation set are stopped, and the whole repository has an automated test suite that runs in the Docker build. `
+    + (fs.existsSync(path.join(root, "evidence", "live_runs.json"))
+      ? `With real models the same evaluation passes ${ev("live_runs.json").functional.passed} of ${ev("live_runs.json").functional.tasks}; every miss is the live critic stopping something a card was expected for. `
+      : "")
     + "Everything is reproducible from the repository in replay mode without any keys. "
-    + "Next: live runs with real models, anchoring on a public test network, the payee model on real bank graphs, and SD-JWT selective disclosure for mandates. "
+    + "Next: the pilot with a bank, anchoring on a public test network, the payee model on real bank graphs, and SD-JWT selective disclosure for mandates. "
     + "Agents propose; the kernel decides, checks and records. Thank you.");
-  stat(s, 0.5, 1.3, 2.1, `${fn.passed}/${fn.tasks}`, "functional tasks, EN / RU / ZH");
+  const lr = fs.existsSync(path.join(root, "evidence", "live_runs.json")) ? ev("live_runs.json").functional : null;
+  stat(s, 0.5, 1.3, 2.1, `${fn.passed}/${fn.tasks}`, "functional tasks, EN / RU / ZH" + (lr ? `; ${lr.passed}/${lr.tasks} live` : ""));
   stat(s, 2.8, 1.3, 2.1, `${at.stopped}/${at.attacks}`, "attacks in the evaluation set stopped");
   stat(s, 5.1, 1.3, 2.1, String(demo.journal.entries), "signed journal entries in the demo, chain verified");
   stat(s, 7.4, 1.3, 2.1, "0 keys", "needed to reproduce: replay mode, make test");
   s.addText("Next", {x: 0.5, y: 2.95, w: 4, h: 0.4, fontFace: HF, fontSize: 17, bold: true, color: C.mid, margin: 0});
   s.addText([
-    {text: "Live runs with real models; measured cost replaces the estimate", options: {bullet: true, breakLine: true}},
+    {text: "Pilot with a bank: shadow mode next to its fraud team first", options: {bullet: true, breakLine: true}},
     {text: "Journal anchoring on a public test network", options: {bullet: true, breakLine: true}},
     {text: "Payee model trained and checked on real bank graphs", options: {bullet: true, breakLine: true}},
-    {text: "SD-JWT selective disclosure for mandates; pilot with a bank's fraud team", options: {bullet: true}},
+    {text: "SD-JWT selective disclosure for mandates", options: {bullet: true}},
   ], {x: 0.5, y: 3.35, w: 5.6, h: 1.6, fontFace: BF, fontSize: 13, color: C.ink, margin: 0, paraSpaceAfter: 4});
   s.addShape(R(pres), {x: 6.4, y: 3.0, w: 3.1, h: 1.9, rectRadius: 0.12, fill: {color: C.dark}, line: {color: C.dark}});
   s.addText("Agents propose.\nThe kernel decides, checks and records.", {x: 6.55, y: 3.1, w: 2.8, h: 1.7, fontFace: HF, fontSize: 16, bold: true, color: C.white, valign: "middle", margin: 0});
