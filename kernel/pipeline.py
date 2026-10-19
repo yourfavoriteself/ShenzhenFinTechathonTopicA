@@ -367,6 +367,7 @@ class Pipeline:
             return self._finish(ctx, Outcome.DENIED)
         self._journal(ctx, "executed", {"ok": receipt.ok, "reference": receipt.reference})
         if not receipt.ok:
+            ctx.reasons.append(str(receipt.details.get("error") or "the executor reported a failure"))
             return self._finish(ctx, Outcome.FAILED, receipt=receipt)
         verifier = k.investing.verify if i.action == Action.INVEST and k.investing else self.verifier
         verified = verifier(i, receipt) if verifier else True

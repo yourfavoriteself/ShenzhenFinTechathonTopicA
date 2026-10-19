@@ -128,7 +128,17 @@ class AlpacaBroker:
             body["qty"] = qty
         if client_order_id:
             body["client_order_id"] = client_order_id
-        return self._order(self._call(self._api, "POST", "/v2/orders", json=body))
+        try:
+            return self._order(self._call(self._api, "POST", "/v2/orders", json=body))
+        except BrokerError as e:
+            # a timeout says nothing about whether the order exists: look it up instead of sending it again
+            if not client_order_id or not re.search(r"unreachable|: 50[234] ", str(e)):
+                raise
+            found = self._call(self._api, "GET", "/v2/orders:by_client_order_id",
+                               params={"client_order_id": client_order_id}, allow_404=True)
+            if found:
+                return self._order(found)
+            raise BrokerError(f"{e}; no order with this grant at Alpaca, nothing was placed") from e
 
     def order(self, order_id: str) -> Order:
         return self._order(self._call(self._api, "GET", f"/v2/orders/{order_id}"))

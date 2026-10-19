@@ -1,0 +1,1143 @@
+{
+ "run_at": "2026-10-19T22:22:06.021018+00:00",
+ "session": "extended",
+ "market": {
+  "is_open": false,
+  "next_open": "2026-10-20T09:30:00-04:00",
+  "next_close": "2026-10-20T16:00:00-04:00"
+ },
+ "broker": "Alpaca paper trading (paper-api.alpaca.markets), quotes from the IEX feed",
+ "limits": {
+  "allowlist": [
+   "SPY",
+   "VTI",
+   "QQQ",
+   "BND"
+  ],
+  "min_notional_cents": 100,
+  "max_notional_cents": 2500,
+  "max_quote_age": "PT15M",
+  "corridor_pct": 2.0,
+  "max_orders_per_symbol_per_day": 1
+ },
+ "envelope_cents": 5000,
+ "orders": [
+  {
+   "id": "e88c2b26-c326-4e0f-9873-362d41c17531",
+   "client_order_id": "grt_cc65579265fe",
+   "symbol": "SPY",
+   "side": "buy",
+   "notional_cents": null,
+   "qty": "0.012977406",
+   "limit_price_cents": 77057,
+   "status": "filled",
+   "filled_qty": "0.012977406",
+   "filled_avg_price_cents": 76757,
+   "submitted_at": "2026-10-19T22:22:09.604501Z",
+   "filled_at": "2026-10-19T22:22:09.611435Z",
+   "source": "alpaca:paper"
+  }
+ ],
+ "chat": [
+  {
+   "type": "card",
+   "text": "Invest in State Street SPDR S&P 500 ETF Trust (SPY)"
+  },
+  {
+   "type": "receipt",
+   "text": "Order placed: $10 of State Street SPDR S&P 500 ETF Trust (SPY) from your investment envelope (Alpaca paper account, order e88c2b26-c326-4e0f-9873-362d41c17531, pending_new; extended hours, a limit order for 0.012977406 shares at up to $770.57). The bank read the order back from the broker."
+  },
+  {
+   "type": "denied",
+   "text": "I stopped this action: GME is not on the client's list of securities"
+  },
+  {
+   "type": "denied",
+   "text": "I stopped this action: broker: Alpaca GET /v2/stocks/SPY261218C00600000/trades/latest: 400 code=400, message=invalid symbol: SPY261218C00600000"
+  },
+  {
+   "type": "denied",
+   "text": "I stopped this action: BTC/USD is not a plain stock or fund ticker (no options, crypto or other derivatives); no quote for BTC/USD"
+  },
+  {
+   "type": "denied",
+   "text": "I stopped this action: amount outside the allowed range; not enough money in the investment envelope"
+  }
+ ],
+ "broker_steps": [
+  {
+   "data": {
+    "broker": "alpaca",
+    "session": "extended"
+   },
+   "intent": "int_6d2dd9851903",
+   "reasons": [],
+   "risk": 0,
+   "verdict": 0
+  },
+  {
+   "data": {
+    "broker": "alpaca",
+    "session": "extended"
+   },
+   "intent": "int_6d2dd9851903",
+   "reasons": [],
+   "risk": 0,
+   "verdict": 0
+  },
+  {
+   "data": {
+    "broker": "alpaca",
+    "session": "extended"
+   },
+   "intent": "int_c4fdd69f1e31",
+   "reasons": [
+    "GME is not on the client's list of securities"
+   ],
+   "risk": 2,
+   "verdict": 2
+  },
+  {
+   "data": {},
+   "intent": "int_0efb36a68f5b",
+   "reasons": [
+    "broker: Alpaca GET /v2/stocks/SPY261218C00600000/trades/latest: 400 code=400, message=invalid symbol: SPY261218C00600000"
+   ],
+   "risk": 2,
+   "verdict": 2
+  },
+  {
+   "data": {
+    "broker": "alpaca",
+    "session": "extended"
+   },
+   "intent": "int_7ad9b778d63d",
+   "reasons": [
+    "BTC/USD is not a plain stock or fund ticker (no options, crypto or other derivatives)",
+    "no quote for BTC/USD"
+   ],
+   "risk": 2,
+   "verdict": 2
+  },
+  {
+   "data": {
+    "broker": "alpaca",
+    "session": "extended"
+   },
+   "intent": "int_70d2403ebbeb",
+   "reasons": [
+    "amount outside the allowed range",
+    "not enough money in the investment envelope"
+   ],
+   "risk": 2,
+   "verdict": 2
+  }
+ ],
+ "journal": {
+  "entries": 73,
+  "ok": true,
+  "head": "e6e99caeb5baa518f7c6cf39b667d9d86848530b1a0d390ad2a16fc972ce3e84"
+ },
+ "calls": [
+  {
+   "method": "GET",
+   "path": "/v2/clock",
+   "status": 200,
+   "request": null,
+   "response": {
+    "is_open": false,
+    "next_close": "2026-10-20T16:00:00-04:00",
+    "next_open": "2026-10-20T09:30:00-04:00",
+    "timestamp": "2026-10-19T18:22:06.443822287-04:00"
+   }
+  },
+  {
+   "method": "GET",
+   "path": "/v2/assets/SPY",
+   "status": 200,
+   "request": null,
+   "response": {
+    "id": "b28f4066-5c6d-479b-a2af-85dc1a8f16fb",
+    "class": "us_equity",
+    "exchange": "ARCA",
+    "symbol": "SPY",
+    "name": "State Street SPDR S&P 500 ETF Trust",
+    "status": "active",
+    "tradable": true,
+    "marginable": true,
+    "maintenance_margin_requirement": 30,
+    "margin_requirement_long": "30",
+    "margin_requirement_short": "30",
+    "shortable": true,
+    "easy_to_borrow": true,
+    "borrow_status": "easy_to_borrow",
+    "fractionable": true,
+    "attributes": [
+     "fractional_eh_enabled",
+     "has_options",
+     "options_late_close",
+     "overnight_tradable"
+    ]
+   }
+  },
+  {
+   "method": "GET",
+   "path": "/v2/assets/SPY",
+   "status": 200,
+   "request": null,
+   "response": {
+    "id": "b28f4066-5c6d-479b-a2af-85dc1a8f16fb",
+    "class": "us_equity",
+    "exchange": "ARCA",
+    "symbol": "SPY",
+    "name": "State Street SPDR S&P 500 ETF Trust",
+    "status": "active",
+    "tradable": true,
+    "marginable": true,
+    "maintenance_margin_requirement": 30,
+    "margin_requirement_long": "30",
+    "margin_requirement_short": "30",
+    "shortable": true,
+    "easy_to_borrow": true,
+    "borrow_status": "easy_to_borrow",
+    "fractionable": true,
+    "attributes": [
+     "fractional_eh_enabled",
+     "has_options",
+     "options_late_close",
+     "overnight_tradable"
+    ]
+   }
+  },
+  {
+   "method": "GET",
+   "path": "/v2/stocks/SPY/trades/latest",
+   "status": 200,
+   "request": null,
+   "response": {
+    "symbol": "SPY",
+    "trade": {
+     "c": [
+      " ",
+      "T"
+     ],
+     "i": 52983962091122,
+     "p": 766.73,
+     "s": 100,
+     "t": "2026-10-19T20:17:39.013000607Z",
+     "x": "V",
+     "z": "B"
+    }
+   }
+  },
+  {
+   "method": "GET",
+   "path": "/v2/account",
+   "status": 200,
+   "request": null,
+   "response": {
+    "id": "fe527315-cb25-47dd-b0f7-64179844c65f",
+    "admin_configurations": {},
+    "user_configurations": {
+     "fractional_trading": true
+    },
+    "account_number": "***",
+    "status": "ACTIVE",
+    "crypto_status": "ACTIVE",
+    "options_approved_level": 3,
+    "options_trading_level": 3,
+    "currency": "USD",
+    "buying_power": "400000",
+    "regt_buying_power": "200000",
+    "effective_buying_power": "400000",
+    "non_marginable_buying_power": "100000",
+    "options_buying_power": "100000",
+    "cash": "100000",
+    "accrued_fees": "0",
+    "portfolio_value": "100000",
+    "trading_blocked": false,
+    "transfers_blocked": false,
+    "account_blocked": false,
+    "created_at": "2026-10-19T22:10:15.484077Z",
+    "trade_suspended_by_user": false,
+    "multiplier": "4",
+    "shorting_enabled": true,
+    "equity": "100000",
+    "last_equity": "100000",
+    "long_market_value": "0",
+    "short_market_value": "0",
+    "position_market_value": "0",
+    "initial_margin": "0",
+    "maintenance_margin": "0",
+    "last_maintenance_margin": "0",
+    "sma": "0",
+    "balance_asof": "2026-10-16",
+    "crypto_tier": 0,
+    "intraday_adjustments": "0",
+    "pending_reg_taf_fees": "0"
+   }
+  },
+  {
+   "method": "GET",
+   "path": "/v2/positions",
+   "status": 200,
+   "request": null,
+   "response": []
+  },
+  {
+   "method": "GET",
+   "path": "/v2/clock",
+   "status": 200,
+   "request": null,
+   "response": {
+    "is_open": false,
+    "next_close": "2026-10-20T16:00:00-04:00",
+    "next_open": "2026-10-20T09:30:00-04:00",
+    "timestamp": "2026-10-19T18:22:08.215152311-04:00"
+   }
+  },
+  {
+   "method": "GET",
+   "path": "/v2/assets/SPY",
+   "status": 200,
+   "request": null,
+   "response": {
+    "id": "b28f4066-5c6d-479b-a2af-85dc1a8f16fb",
+    "class": "us_equity",
+    "exchange": "ARCA",
+    "symbol": "SPY",
+    "name": "State Street SPDR S&P 500 ETF Trust",
+    "status": "active",
+    "tradable": true,
+    "marginable": true,
+    "maintenance_margin_requirement": 30,
+    "margin_requirement_long": "30",
+    "margin_requirement_short": "30",
+    "shortable": true,
+    "easy_to_borrow": true,
+    "borrow_status": "easy_to_borrow",
+    "fractionable": true,
+    "attributes": [
+     "fractional_eh_enabled",
+     "has_options",
+     "options_late_close",
+     "overnight_tradable"
+    ]
+   }
+  },
+  {
+   "method": "GET",
+   "path": "/v2/assets/SPY",
+   "status": 200,
+   "request": null,
+   "response": {
+    "id": "b28f4066-5c6d-479b-a2af-85dc1a8f16fb",
+    "class": "us_equity",
+    "exchange": "ARCA",
+    "symbol": "SPY",
+    "name": "State Street SPDR S&P 500 ETF Trust",
+    "status": "active",
+    "tradable": true,
+    "marginable": true,
+    "maintenance_margin_requirement": 30,
+    "margin_requirement_long": "30",
+    "margin_requirement_short": "30",
+    "shortable": true,
+    "easy_to_borrow": true,
+    "borrow_status": "easy_to_borrow",
+    "fractionable": true,
+    "attributes": [
+     "fractional_eh_enabled",
+     "has_options",
+     "options_late_close",
+     "overnight_tradable"
+    ]
+   }
+  },
+  {
+   "method": "GET",
+   "path": "/v2/stocks/SPY/trades/latest",
+   "status": 200,
+   "request": null,
+   "response": {
+    "symbol": "SPY",
+    "trade": {
+     "c": [
+      " ",
+      "T"
+     ],
+     "i": 52983962091122,
+     "p": 766.73,
+     "s": 100,
+     "t": "2026-10-19T20:17:39.013000607Z",
+     "x": "V",
+     "z": "B"
+    }
+   }
+  },
+  {
+   "method": "GET",
+   "path": "/v2/account",
+   "status": 200,
+   "request": null,
+   "response": {
+    "id": "fe527315-cb25-47dd-b0f7-64179844c65f",
+    "admin_configurations": {},
+    "user_configurations": {
+     "fractional_trading": true
+    },
+    "account_number": "***",
+    "status": "ACTIVE",
+    "crypto_status": "ACTIVE",
+    "options_approved_level": 3,
+    "options_trading_level": 3,
+    "currency": "USD",
+    "buying_power": "400000",
+    "regt_buying_power": "200000",
+    "effective_buying_power": "400000",
+    "non_marginable_buying_power": "100000",
+    "options_buying_power": "100000",
+    "cash": "100000",
+    "accrued_fees": "0",
+    "portfolio_value": "100000",
+    "trading_blocked": false,
+    "transfers_blocked": false,
+    "account_blocked": false,
+    "created_at": "2026-10-19T22:10:15.484077Z",
+    "trade_suspended_by_user": false,
+    "multiplier": "4",
+    "shorting_enabled": true,
+    "equity": "100000",
+    "last_equity": "100000",
+    "long_market_value": "0",
+    "short_market_value": "0",
+    "position_market_value": "0",
+    "initial_margin": "0",
+    "maintenance_margin": "0",
+    "last_maintenance_margin": "0",
+    "sma": "0",
+    "balance_asof": "2026-10-16",
+    "crypto_tier": 0,
+    "intraday_adjustments": "0",
+    "pending_reg_taf_fees": "0"
+   }
+  },
+  {
+   "method": "GET",
+   "path": "/v2/positions",
+   "status": 200,
+   "request": null,
+   "response": []
+  },
+  {
+   "method": "GET",
+   "path": "/v2/clock",
+   "status": 200,
+   "request": null,
+   "response": {
+    "is_open": false,
+    "next_close": "2026-10-20T16:00:00-04:00",
+    "next_open": "2026-10-20T09:30:00-04:00",
+    "timestamp": "2026-10-19T18:22:09.245785169-04:00"
+   }
+  },
+  {
+   "method": "GET",
+   "path": "/v2/stocks/SPY/trades/latest",
+   "status": 200,
+   "request": null,
+   "response": {
+    "symbol": "SPY",
+    "trade": {
+     "c": [
+      " ",
+      "T"
+     ],
+     "i": 52983962091122,
+     "p": 766.73,
+     "s": 100,
+     "t": "2026-10-19T20:17:39.013000607Z",
+     "x": "V",
+     "z": "B"
+    }
+   }
+  },
+  {
+   "method": "POST",
+   "path": "/v2/orders",
+   "status": 200,
+   "request": {
+    "symbol": "SPY",
+    "side": "buy",
+    "type": "limit",
+    "time_in_force": "day",
+    "limit_price": "770.57",
+    "extended_hours": true,
+    "qty": "0.012977406",
+    "client_order_id": "grt_cc65579265fe"
+   },
+   "response": {
+    "id": "e88c2b26-c326-4e0f-9873-362d41c17531",
+    "client_order_id": "grt_cc65579265fe",
+    "created_at": "2026-10-19T22:22:09.60450167Z",
+    "updated_at": "2026-10-19T22:22:09.605579757Z",
+    "submitted_at": "2026-10-19T22:22:09.60450167Z",
+    "filled_at": null,
+    "expired_at": null,
+    "canceled_at": null,
+    "failed_at": null,
+    "replaced_at": null,
+    "replaced_by": null,
+    "replaces": null,
+    "asset_id": "b28f4066-5c6d-479b-a2af-85dc1a8f16fb",
+    "symbol": "SPY",
+    "asset_class": "us_equity",
+    "notional": null,
+    "qty": "0.012977406",
+    "filled_qty": "0",
+    "filled_avg_price": null,
+    "order_class": "",
+    "order_type": "limit",
+    "type": "limit",
+    "side": "buy",
+    "position_intent": "buy_to_open",
+    "time_in_force": "day",
+    "limit_price": "770.57",
+    "stop_price": null,
+    "status": "pending_new",
+    "extended_hours": true,
+    "legs": null,
+    "trail_percent": null,
+    "trail_price": null,
+    "hwm": null,
+    "subtag": null,
+    "source": null,
+    "expires_at": "2026-10-20T00:00:00Z"
+   }
+  },
+  {
+   "method": "GET",
+   "path": "/v2/orders/e88c2b26-c326-4e0f-9873-362d41c17531",
+   "status": 200,
+   "request": null,
+   "response": {
+    "id": "e88c2b26-c326-4e0f-9873-362d41c17531",
+    "client_order_id": "grt_cc65579265fe",
+    "created_at": "2026-10-19T22:22:09.60450167Z",
+    "updated_at": "2026-10-19T22:22:09.612490322Z",
+    "submitted_at": "2026-10-19T22:22:09.60450167Z",
+    "filled_at": "2026-10-19T22:22:09.611435254Z",
+    "expired_at": null,
+    "canceled_at": null,
+    "failed_at": null,
+    "replaced_at": null,
+    "replaced_by": null,
+    "replaces": null,
+    "asset_id": "b28f4066-5c6d-479b-a2af-85dc1a8f16fb",
+    "symbol": "SPY",
+    "asset_class": "us_equity",
+    "notional": null,
+    "qty": "0.012977406",
+    "filled_qty": "0.012977406",
+    "filled_avg_price": "767.5692",
+    "order_class": "",
+    "order_type": "limit",
+    "type": "limit",
+    "side": "buy",
+    "position_intent": "buy_to_open",
+    "time_in_force": "day",
+    "limit_price": "770.57",
+    "stop_price": null,
+    "status": "filled",
+    "extended_hours": true,
+    "legs": null,
+    "trail_percent": null,
+    "trail_price": null,
+    "hwm": null,
+    "subtag": null,
+    "source": null,
+    "expires_at": "2026-10-20T00:00:00Z"
+   }
+  },
+  {
+   "method": "GET",
+   "path": "/v2/assets/SPY",
+   "status": 200,
+   "request": null,
+   "response": {
+    "id": "b28f4066-5c6d-479b-a2af-85dc1a8f16fb",
+    "class": "us_equity",
+    "exchange": "ARCA",
+    "symbol": "SPY",
+    "name": "State Street SPDR S&P 500 ETF Trust",
+    "status": "active",
+    "tradable": true,
+    "marginable": true,
+    "maintenance_margin_requirement": 30,
+    "margin_requirement_long": "30",
+    "margin_requirement_short": "30",
+    "shortable": true,
+    "easy_to_borrow": true,
+    "borrow_status": "easy_to_borrow",
+    "fractionable": true,
+    "attributes": [
+     "fractional_eh_enabled",
+     "has_options",
+     "options_late_close",
+     "overnight_tradable"
+    ]
+   }
+  },
+  {
+   "method": "GET",
+   "path": "/v2/assets/GME",
+   "status": 200,
+   "request": null,
+   "response": {
+    "id": "9eae922d-8d67-4c40-b6ea-faca9b092b89",
+    "class": "us_equity",
+    "exchange": "NYSE",
+    "symbol": "GME",
+    "name": "GameStop Corp. Class A",
+    "status": "active",
+    "tradable": true,
+    "marginable": true,
+    "maintenance_margin_requirement": 100,
+    "margin_requirement_long": "100",
+    "margin_requirement_short": "100",
+    "shortable": true,
+    "easy_to_borrow": true,
+    "borrow_status": "easy_to_borrow",
+    "fractionable": true,
+    "attributes": [
+     "fractional_eh_enabled",
+     "has_options",
+     "overnight_tradable"
+    ]
+   }
+  },
+  {
+   "method": "GET",
+   "path": "/v2/assets/GME",
+   "status": 200,
+   "request": null,
+   "response": {
+    "id": "9eae922d-8d67-4c40-b6ea-faca9b092b89",
+    "class": "us_equity",
+    "exchange": "NYSE",
+    "symbol": "GME",
+    "name": "GameStop Corp. Class A",
+    "status": "active",
+    "tradable": true,
+    "marginable": true,
+    "maintenance_margin_requirement": 100,
+    "margin_requirement_long": "100",
+    "margin_requirement_short": "100",
+    "shortable": true,
+    "easy_to_borrow": true,
+    "borrow_status": "easy_to_borrow",
+    "fractionable": true,
+    "attributes": [
+     "fractional_eh_enabled",
+     "has_options",
+     "overnight_tradable"
+    ]
+   }
+  },
+  {
+   "method": "GET",
+   "path": "/v2/stocks/GME/trades/latest",
+   "status": 200,
+   "request": null,
+   "response": {
+    "symbol": "GME",
+    "trade": {
+     "c": [
+      " "
+     ],
+     "i": 52983961770062,
+     "p": 26.435,
+     "s": 100,
+     "t": "2026-10-19T19:59:59.512617964Z",
+     "x": "V",
+     "z": "A"
+    }
+   }
+  },
+  {
+   "method": "GET",
+   "path": "/v2/account",
+   "status": 200,
+   "request": null,
+   "response": {
+    "id": "fe527315-cb25-47dd-b0f7-64179844c65f",
+    "admin_configurations": {},
+    "user_configurations": {
+     "fractional_trading": true
+    },
+    "account_number": "***",
+    "status": "ACTIVE",
+    "crypto_status": "ACTIVE",
+    "options_approved_level": 3,
+    "options_trading_level": 3,
+    "currency": "USD",
+    "buying_power": "399988.05",
+    "regt_buying_power": "199990.04",
+    "effective_buying_power": "399988.05",
+    "non_marginable_buying_power": "99995.02",
+    "options_buying_power": "99995.02",
+    "cash": "99990.04",
+    "accrued_fees": "0",
+    "portfolio_value": "100000",
+    "trading_blocked": false,
+    "transfers_blocked": false,
+    "account_blocked": false,
+    "created_at": "2026-10-19T22:10:15.484077Z",
+    "trade_suspended_by_user": false,
+    "multiplier": "4",
+    "shorting_enabled": true,
+    "equity": "100000",
+    "last_equity": "100000",
+    "long_market_value": "9.96",
+    "short_market_value": "0",
+    "position_market_value": "9.96",
+    "initial_margin": "4.98",
+    "maintenance_margin": "2.99",
+    "last_maintenance_margin": "0",
+    "sma": "0",
+    "balance_asof": "2026-10-16",
+    "crypto_tier": 0,
+    "intraday_adjustments": "0",
+    "pending_reg_taf_fees": "0"
+   }
+  },
+  {
+   "method": "GET",
+   "path": "/v2/positions",
+   "status": 200,
+   "request": null,
+   "response": [
+    {
+     "asset_id": "b28f4066-5c6d-479b-a2af-85dc1a8f16fb",
+     "symbol": "SPY",
+     "exchange": "ARCA",
+     "asset_class": "us_equity",
+     "asset_marginable": true,
+     "qty": "0.012977406",
+     "qty_available": "0.012977406",
+     "avg_entry_price": "767.5692",
+     "side": "long",
+     "market_value": "9.960938",
+     "cost_basis": "9.961057",
+     "unrealized_pl": "-0.000119",
+     "unrealized_plpc": "-0.00001",
+     "unrealized_intraday_pl": "-0.000119",
+     "unrealized_intraday_plpc": "-0.00001",
+     "current_price": "767.56",
+     "lastday_price": "763.25",
+     "change_today": "0.00565"
+    }
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/v2/clock",
+   "status": 200,
+   "request": null,
+   "response": {
+    "is_open": false,
+    "next_close": "2026-10-20T16:00:00-04:00",
+    "next_open": "2026-10-20T09:30:00-04:00",
+    "timestamp": "2026-10-19T18:22:10.981320953-04:00"
+   }
+  },
+  {
+   "method": "GET",
+   "path": "/v2/assets/SPY261218C00600000",
+   "status": 404,
+   "request": null,
+   "response": {
+    "code": 40410000,
+    "message": "asset not found for SPY261218C00600000"
+   }
+  },
+  {
+   "method": "GET",
+   "path": "/v2/assets/SPY261218C00600000",
+   "status": 404,
+   "request": null,
+   "response": {
+    "code": 40410000,
+    "message": "asset not found for SPY261218C00600000"
+   }
+  },
+  {
+   "method": "GET",
+   "path": "/v2/stocks/SPY261218C00600000/trades/latest",
+   "status": 400,
+   "request": null,
+   "response": {
+    "message": "code=400, message=invalid symbol: SPY261218C00600000"
+   }
+  },
+  {
+   "method": "GET",
+   "path": "/v2/assets/BTC/USD",
+   "status": 200,
+   "request": null,
+   "response": {
+    "id": "276e2673-764b-4ab6-a611-caf665ca6340",
+    "class": "crypto",
+    "exchange": "CRYPTO",
+    "symbol": "BTC/USD",
+    "name": "Bitcoin  / US Dollar",
+    "status": "active",
+    "tradable": true,
+    "marginable": false,
+    "maintenance_margin_requirement": 100,
+    "margin_requirement_long": "100",
+    "margin_requirement_short": "100",
+    "shortable": false,
+    "easy_to_borrow": false,
+    "fractionable": true,
+    "attributes": [
+     "fractional_eh_enabled"
+    ],
+    "min_order_size": "0.000012145",
+    "min_trade_increment": "0.000000001",
+    "price_increment": "0.000000001"
+   }
+  },
+  {
+   "method": "GET",
+   "path": "/v2/assets/BTC/USD",
+   "status": 200,
+   "request": null,
+   "response": {
+    "id": "276e2673-764b-4ab6-a611-caf665ca6340",
+    "class": "crypto",
+    "exchange": "CRYPTO",
+    "symbol": "BTC/USD",
+    "name": "Bitcoin  / US Dollar",
+    "status": "active",
+    "tradable": true,
+    "marginable": false,
+    "maintenance_margin_requirement": 100,
+    "margin_requirement_long": "100",
+    "margin_requirement_short": "100",
+    "shortable": false,
+    "easy_to_borrow": false,
+    "fractionable": true,
+    "attributes": [
+     "fractional_eh_enabled"
+    ],
+    "min_order_size": "0.000012145",
+    "min_trade_increment": "0.000000001",
+    "price_increment": "0.000000001"
+   }
+  },
+  {
+   "method": "GET",
+   "path": "/v2/stocks/BTC/USD/trades/latest",
+   "status": 404,
+   "request": null,
+   "response": {
+    "message": "Not Found"
+   }
+  },
+  {
+   "method": "GET",
+   "path": "/v2/account",
+   "status": 200,
+   "request": null,
+   "response": {
+    "id": "fe527315-cb25-47dd-b0f7-64179844c65f",
+    "admin_configurations": {},
+    "user_configurations": {
+     "fractional_trading": true
+    },
+    "account_number": "***",
+    "status": "ACTIVE",
+    "crypto_status": "ACTIVE",
+    "options_approved_level": 3,
+    "options_trading_level": 3,
+    "currency": "USD",
+    "buying_power": "399988.05",
+    "regt_buying_power": "199990.04",
+    "effective_buying_power": "399988.05",
+    "non_marginable_buying_power": "99995.02",
+    "options_buying_power": "99995.02",
+    "cash": "99990.04",
+    "accrued_fees": "0",
+    "portfolio_value": "100000",
+    "trading_blocked": false,
+    "transfers_blocked": false,
+    "account_blocked": false,
+    "created_at": "2026-10-19T22:10:15.484077Z",
+    "trade_suspended_by_user": false,
+    "multiplier": "4",
+    "shorting_enabled": true,
+    "equity": "100000",
+    "last_equity": "100000",
+    "long_market_value": "9.96",
+    "short_market_value": "0",
+    "position_market_value": "9.96",
+    "initial_margin": "4.98",
+    "maintenance_margin": "2.99",
+    "last_maintenance_margin": "0",
+    "sma": "0",
+    "balance_asof": "2026-10-16",
+    "crypto_tier": 0,
+    "intraday_adjustments": "0",
+    "pending_reg_taf_fees": "0"
+   }
+  },
+  {
+   "method": "GET",
+   "path": "/v2/positions",
+   "status": 200,
+   "request": null,
+   "response": [
+    {
+     "asset_id": "b28f4066-5c6d-479b-a2af-85dc1a8f16fb",
+     "symbol": "SPY",
+     "exchange": "ARCA",
+     "asset_class": "us_equity",
+     "asset_marginable": true,
+     "qty": "0.012977406",
+     "qty_available": "0.012977406",
+     "avg_entry_price": "767.5692",
+     "side": "long",
+     "market_value": "9.960938",
+     "cost_basis": "9.961057",
+     "unrealized_pl": "-0.000119",
+     "unrealized_plpc": "-0.00001",
+     "unrealized_intraday_pl": "-0.000119",
+     "unrealized_intraday_plpc": "-0.00001",
+     "current_price": "767.56",
+     "lastday_price": "763.25",
+     "change_today": "0.00565"
+    }
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/v2/clock",
+   "status": 200,
+   "request": null,
+   "response": {
+    "is_open": false,
+    "next_close": "2026-10-20T16:00:00-04:00",
+    "next_open": "2026-10-20T09:30:00-04:00",
+    "timestamp": "2026-10-19T18:22:12.514472492-04:00"
+   }
+  },
+  {
+   "method": "GET",
+   "path": "/v2/assets/VTI",
+   "status": 200,
+   "request": null,
+   "response": {
+    "id": "3a64306e-4a77-4a06-8458-15a8bfd31f55",
+    "class": "us_equity",
+    "exchange": "ARCA",
+    "symbol": "VTI",
+    "name": "Vanguard Morningstar Total Stock Market ETF",
+    "status": "active",
+    "tradable": true,
+    "marginable": true,
+    "maintenance_margin_requirement": 30,
+    "margin_requirement_long": "30",
+    "margin_requirement_short": "30",
+    "shortable": true,
+    "easy_to_borrow": true,
+    "borrow_status": "easy_to_borrow",
+    "fractionable": true,
+    "attributes": [
+     "fractional_eh_enabled",
+     "has_options",
+     "overnight_tradable"
+    ]
+   }
+  },
+  {
+   "method": "GET",
+   "path": "/v2/assets/VTI",
+   "status": 200,
+   "request": null,
+   "response": {
+    "id": "3a64306e-4a77-4a06-8458-15a8bfd31f55",
+    "class": "us_equity",
+    "exchange": "ARCA",
+    "symbol": "VTI",
+    "name": "Vanguard Morningstar Total Stock Market ETF",
+    "status": "active",
+    "tradable": true,
+    "marginable": true,
+    "maintenance_margin_requirement": 30,
+    "margin_requirement_long": "30",
+    "margin_requirement_short": "30",
+    "shortable": true,
+    "easy_to_borrow": true,
+    "borrow_status": "easy_to_borrow",
+    "fractionable": true,
+    "attributes": [
+     "fractional_eh_enabled",
+     "has_options",
+     "overnight_tradable"
+    ]
+   }
+  },
+  {
+   "method": "GET",
+   "path": "/v2/stocks/VTI/trades/latest",
+   "status": 200,
+   "request": null,
+   "response": {
+    "symbol": "VTI",
+    "trade": {
+     "c": [
+      " "
+     ],
+     "i": 52983948537949,
+     "p": 375.54,
+     "s": 40,
+     "t": "2026-10-19T19:59:48.671653787Z",
+     "x": "V",
+     "z": "B"
+    }
+   }
+  },
+  {
+   "method": "GET",
+   "path": "/v2/account",
+   "status": 200,
+   "request": null,
+   "response": {
+    "id": "fe527315-cb25-47dd-b0f7-64179844c65f",
+    "admin_configurations": {},
+    "user_configurations": {
+     "fractional_trading": true
+    },
+    "account_number": "***",
+    "status": "ACTIVE",
+    "crypto_status": "ACTIVE",
+    "options_approved_level": 3,
+    "options_trading_level": 3,
+    "currency": "USD",
+    "buying_power": "399988.05",
+    "regt_buying_power": "199990.04",
+    "effective_buying_power": "399988.05",
+    "non_marginable_buying_power": "99995.02",
+    "options_buying_power": "99995.02",
+    "cash": "99990.04",
+    "accrued_fees": "0",
+    "portfolio_value": "100000",
+    "trading_blocked": false,
+    "transfers_blocked": false,
+    "account_blocked": false,
+    "created_at": "2026-10-19T22:10:15.484077Z",
+    "trade_suspended_by_user": false,
+    "multiplier": "4",
+    "shorting_enabled": true,
+    "equity": "100000",
+    "last_equity": "100000",
+    "long_market_value": "9.96",
+    "short_market_value": "0",
+    "position_market_value": "9.96",
+    "initial_margin": "4.98",
+    "maintenance_margin": "2.99",
+    "last_maintenance_margin": "0",
+    "sma": "0",
+    "balance_asof": "2026-10-16",
+    "crypto_tier": 0,
+    "intraday_adjustments": "0",
+    "pending_reg_taf_fees": "0"
+   }
+  },
+  {
+   "method": "GET",
+   "path": "/v2/positions",
+   "status": 200,
+   "request": null,
+   "response": [
+    {
+     "asset_id": "b28f4066-5c6d-479b-a2af-85dc1a8f16fb",
+     "symbol": "SPY",
+     "exchange": "ARCA",
+     "asset_class": "us_equity",
+     "asset_marginable": true,
+     "qty": "0.012977406",
+     "qty_available": "0.012977406",
+     "avg_entry_price": "767.5692",
+     "side": "long",
+     "market_value": "9.960938",
+     "cost_basis": "9.961057",
+     "unrealized_pl": "-0.000119",
+     "unrealized_plpc": "-0.00001",
+     "unrealized_intraday_pl": "-0.000119",
+     "unrealized_intraday_plpc": "-0.00001",
+     "current_price": "767.56",
+     "lastday_price": "763.25",
+     "change_today": "0.00565"
+    }
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/v2/clock",
+   "status": 200,
+   "request": null,
+   "response": {
+    "is_open": false,
+    "next_close": "2026-10-20T16:00:00-04:00",
+    "next_open": "2026-10-20T09:30:00-04:00",
+    "timestamp": "2026-10-19T18:22:13.519633107-04:00"
+   }
+  },
+  {
+   "method": "GET",
+   "path": "/v2/orders/e88c2b26-c326-4e0f-9873-362d41c17531",
+   "status": 200,
+   "request": null,
+   "response": {
+    "id": "e88c2b26-c326-4e0f-9873-362d41c17531",
+    "client_order_id": "grt_cc65579265fe",
+    "created_at": "2026-10-19T22:22:09.60450167Z",
+    "updated_at": "2026-10-19T22:22:09.612490322Z",
+    "submitted_at": "2026-10-19T22:22:09.60450167Z",
+    "filled_at": "2026-10-19T22:22:09.611435254Z",
+    "expired_at": null,
+    "canceled_at": null,
+    "failed_at": null,
+    "replaced_at": null,
+    "replaced_by": null,
+    "replaces": null,
+    "asset_id": "b28f4066-5c6d-479b-a2af-85dc1a8f16fb",
+    "symbol": "SPY",
+    "asset_class": "us_equity",
+    "notional": null,
+    "qty": "0.012977406",
+    "filled_qty": "0.012977406",
+    "filled_avg_price": "767.5692",
+    "order_class": "",
+    "order_type": "limit",
+    "type": "limit",
+    "side": "buy",
+    "position_intent": "buy_to_open",
+    "time_in_force": "day",
+    "limit_price": "770.57",
+    "stop_price": null,
+    "status": "filled",
+    "extended_hours": true,
+    "legs": null,
+    "trail_percent": null,
+    "trail_price": null,
+    "hwm": null,
+    "subtag": null,
+    "source": null,
+    "expires_at": "2026-10-20T00:00:00Z"
+   }
+  }
+ ]
+}

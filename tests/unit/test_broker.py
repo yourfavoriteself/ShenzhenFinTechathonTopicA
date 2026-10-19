@@ -218,3 +218,22 @@ def test_invest_desk_falls_back_to_a_queued_order_when_the_limit_order_is_refuse
     desk = InvestDesk(b, lambda: datetime(2026, 10, 20, 11, 30, tzinfo=MSK), envelope_cents=5_000, source="alpaca")
     r = desk.execute(SimpleNamespace(payee="SPY", amount=2_500, id="g-1"), None)
     assert r.ok and r.details["type"] == "market" and "refused" in r.details["note"]
+
+
+def test_alpaca_timeout_on_submit_looks_the_order_up_instead_of_sending_it_twice():
+    posts = []
+
+    def api(request: httpx.Request) -> httpx.Response:
+        if request.url.path == "/v2/orders" and request.method == "POST":
+            posts.append(json.loads(request.content))
+            return httpx.Response(504, json={"code": 50410000, "message": "request timed out"})
+        if request.url.path == "/v2/orders:by_client_order_id":
+            if request.url.params["client_order_id"] == "g-1":
+                return httpx.Response(200, json=ORDER)
+            return httpx.Response(404, json={"message": "order not found"})
+        return _api(request)
+    b = AlpacaBroker("PKTEST", "s3cret", transport=httpx.MockTransport(api))
+    assert b.submit("SPY", "buy", notional_cents=2_500, client_order_id="g-1").id == ORDER["id"]
+    with pytest.raises(Exception, match="nothing was placed"):
+        b.submit("SPY", "buy", notional_cents=2_500, client_order_id="g-2")
+    assert len(posts) == 2, "one POST per order, never a blind retry"
