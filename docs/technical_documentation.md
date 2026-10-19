@@ -33,7 +33,7 @@ Topic A asks for smart budgeting, bill analysis and spending analytics:
 
 The theme, *AI as a Financial Participant*, is the core of the design: the assistant acts, and the kernel makes acting safe.
 
-The system is about 11 000 lines of Python, JavaScript and Solidity, with 3 350 lines of tests (338 tests, all green in CI with PostgreSQL and a local chain, plus 5 contract tests). It runs with `docker compose up` and needs no API keys in the default replay mode.
+The system is about 11 000 lines of Python, JavaScript and Solidity, with 3 350 lines of tests (346 tests, all green in CI with PostgreSQL and a local chain, plus 5 contract tests). It runs with `docker compose up` and needs no API keys in the default replay mode.
 
 # 2. Scenarios
 
@@ -313,7 +313,8 @@ docker compose up --build         # app + PostgreSQL 18, http://localhost:8000
 
 - Python 3.14.
 - Dependencies are pinned (`requirements.txt`).
-- Configuration lives in `.env` (see `.env.example`): `GUARDIAN_LLM_MODE`, `ANTHROPIC_API_KEY` (live only), `GUARDIAN_TOKEN_BUDGET_RUB`, `DATABASE_URL`, `GUARDIAN_OPERATOR_TOKEN`.
+- Configuration lives in `.env` (see `.env.example`): `GUARDIAN_LLM_MODE`, `ANTHROPIC_API_KEY` and `ANTHROPIC_BASE_URL` (live only), `GUARDIAN_TOKEN_BUDGET_RUB`, `DATABASE_URL`, `POSTGRES_PASSWORD`, `GUARDIAN_OPERATOR_TOKEN`.
+- The model ladder is a values file, `config/models.yaml`: provider, model, prices and the effort flag for each level, plus the names of the variables that hold each provider's key and endpoint. Environment variables override it per level (`GUARDIAN_MODEL_L1`, `GUARDIAN_PROVIDER_L1`, `GUARDIAN_PRICE_L1_IN`, `GUARDIAN_PRICE_L1_OUT`, `GUARDIAN_EFFORT_L1`) or replace the whole file (`GUARDIAN_MODELS_FILE`). No model name and no key is written in the code.
 - In a bank, the kernel, vault and executors run inside the bank's perimeter. Models are reached through the gateway only; a self-hosted model can replace a level without changing the kernel.
 
 # 12. Ethics and responsible design

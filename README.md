@@ -43,7 +43,7 @@ All numbers come from a synthetic sandbox bank (seed 22, 1 156 transactions, "no
 | Journal anchoring on a local devnet | 4 checkpoints; a rewritten entry and a cut tail are both caught | [`anchors.json`](evidence/anchors.json) |
 | Token cost of one client's month (real prompts, stub answers) | 0.73 ₽ the first month, 0.27 ₽ the next (63 % less); about 270 000 ₽ a month for a million clients | [`costs.json`](evidence/costs.json) |
 | The whole demo month | 548 ₽ a month saved, 10 tasks done, 11 questions, 2 attacks stopped, 292 signed journal entries, chain verified | [`demo_run.log`](evidence/demo_run.log) |
-| Automated tests | 338 pass in CI (unit, end to end in Chromium, red-team, evaluation, PostgreSQL, local chain) plus 5 contract tests in Foundry | [CI](.github/workflows/ci.yml) |
+| Automated tests | 346 pass in CI (unit, end to end in Chromium, red-team, evaluation, PostgreSQL, local chain) plus 5 contract tests in Foundry | [CI](.github/workflows/ci.yml) |
 
 The graph model is trained and tested on graphs from our own generator, so real bank data will score lower. The numbers show that the pipeline works, not field accuracy.
 
@@ -128,6 +128,8 @@ Guardian is built to **智能体支付应用自律公约**, the self-regulatory 
 | 2 | Planning a new kind of task | claude-sonnet-5-5 |
 | 3 | Rare hard cases | claude-opus-5-5 |
 
+The models are not wired into the code: names, prices and providers are values in [`config/models.yaml`](config/models.yaml), and any of them can be replaced from the environment (`GUARDIAN_MODEL_L1=...`, or a whole other file with `GUARDIAN_MODELS_FILE`). The file only names the variables that hold keys; the keys themselves stay in `.env`.
+
 A solved task becomes a template, so the repeat needs no model at all. In the demo month **96.7 %** of the work stays on levels 0 and 1, and one client's month costs **0.73 ₽** the first time and **0.27 ₽** after that, about 270 000 ₽ a month for a million clients. The gateway holds a hard budget of 2 000 ₽ and strips secrets from every prompt. These are token counts on the real prompts at list prices ([`costs.json`](evidence/costs.json)); live runs will replace the estimate.
 
 ### VIII. Run it
@@ -159,7 +161,7 @@ make docs video     # rebuilds the PDFs, the slides and the demo video
 GUARDIAN_TEST_PG=postgresql://…/empty_db make test-pg
 ```
 
-Modes (`GUARDIAN_LLM_MODE`): `replay` (default), `stub` for tests, `live` and `record` with `ANTHROPIC_API_KEY` in `.env` (see [`.env.example`](.env.example)).
+Modes (`GUARDIAN_LLM_MODE`): `replay` (default), `stub` for tests, `live` and `record` with `ANTHROPIC_API_KEY` (and optionally `ANTHROPIC_BASE_URL`) in `.env`. Models and prices: [`config/models.yaml`](config/models.yaml); every variable is listed in [`.env.example`](.env.example).
 
 </details>
 
@@ -187,6 +189,7 @@ Guardian grew out of our earlier prototype ([`guardian/`](guardian)): purpose bo
 | Path | Contents |
 |---|---|
 | [`kernel/`](kernel) | The trusted kernel: passports, mandates, pipeline, provenance, references, policy, critic, counterfactual check, trust, budget, cancellations, secret vault, journal, model gateway, PostgreSQL store |
+| [`config/`](config) | `models.yaml`: model ladder, prices and the names of the key variables |
 | [`agents/`](agents) | Untrusted agents: dispatcher, planner, readers |
 | [`app/`](app), [`web/`](web) | Chat service, web API and the UI with kernel drawn cards and the device key |
 | [`sandbox/`](sandbox) | Sandbox bank and merchant accounts with their APIs |
