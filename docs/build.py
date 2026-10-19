@@ -12,32 +12,33 @@ from pathlib import Path
 
 CSS = """
 @page { size: A4; }
-body { font-family: "Noto Sans", "Noto Sans CJK SC", "DejaVu Sans", sans-serif; font-size: 10.3pt; line-height: 1.5;
-       color: #1b1712; max-width: none; margin: 0; padding: 0; }
-header#title-block-header { position: relative; border-top: 6px solid #1b1712; border-bottom: 1px solid #1b1712;
-       margin-bottom: 22px; padding: 16px 0 12px 74px; }
-header#title-block-header::before { content: "\\5b88"; position: absolute; left: 0; top: 18px; width: 56px; height: 56px;
-       display: grid; place-items: center; background: #b8321c; color: #fff8ee; border-radius: 3px;
-       font: 700 34px/1 "Noto Serif CJK SC", "WenQuanYi Zen Hei", serif; box-shadow: inset 0 0 0 3px #b8321c, inset 0 0 0 5px #fff8ee; }
-h1, h2, h1.title { font-family: Georgia, "Noto Serif", "DejaVu Serif", serif; font-weight: 600; }
-h1.title { font-size: 25pt; margin: 0 0 4px; color: #1b1712; }
-p.subtitle { font-size: 12pt; color: #4a4339; margin: 0; font-style: italic; font-family: Georgia, "Noto Serif", serif; }
-p.author { font-size: 9.5pt; font-weight: 600; color: #b8321c; margin: 8px 0 0; letter-spacing: .08em; text-transform: uppercase; }
-h1 { font-size: 15.5pt; color: #1b1712; margin: 24px 0 8px; padding-bottom: 3px; border-bottom: 1px solid #d9cfbd; break-after: avoid; }
-h2 { font-size: 12.3pt; color: #9e2a16; margin: 16px 0 6px; break-after: avoid; }
-a { color: #9e2a16; }
-table { border-collapse: collapse; width: 100%; margin: 8px 0 14px; font-size: 9pt; break-inside: auto;
-        border-top: 1.5px solid #1b1712; border-bottom: 1.5px solid #1b1712; }
-th, td { border: none; border-bottom: 1px solid #e2d9c8; padding: 4px 6px; vertical-align: top; text-align: left; }
-th { background: transparent; border-bottom: 1px solid #1b1712; font-size: 8.3pt; text-transform: uppercase; letter-spacing: .05em; color: #4a4339; }
+body { font-family: Inter, "Noto Sans", "Noto Sans CJK SC", "DejaVu Sans", sans-serif; font-size: 10pt; line-height: 1.55;
+       color: #101828; max-width: none; margin: 0; padding: 0; }
+header#title-block-header { position: relative; background: #f4f5f7; border-radius: 12px;
+       margin-bottom: 22px; padding: 20px 20px 18px 92px; }
+header#title-block-header::before { content: "\\5b88"; position: absolute; left: 20px; top: 22px; width: 54px; height: 54px;
+       display: grid; place-items: center; background: #c2361f; color: #ffffff; border-radius: 12px;
+       font: 600 32px/1 "Noto Sans CJK SC", "WenQuanYi Zen Hei", sans-serif; }
+h1, h2, h1.title { font-weight: 700; letter-spacing: -.01em; }
+h1.title { font-size: 24pt; margin: 0 0 4px; color: #101828; letter-spacing: -.02em; }
+p.subtitle { font-size: 12pt; color: #475467; margin: 0; }
+p.author { font-size: 9.5pt; font-weight: 500; color: #344054; margin: 8px 0 0; }
+h1 { font-size: 15pt; color: #101828; margin: 24px 0 8px; break-after: avoid; }
+h2 { font-size: 12pt; color: #1d2939; margin: 16px 0 6px; break-after: avoid; }
+a { color: #1d4ed8; }
+table { border-collapse: separate; border-spacing: 0; width: 100%; margin: 8px 0 14px; font-size: 9pt; break-inside: auto;
+        border: 1px solid #e4e7ec; border-radius: 8px; overflow: hidden; }
+th, td { border: none; border-bottom: 1px solid #eaecf0; padding: 5px 8px; vertical-align: top; text-align: left; }
+tr:last-child td { border-bottom: none; }
+th { background: #f9fafb; font-size: 8.5pt; font-weight: 600; color: #475467; }
 tr { break-inside: avoid; }
-code { font-family: "DejaVu Sans Mono", monospace; font-size: 8.6pt; background: #f1ebe0; padding: 0 2px; }
-pre { background: #1b1712; color: #f6f1e7; padding: 9px 11px; font-size: 8.2pt; white-space: pre-wrap; border-radius: 2px; }
-pre code { background: none; color: inherit; }
+code { font-family: "DejaVu Sans Mono", monospace; font-size: 8.5pt; background: #f2f4f7; padding: 0 3px; border-radius: 4px; }
+pre { background: #f8f9fb; color: #101828; border: 1px solid #e4e7ec; padding: 10px 12px; font-size: 8.2pt; white-space: pre-wrap; border-radius: 8px; }
+pre code { background: none; color: inherit; padding: 0; }
 img { max-width: 100%; }
 figure { margin: 10px 0; text-align: center; }
-figcaption { font-size: 9pt; color: #6f675b; font-style: italic; font-family: Georgia, serif; }
-blockquote { border-left: 4px solid #b8321c; margin: 10px 0; padding: 4px 12px; color: #1b1712; background: #f4ece0; }
+figcaption { font-size: 9pt; color: #667085; }
+blockquote { margin: 10px 0; padding: 8px 14px; color: #101828; background: #eef4ff; border-radius: 8px; }
 """
 
 
@@ -101,10 +102,10 @@ def build(md: Path) -> Path:
         page.goto(html.resolve().as_uri())
         page.pdf(path=str(pdf), format="A4", print_background=True, display_header_footer=True,
                  header_template="<span></span>",
-                 footer_template='<div style="font:8px Georgia,serif;color:#6f675b;width:100%;margin:0 14mm;display:flex;'
-                                 'justify-content:space-between;border-top:0.5px solid #d9cfbd;padding-top:3px">'
-                                 '<span style="color:#b8321c;letter-spacing:.1em">GUARDIAN</span>'
-                                 '<span><span class="pageNumber"></span> of <span class="totalPages"></span></span></div>',
+                 footer_template='<div style="font:8px Inter,sans-serif;color:#667085;width:100%;margin:0 14mm;display:flex;'
+                                 'justify-content:space-between;padding-top:3px">'
+                                 '<span style="color:#101828;font-weight:600">Guardian</span>'
+                                 '<span><span class="pageNumber"></span> / <span class="totalPages"></span></span></div>',
                  margin={"top": "16mm", "bottom": "16mm", "left": "14mm", "right": "14mm"})
         b.close()
     html.unlink()

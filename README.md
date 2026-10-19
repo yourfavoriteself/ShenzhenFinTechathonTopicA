@@ -1,12 +1,12 @@
 # Guardian: a bank kernel for AI payment agents
 
 [![CI](https://github.com/yourfavoriteself/ShenzhenFinTechathonTopicA/actions/workflows/ci.yml/badge.svg)](https://github.com/yourfavoriteself/ShenzhenFinTechathonTopicA/actions/workflows/ci.yml)
-[![Tests](https://img.shields.io/badge/tests-347%20passing-2f6b4f)](.github/workflows/ci.yml)
-[![Red-team](https://img.shields.io/badge/red--team-39%2F39%20stopped-b8321c)](evidence/redteam.json)
-[![Python](https://img.shields.io/badge/python-3.14-1b1712)](requirements.txt)
-[![License](https://img.shields.io/badge/license-MIT-6f675b)](LICENSE)
-[![Docs](https://img.shields.io/badge/docs-technical%20documentation-1b1712)](docs/technical_documentation.pdf)
-[![Video](https://img.shields.io/badge/demo-3%3A29-b8321c)](https://github.com/yourfavoriteself/ShenzhenFinTechathonTopicA/releases/download/v1.0/guardian_demo.mp4)
+[![Tests](https://img.shields.io/badge/tests-347%20passing-067647)](.github/workflows/ci.yml)
+[![Red-team](https://img.shields.io/badge/red--team-39%2F39%20stopped-067647)](evidence/redteam.json)
+[![Python](https://img.shields.io/badge/python-3.14-101828)](requirements.txt)
+[![License](https://img.shields.io/badge/license-MIT-667085)](LICENSE)
+[![Docs](https://img.shields.io/badge/docs-technical%20documentation-101828)](docs/technical_documentation.pdf)
+[![Video](https://img.shields.io/badge/demo-3%3A18-1d4ed8)](https://github.com/yourfavoriteself/ShenzhenFinTechathonTopicA/releases/download/v1.0/guardian_demo.mp4)
 
 > **SUBMISSION**: 2026 Shenzhen FinTechathon, International Track, Topic A: Personal Finance Assistant, theme *AI as a Financial Participant*. The six submission materials are attached to release [v1.0](https://github.com/yourfavoriteself/ShenzhenFinTechathonTopicA/releases/tag/v1.0) and indexed in [`docs/README.md`](docs/README.md).
 
@@ -24,15 +24,15 @@ One client, one month in a sandbox bank, recorded from the real interface ([down
 |---|---|---|
 | 0:11 | Cash gap and the first signed card | C8 |
 | 0:29 | Budget, goal and safe to spend | C8 |
-| 0:54 | Leaks in subscriptions | C3 |
-| 1:03 | Cancel through the merchant's API, protected form, three way check | C2 |
-| 1:27 | Pay and allow monthly | C1 |
-| 1:34 | Double charge and dispute | C4 |
-| 1:39 | Bills and a fake bill | C5, C6 |
-| 1:53 | Payee risk on the transfer graph | C10 |
-| 2:01 | Scam call: pause, hold, analyst | C9 |
-| 2:33 | One month later: the standing permission at work | C1 |
-| 2:45 | Tour: month, permissions, trust, agents, cost, red-team, compliance, journal |  |
+| 0:51 | Leaks in subscriptions | C3 |
+| 0:59 | Cancel through the merchant's API, protected form, three way check | C2 |
+| 1:22 | Pay and allow monthly | C1 |
+| 1:28 | Double charge and dispute | C4 |
+| 1:33 | Bills and a fake bill | C5, C6 |
+| 1:44 | Payee risk on the transfer graph | C10 |
+| 1:52 | Scam call: pause, hold, analyst | C9 |
+| 2:22 | One month later: the standing permission at work | C1 |
+| 2:35 | Tour: month, permissions, trust, agents, cost, red-team, compliance, journal |  |
 
 ## Requirements
 

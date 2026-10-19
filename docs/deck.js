@@ -12,9 +12,12 @@ const media = (f) => path.join(root, "docs", "media", f);
 const num = (n) => String(n).replace(/\B(?=(\d{3})+(?!\d))/g, "\u00a0");
 const rub = (kop) => num(Math.floor(kop / 100)) + "." + String(kop % 100).padStart(2, "0") + " ₽";
 
-const C = {dark: "1B1712", mid: "9E2A16", accent: "B8321C", soft: "EFE7D8", ink: "1B1712", grey: "6F675B", line: "D9CFBD",
-  red: "B3261E", amber: "9A6200", white: "FFFFFF", paper: "F6F1E7", cream: "FFF8EE"};
-const HF = "Georgia", BF = "Calibri", SEAL_FONT = "SimSun";
+const C = {dark: "101828", mid: "1D4ED8", accent: "1D4ED8", soft: "F2F4F7", ink: "101828", grey: "667085", line: "E4E7EC",
+  red: "B42318", amber: "B54708", white: "FFFFFF", paper: "F4F5F7", cream: "FFFFFF", brand: "C2361F",
+  blue: "EEF4FF", violet: "F3F0FF", mint: "E8F6F3", sand: "FFF6E5"};
+const HF = "Inter", BF = "Inter", LOGO_FONT = "Noto Sans CJK SC";
+const R = pres => pres.shapes.ROUNDED_RECTANGLE;
+const pngSize = (f) => { const b = fs.readFileSync(f); return [b.readUInt32BE(16), b.readUInt32BE(20)]; };
 const TOTAL = 12;
 let page = 0;
 
@@ -23,37 +26,33 @@ pres.layout = "LAYOUT_16x9";
 pres.title = "Guardian: a bank-side safety kernel for AI payment agents";
 
 function seal(s, x, y, size) {
-  s.addShape(pres.shapes.RECTANGLE, {x, y, w: size, h: size, fill: {color: C.accent}, line: {color: C.accent}});
-  const k = size * 0.09;
-  s.addShape(pres.shapes.RECTANGLE, {x: x + k, y: y + k, w: size - 2 * k, h: size - 2 * k, fill: {type: "none"}, line: {color: C.cream, width: Math.max(0.75, size * 2)}});
-  s.addText("\u5b88", {x, y, w: size, h: size, fontFace: SEAL_FONT, fontSize: size * 44, bold: true, color: C.cream, align: "center", valign: "middle", margin: 0});
+  s.addShape(R(pres), {x, y, w: size, h: size, rectRadius: size * 0.22, fill: {color: C.brand}, line: {color: C.brand}});
+  s.addText("\u5b88", {x, y, w: size, h: size, fontFace: LOGO_FONT, fontSize: size * 40, color: C.white, align: "center", valign: "middle", margin: 0});
 }
 
-function slide(title, notes, {bg = C.paper} = {}) {
+function slide(title, notes, {bg = C.white} = {}) {
   const s = pres.addSlide();
   page += 1;
   s.background = {color: bg};
   if (title) {
-    s.addText(String(page).padStart(2, "0"), {x: 0.5, y: 0.28, w: 0.6, h: 0.3, fontFace: HF, fontSize: 12, bold: true, color: C.accent, margin: 0});
-    s.addText(title, {x: 0.5, y: 0.52, w: 9, h: 0.55, fontFace: HF, fontSize: title.length > 46 ? 22 : 26, bold: true, color: C.ink, margin: 0, valign: "middle"});
-    s.addShape(pres.shapes.LINE, {x: 0.5, y: 1.1, w: 9, h: 0, line: {color: C.ink, width: 1}});
-    seal(s, 9.27, 5.2, 0.23);
-    s.addText(`Guardian  ·  ${page} of ${TOTAL}`, {x: 6.2, y: 5.2, w: 2.95, h: 0.23, fontFace: HF, fontSize: 9, color: C.grey, align: "right", valign: "middle", margin: 0});
+    s.addText(title, {x: 0.5, y: 0.42, w: 9, h: 0.6, fontFace: HF, fontSize: title.length > 46 ? 21 : 25, bold: true, color: C.ink, margin: 0, valign: "middle"});
+    seal(s, 0.5, 5.2, 0.23);
+    s.addText("Guardian", {x: 0.8, y: 5.2, w: 2, h: 0.23, fontFace: HF, fontSize: 9, bold: true, color: C.ink, valign: "middle", margin: 0});
+    s.addText(`${page} / ${TOTAL}`, {x: 7.5, y: 5.2, w: 2, h: 0.23, fontFace: HF, fontSize: 9, color: C.grey, align: "right", valign: "middle", margin: 0});
   }
   if (notes) s.addNotes(notes);
   return s;
 }
 
 function stat(s, x, y, w, big, small, color = C.ink) {
-  s.addShape(pres.shapes.LINE, {x, y, w, h: 0, line: {color: C.ink, width: 2}});
-  s.addShape(pres.shapes.RECTANGLE, {x, y: y + 0.08, w: 0.08, h: 0.62, fill: {color: C.accent}, line: {color: C.accent}});
-  s.addText(big, {x: x + 0.18, y: y + 0.08, w: w - 0.18, h: 0.62, fontFace: HF, fontSize: big.length > 12 ? 22 : 30, bold: true, color, valign: "middle", margin: 0});
-  s.addText(small, {x, y: y + 0.78, w, h: 0.5, fontFace: BF, fontSize: 11, color: C.grey, valign: "top", margin: 0});
+  s.addShape(R(pres), {x, y, w, h: 1.3, rectRadius: 0.1, fill: {color: C.paper}, line: {color: C.paper}});
+  s.addText(big, {x: x + 0.15, y: y + 0.1, w: w - 0.3, h: 0.6, fontFace: HF, fontSize: big.length > 12 ? 20 : 26, bold: true, color, valign: "middle", margin: 0});
+  s.addText(small, {x: x + 0.15, y: y + 0.72, w: w - 0.3, h: 0.5, fontFace: BF, fontSize: 10.5, color: C.grey, valign: "top", margin: 0});
 }
 
 function shot(s, file, x, y, w, h) {
   s.addImage({path: media(file), x, y, w, h});
-  s.addShape(pres.shapes.RECTANGLE, {x, y, w, h, fill: {type: "none"}, line: {color: C.ink, width: 1}});
+  s.addShape(R(pres), {x, y, w, h, rectRadius: 0.06, fill: {type: "none"}, line: {color: C.line, width: 1}});
 }
 
 const st = rt.static, ad = rt.adaptive, lg = rt.legacy_prototype, rr = rt.retention;
@@ -62,13 +61,11 @@ const st = rt.static, ad = rt.adaptive, lg = rt.legacy_prototype, rr = rt.retent
 {
   const s = slide(null, "Hello. We are Kseniia Kuzmina and Nikita Stepanov, the Guardian team. Our topic is A: an AI agent that pays, cancels and budgets for a bank client. "
     + "In ten minutes: the problem, the idea, a month of the demo, how the kernel works, the security results, compliance, cost and what is next.", {bg: C.paper});
-  s.addShape(pres.shapes.RECTANGLE, {x: 0, y: 0, w: 10, h: 0.12, fill: {color: C.ink}, line: {color: C.ink}});
   seal(s, 0.7, 1.05, 1.15);
   s.addText("Guardian", {x: 0.7, y: 2.4, w: 8.6, h: 1.0, fontFace: HF, fontSize: 58, bold: true, color: C.ink, margin: 0});
-  s.addShape(pres.shapes.LINE, {x: 0.7, y: 3.45, w: 5.2, h: 0, line: {color: C.ink, width: 1.5}});
-  s.addText("A bank-side safety kernel for AI payment agents", {x: 0.7, y: 3.6, w: 8.6, h: 0.5, fontFace: HF, fontSize: 22, italic: true, color: C.ink, margin: 0});
+  s.addText("A bank-side safety kernel for AI payment agents", {x: 0.7, y: 3.6, w: 8.6, h: 0.5, fontFace: HF, fontSize: 22, color: C.ink, margin: 0});
   s.addText("Agents propose. The kernel decides, checks and records.", {x: 0.7, y: 4.1, w: 8.6, h: 0.4, fontFace: BF, fontSize: 15, color: C.grey, margin: 0});
-  s.addText("KSENIIA KUZMINA  ·  NIKITA STEPANOV", {x: 0.7, y: 4.75, w: 5.5, h: 0.3, fontFace: BF, fontSize: 12, bold: true, color: C.accent, charSpacing: 2, margin: 0});
+  s.addText("Kseniia Kuzmina  ·  Nikita Stepanov", {x: 0.7, y: 4.75, w: 5.5, h: 0.3, fontFace: BF, fontSize: 12, bold: true, color: C.ink, margin: 0});
   s.addText("Shenzhen FinTechathon 2026 · International Track · Topic A", {x: 4.6, y: 4.75, w: 4.9, h: 0.3, fontFace: BF, fontSize: 11, color: C.grey, align: "right", margin: 0});
 }
 
@@ -90,12 +87,11 @@ const st = rt.static, ad = rt.adaptive, lg = rt.legacy_prototype, rr = rt.retent
     s.addText(h, {x: 1.3, y, w: 4.2, h: 0.35, fontFace: HF, fontSize: 18, bold: true, color: C.ink, margin: 0});
     s.addText(t, {x: 1.3, y: y + 0.38, w: 4.4, h: 0.6, fontFace: BF, fontSize: 13, color: C.grey, margin: 0});
   });
-  s.addShape(pres.shapes.RECTANGLE, {x: 6.1, y: 1.3, w: 3.4, h: 3.2, fill: {color: C.dark}, line: {color: C.dark}});
-  s.addShape(pres.shapes.RECTANGLE, {x: 6.1, y: 1.3, w: 0.09, h: 3.2, fill: {color: C.accent}, line: {color: C.accent}});
+  s.addShape(R(pres), {x: 6.1, y: 1.3, w: 3.4, h: 3.2, rectRadius: 0.12, fill: {color: C.dark}, line: {color: C.dark}});
   s.addText("Same attacks, agent without the kernel", {x: 6.3, y: 1.45, w: 3.0, h: 0.6, fontFace: BF, fontSize: 13, color: C.cream, margin: 0});
-  s.addText(`${st.without_kernel.succeeded} / ${st.attacks}`, {x: 6.3, y: 2.05, w: 3.0, h: 0.8, fontFace: HF, fontSize: 44, bold: true, color: "E58A6F", margin: 0});
+  s.addText(`${st.without_kernel.succeeded} / ${st.attacks}`, {x: 6.3, y: 2.05, w: 3.0, h: 0.8, fontFace: HF, fontSize: 44, bold: true, color: "FDA29B", margin: 0});
   s.addText("attacks succeeded", {x: 6.3, y: 2.8, w: 3.0, h: 0.35, fontFace: BF, fontSize: 13, color: C.cream, margin: 0});
-  s.addText(rub(st.without_kernel.lost_kop), {x: 6.3, y: 3.3, w: 3.0, h: 0.6, fontFace: HF, fontSize: 26, bold: true, color: "E58A6F", margin: 0});
+  s.addText(rub(st.without_kernel.lost_kop), {x: 6.3, y: 3.3, w: 3.0, h: 0.6, fontFace: HF, fontSize: 26, bold: true, color: "FDA29B", margin: 0});
   s.addText("lost from the sandbox client", {x: 6.3, y: 3.9, w: 3.0, h: 0.35, fontFace: BF, fontSize: 13, color: C.cream, margin: 0});
 }
 
@@ -113,8 +109,8 @@ const st = rt.static, ad = rt.adaptive, lg = rt.legacy_prototype, rr = rt.retent
   ];
   cols.forEach(([h, t], i) => {
     const x = 0.5 + i * 3.1;
-    s.addShape(pres.shapes.RECTANGLE, {x, y: 1.35, w: 2.9, h: 2.9, fill: {color: C.white}, line: {color: C.ink, width: 1}, shadow: {type: "outer", color: C.line, opacity: 1, blur: 0, offset: 4, angle: 45}});
-    s.addText(["I", "II", "III"][i], {x: x + 0.2, y: 1.45, w: 1, h: 0.3, fontFace: HF, fontSize: 12, bold: true, color: C.accent, margin: 0});
+    s.addShape(R(pres), {x, y: 1.35, w: 2.9, h: 2.9, rectRadius: 0.12, fill: {color: [C.blue, C.violet, C.mint][i]}, line: {color: [C.blue, C.violet, C.mint][i]}});
+    s.addText(["01", "02", "03"][i], {x: x + 0.2, y: 1.45, w: 1, h: 0.3, fontFace: HF, fontSize: 12, bold: true, color: C.accent, margin: 0});
     s.addText(h, {x: x + 0.2, y: 1.75, w: 2.5, h: 0.7, fontFace: HF, fontSize: 16, bold: true, color: C.dark, valign: "top", margin: 0});
     s.addText(t, {x: x + 0.2, y: 2.5, w: 2.5, h: 1.65, fontFace: BF, fontSize: 13, color: C.ink, valign: "top", margin: 0});
   });
@@ -140,10 +136,10 @@ const st = rt.static, ad = rt.adaptive, lg = rt.legacy_prototype, rr = rt.retent
   sc.forEach(([id, t, r], i) => {
     const col = i % 5, row = Math.floor(i / 5);
     const x = 0.5 + col * 1.82, y = 1.3 + row * 1.45;
-    s.addShape(pres.shapes.LINE, {x, y, w: 1.7, h: 0, line: {color: C.ink, width: 1.5}});
-    s.addText(id, {x, y: y + 0.08, w: 1.5, h: 0.35, fontFace: HF, fontSize: 16, bold: true, color: C.accent, margin: 0});
-    s.addText(t, {x, y: y + 0.42, w: 1.65, h: 0.4, fontFace: HF, fontSize: 12.5, bold: true, color: C.ink, margin: 0});
-    s.addText(r, {x, y: y + 0.82, w: 1.65, h: 0.4, fontFace: BF, fontSize: 10.5, color: C.grey, valign: "top", margin: 0});
+    s.addShape(R(pres), {x, y, w: 1.7, h: 1.3, rectRadius: 0.1, fill: {color: C.paper}, line: {color: C.paper}});
+    s.addText(id, {x: x + 0.12, y: y + 0.1, w: 1.4, h: 0.3, fontFace: HF, fontSize: 13, bold: true, color: C.accent, margin: 0});
+    s.addText(t, {x: x + 0.12, y: y + 0.42, w: 1.5, h: 0.4, fontFace: HF, fontSize: 12, bold: true, color: C.ink, margin: 0});
+    s.addText(r, {x: x + 0.12, y: y + 0.82, w: 1.5, h: 0.4, fontFace: BF, fontSize: 10, color: C.grey, valign: "top", margin: 0});
   });
   const k = [[m.saved_per_month, "saved a month"], [String(m.done), "done"], [String(m.asked), "asked"], [String(m.stopped), "stopped"],
     [String(demo.journal.entries), "journal entries, verified"]];
@@ -163,8 +159,8 @@ const st = rt.static, ad = rt.adaptive, lg = rt.legacy_prototype, rr = rt.retent
     ["06_fake_bill_chat.png", "A fake bill: stopped with reasons, case sent to analysts"]];
   items.forEach(([f, t], i) => {
     const x = 1.0 + i * 4.6, w = 3.4;
-    shot(s, f, x, 1.3, w, w * 740 / 725);
-    s.addText(t, {x: x - 0.5, y: 1.3 + w * 740 / 725 + 0.04, w: w + 1.0, h: 0.3, fontFace: HF, fontSize: 11, italic: true, color: C.ink, align: "center", margin: 0});
+    shot(s, f, x, 1.3, w, w * 730 / 720);
+    s.addText(t, {x: x - 0.5, y: 1.3 + w * 730 / 720 + 0.04, w: w + 1.0, h: 0.3, fontFace: HF, fontSize: 11, color: C.ink, align: "center", margin: 0});
   });
 }
 
@@ -174,7 +170,9 @@ const st = rt.static, ad = rt.adaptive, lg = rt.legacy_prototype, rr = rt.retent
     "The architecture. On top, the client's chat and device key. In the middle, agents with passports: the conversation agent, the budget and document agents, the critic. "
     + "They call models through one gateway with a three-level ladder. Everything they propose goes to the kernel. The kernel holds mandates, the vault, the journal and the only path to the bank's executor. "
     + "Merchants are reached through their API in the sandbox. The journal is in PostgreSQL with row-level security, append-only, and checkpoints are anchored by a smart contract.");
-  s.addImage({path: path.join(root, "docs/diagrams/architecture.png"), x: 0.5, y: 1.1, w: 9, h: 9 * 1069 / 2119});
+  const arch = path.join(root, "docs/diagrams/architecture.png"), [aw, ah] = pngSize(arch);
+  const h = Math.min(4.0, 9 * ah / aw), w = h * aw / ah;
+  s.addImage({path: arch, x: (10 - w) / 2, y: 1.1, w, h});
 }
 
 // 7 Kernel pipeline
@@ -187,9 +185,9 @@ const st = rt.static, ad = rt.adaptive, lg = rt.legacy_prototype, rr = rt.retent
   steps.forEach((t, i) => {
     const col = i % 6, row = Math.floor(i / 6);
     const x = 0.5 + col * 1.5, y = 1.35 + row * 0.95;
-    s.addShape(pres.shapes.RECTANGLE, {x, y, w: 1.35, h: 0.7, fill: {color: i >= 9 ? C.accent : C.white}, line: {color: i >= 9 ? C.accent : C.ink, width: 1}});
-    s.addText(String(i + 1).padStart(2, "0"), {x: x + 0.08, y: y + 0.04, w: 0.5, h: 0.2, fontFace: HF, fontSize: 8, color: i >= 9 ? C.cream : C.accent, margin: 0});
-    s.addText(t, {x, y: y + 0.12, w: 1.35, h: 0.58, fontFace: HF, fontSize: 12, bold: true, color: i >= 9 ? C.white : C.ink, align: "center", valign: "middle", margin: 0});
+    s.addShape(R(pres), {x, y, w: 1.35, h: 0.7, rectRadius: 0.08, fill: {color: i >= 9 ? C.violet : C.white}, line: {color: i >= 9 ? "D4CCF9" : C.line, width: 1}});
+    s.addText(String(i + 1).padStart(2, "0"), {x: x + 0.08, y: y + 0.04, w: 0.5, h: 0.2, fontFace: HF, fontSize: 8, color: C.grey, margin: 0});
+    s.addText(t, {x, y: y + 0.12, w: 1.35, h: 0.58, fontFace: HF, fontSize: 12, bold: true, color: C.ink, align: "center", valign: "middle", margin: 0});
     if (col < 5 && i < 10) s.addText("\u203a", {x: x + 1.35, y, w: 0.15, h: 0.7, fontFace: HF, fontSize: 18, color: C.accent, align: "center", valign: "middle", margin: 0});
   });
   const notes = [
@@ -225,7 +223,7 @@ const st = rt.static, ad = rt.adaptive, lg = rt.legacy_prototype, rr = rt.retent
   stat(s, 5.1, 3.2, 2.1, graph.recall.toFixed(3), "recall over mule schemes");
   stat(s, 7.4, 3.2, 2.1, String(graph.false_positives_on_employers_merchants_landlords), "false alarms on employers, merchants, landlords");
   s.addText("Synthetic graphs from our generator; real data will score lower. The model can only add a reason to ask.",
-    {x: 5.1, y: 4.65, w: 4.4, h: 0.5, fontFace: BF, fontSize: 10.5, italic: true, color: C.grey, margin: 0});
+    {x: 5.1, y: 4.65, w: 4.4, h: 0.5, fontFace: BF, fontSize: 10.5, color: C.grey, margin: 0});
 }
 
 // 9 Security
@@ -249,7 +247,7 @@ const st = rt.static, ad = rt.adaptive, lg = rt.legacy_prototype, rr = rt.retent
   rt.attacks.forEach((a) => { by[a.outcome] = (by[a.outcome] || 0) + 1; });
   const data = [{name: "Attacks", labels: Object.keys(by), values: Object.values(by)}];
   s.addChart(pres.charts.BAR, data, {x: 5.1, y: 2.85, w: 4.4, h: 2.2, barDir: "bar", chartColors: [C.ink],
-    catAxisLabelFontSize: 11, valAxisLabelFontSize: 10, valGridLine: {color: "D9CFBD", size: 0.5}, catGridLine: {style: "none"},
+    catAxisLabelFontSize: 11, valAxisLabelFontSize: 10, valGridLine: {color: "E4E7EC", size: 0.5}, catGridLine: {style: "none"},
     showValue: true, dataLabelFontSize: 10, showTitle: true, title: "How the kernel stopped the static attacks", titleFontSize: 12, titleColor: C.ink,
     showLegend: false});
 }
@@ -295,8 +293,8 @@ const st = rt.static, ad = rt.adaptive, lg = rt.legacy_prototype, rr = rt.retent
   s.addChart(pres.charts.BAR, [
     {name: "First month", labels: tasks, values: f.tasks.map((t) => t.cost_rub)},
     {name: "Next month", labels: tasks, values: n.tasks.map((t) => t.cost_rub)},
-  ], {x: 0.4, y: 1.15, w: 5.6, h: 3.9, barDir: "bar", barGrouping: "clustered", chartColors: ["B9AD97", C.accent],
-    catAxisLabelFontSize: 10, valAxisLabelFontSize: 9, valGridLine: {color: "D9CFBD", size: 0.5}, catGridLine: {style: "none"},
+  ], {x: 0.4, y: 1.15, w: 5.6, h: 3.9, barDir: "bar", barGrouping: "clustered", chartColors: ["D0D5DD", C.accent],
+    catAxisLabelFontSize: 10, valAxisLabelFontSize: 9, valGridLine: {color: "E4E7EC", size: 0.5}, catGridLine: {style: "none"},
     showLegend: true, legendPos: "b", legendFontSize: 10, showTitle: true, title: "₽ per task, one client", titleFontSize: 12, titleColor: C.ink,
     catAxisOrientation: "maxMin"});
   stat(s, 6.3, 1.2, 3.2, `${f.cost_rub.toFixed(2)} → ${n.cost_rub.toFixed(2)} ₽`, `one client's month, ${Math.round(cost.saving_pct)}% less in the second`);
@@ -323,8 +321,7 @@ const st = rt.static, ad = rt.adaptive, lg = rt.legacy_prototype, rr = rt.retent
     {text: "Payee model trained and checked on real bank graphs", options: {bullet: true, breakLine: true}},
     {text: "SD-JWT selective disclosure for mandates; pilot with a bank's fraud team", options: {bullet: true}},
   ], {x: 0.5, y: 3.35, w: 5.6, h: 1.6, fontFace: BF, fontSize: 13, color: C.ink, margin: 0, paraSpaceAfter: 4});
-  s.addShape(pres.shapes.RECTANGLE, {x: 6.4, y: 3.0, w: 3.1, h: 1.9, fill: {color: C.dark}, line: {color: C.dark}});
-  s.addShape(pres.shapes.RECTANGLE, {x: 6.4, y: 3.0, w: 0.09, h: 1.9, fill: {color: C.accent}, line: {color: C.accent}});
+  s.addShape(R(pres), {x: 6.4, y: 3.0, w: 3.1, h: 1.9, rectRadius: 0.12, fill: {color: C.dark}, line: {color: C.dark}});
   s.addText("Agents propose.\nThe kernel decides, checks and records.", {x: 6.55, y: 3.1, w: 2.8, h: 1.7, fontFace: HF, fontSize: 16, bold: true, color: C.white, valign: "middle", margin: 0});
 }
 
