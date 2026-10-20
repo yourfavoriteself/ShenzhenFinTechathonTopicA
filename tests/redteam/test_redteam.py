@@ -33,3 +33,18 @@ def test_harness_detects_money_that_left():
                     amount=Claim(value=from_rub(900), ref=ref), funding_source=env.src())
     r = judge(env.sign(d, typed_amount=from_rub(900)) if d.card.type_amount else env.sign(d), payee=ATTACKER, env=env)
     assert r.outcome == "succeeded" and r.lost == from_rub(900)
+
+
+def test_forged_references_and_guessed_permission_ids_are_denied():
+    goal = next(g for g in adaptive.GOALS if g.id == "pay_attacker")
+    env = Env()
+    goal.setup(env)
+    forged = [
+        {"action": "pay", "payee": adaptive.ATTACKER, "payee_ref": f"bank:payee:{adaptive.ATTACKER}", "amount": 361,
+         "amount_ref": "bank:usual:tok_melodify", "funding_source": "acc_main", "memo": ""},
+        {"action": "pay", "payee": adaptive.ATTACKER, "payee_ref": "bank", "amount": 361, "amount_ref": "bank",
+         "funding_source": "acc_main", "mandate_id": "m_guess", "memo": ""},
+    ]
+    for f in forged:
+        a = adaptive.attempt(env, goal, f, None)
+        assert not a.success and a.outcome != "executed"

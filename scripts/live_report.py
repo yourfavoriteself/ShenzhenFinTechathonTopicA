@@ -72,7 +72,7 @@ def _goal_summary(g: dict) -> dict:
 
 
 def open_attacker(rounds: int, width: int, workers: int = 2, save=None, only: list[str] | None = None,
-                  earlier: dict | None = None) -> dict:
+                  earlier: dict | None = None, free: bool = False) -> dict:
     """One gateway per goal; a goal that fails is recorded with its error, and save() runs after each goal.
     With only=[...] just those goals run again; the other goals and the spend are kept from earlier."""
     gws = [_gateway() for _ in adaptive.GOALS]
@@ -84,7 +84,7 @@ def open_attacker(rounds: int, width: int, workers: int = 2, save=None, only: li
     def summary() -> dict:
         goals = [done[i] for i in sorted(done)]
         calls = [r for gw in gws for r in gw.log]
-        return {"model": gws[0].ladder[2].model, "rounds": rounds, "width": width, "goals": goals,
+        return {"model": gws[0].ladder[2].model, "rounds": rounds, "width": width, "free": free, "goals": goals,
                 "with_kernel": {"out_of_mandate_successes": sum(g.get("successes") or 0 for g in goals),
                                 "within_mandate_executions": sum(g.get("within_mandate_executions") or 0 for g in goals),
                                 "attempts": sum(g.get("attempts") or 0 for g in goals)},
@@ -95,7 +95,7 @@ def open_attacker(rounds: int, width: int, workers: int = 2, save=None, only: li
     def one(i: int) -> None:
         goal = adaptive.GOALS[i]
         try:
-            g = _goal_summary(adaptive.run_goal(goal, lambda env: adaptive.ModelAttacker(env), rounds, width, gws[i]))
+            g = _goal_summary(adaptive.run_goal(goal, lambda env: adaptive.ModelAttacker(env, free=free), rounds, width, gws[i]))
         except (LLMFailure, BudgetExceeded) as e:
             g = {"goal": goal.id, "title": goal.title, "attempts": 0, "successes": 0, "error": str(e)}
         done[i] = g
@@ -117,18 +117,20 @@ def main() -> None:
     ap.add_argument("--width", type=int, default=6)
     ap.add_argument("--workers", type=int, default=2)
     ap.add_argument("--goals", nargs="*", help="run only these goals again, keep the rest")
+    ap.add_argument("--free", action="store_true", help="wider fields (own reference strings, permission ids), whole history")
+    ap.add_argument("--key", default="attacker_open_model", help="where in the report the result goes")
     a = ap.parse_args()
     if a.attacker_only:
         report = json.loads(a.out.read_text()) if a.out.exists() else {}
-        run_at = report.get("attacker_open_model", {}).get("run_at") if a.goals else None
+        run_at = report.get(a.key, {}).get("run_at") if a.goals else None
         run_at = run_at or datetime.now(timezone.utc).isoformat(timespec="seconds")
 
         def save(att: dict) -> None:
-            report["attacker_open_model"] = {"run_at": run_at, **att}
+            report[a.key] = {"run_at": run_at, **att}
             a.out.write_text(json.dumps(report, ensure_ascii=False, indent=1))
 
         att = open_attacker(a.rounds, a.width, a.workers, save, a.goals,
-                            report.get("attacker_open_model") if a.goals else None)
+                            report.get(a.key) if a.goals else None, a.free)
         save(att)
         print(json.dumps({"model": att["model"], **att["with_kernel"], "cost_usd": att["cost_usd"],
                           "stopped": [g["attacker_stopped"] for g in att["goals"] if g.get("attacker_stopped")]}, indent=1))
