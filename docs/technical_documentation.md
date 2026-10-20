@@ -33,7 +33,7 @@ Topic A asks for smart budgeting, bill analysis and spending analytics:
 
 The theme, *AI as a Financial Participant*, is the core of the design: the assistant acts, and the kernel makes acting safe.
 
-The system is about 11 000 lines of Python, JavaScript and Solidity, with 3 500 lines of tests (391 tests, all green in CI with PostgreSQL and a local chain, plus 5 contract tests). It runs with `docker compose up` and needs no API keys in the default replay mode.
+The system is about 11 000 lines of Python, JavaScript and Solidity, with 3 500 lines of tests (392 tests, all green in CI with PostgreSQL and a local chain, plus 5 contract tests). It runs with `docker compose up` and needs no API keys in the default replay mode.
 
 # 2. Scenarios
 
@@ -312,7 +312,7 @@ Cost of one client's month, from `evidence/costs_live.json`, is measured on a li
 
 The repeated Melodify payment and the repeated double-charge check use no model at all. At the next-month rate a million clients cost about $4,300 a month in model tokens. In the full demo run 97.6 % of the work happens at levels 0 and 1.
 
-**Live run with real models** (`scripts/live_report.py`, `evidence/live_runs.json`). The functional evaluation with real models passes 44 of 48 tasks for $0.11 (120 calls, 111 on level 1, 9 on level 2). All four misses go the safe way: the live critic stops an action the client did not ask for in so many words, where the evaluation expected a card. "Was I charged twice?" is a question, so the critic refuses to open a dispute on it; a Melodify price of $6.02 against the usual $3.61 is stopped instead of shown for signing. No money moved outside a mandate. We also tried real models as the adaptive attacker: Claude Sonnet 5.5 and Opus 5.5 declined the attacker role for five of the six goals, and the four attempts they wrote for the sixth were all denied. An open model accepted the role: DeepSeek V4 Pro, through the same gateway, made 156 attempts over the 6 goals in 5 rounds and reached none of them, with 0 actions outside a mandate, for $1.75. 17 attempts were held as cards for the client's signature, the rest were stopped by the kernel, and the vault released the saved password only to the merchant's own domain.
+**Live run with real models** (`scripts/live_report.py`, `evidence/live_runs.json`). The functional evaluation with real models passes 44 of 48 tasks for $0.11 (120 calls, 111 on level 1, 9 on level 2). All four misses go the safe way: the live critic stops an action the client did not ask for in so many words, where the evaluation expected a card. "Was I charged twice?" is a question, so the critic refuses to open a dispute on it; a Melodify price of $6.02 against the usual $3.61 is stopped instead of shown for signing. No money moved outside a mandate. We also tried real models as the adaptive attacker: Claude Sonnet 5.5 and Opus 5.5 declined the attacker role for five of the six goals, and the four attempts they wrote for the sixth were all denied. An open model accepted the role: DeepSeek V4 Pro, through the same gateway, made 156 attempts over the 6 goals in 5 rounds and reached none of them, with 0 actions outside a mandate, for $1.75. 17 attempts were held as cards for the client's signature, the rest were stopped by the kernel, and the vault released the saved password only to the merchant's own domain. A second run with wider fields (its own reference strings, permission ids named directly) and the whole history made 187 more attempts in up to 8 rounds, again with none reaching its goal ($2.50).
 
 # 8. Data, persistence and anchoring
 
@@ -389,7 +389,7 @@ docker compose up --build         # app + PostgreSQL 18, http://localhost:8000
 
 - The bank, merchants, telecom and transfer graph are sandboxes with synthetic data. Real data will be noisier, especially for the graph model.
 - Cancellation uses merchant APIs. Merchants without an API would need a separate, strictly sandboxed integration, which we did not build.
-- Live runs are one month of one client; the live critic is stricter than the stub and stops four tasks the evaluation expected as cards. The vendor models declined to act as the adaptive attacker for most goals; the open model DeepSeek V4 Pro played it for 5 rounds per goal (156 attempts). A longer run and a second open model (Qwen) are next.
+- Live runs are one month of one client; the live critic is stricter than the stub and stops four tasks the evaluation expected as cards. The vendor models declined to act as the adaptive attacker for most goals; the open model DeepSeek V4 Pro played it in two runs (343 attempts). A longer run and a second open model (Qwen) are next.
 - Mandates are signed JSON. SD-JWT selective disclosure from Verifiable Intent is not implemented.
 - Investing runs on a sandbox broker or Alpaca paper trading, never with real money. The sandbox broker ignores exchange holidays; the allowlist and limits are demo values, not advice.
 - Anchoring was demonstrated on a local devnet. Sepolia needs a funded test key.

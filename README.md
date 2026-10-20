@@ -1,7 +1,7 @@
 # Guardian: a bank kernel for AI payment agents
 
 [![CI](https://github.com/yourfavoriteself/ShenzhenFinTechathonTopicA/actions/workflows/ci.yml/badge.svg)](https://github.com/yourfavoriteself/ShenzhenFinTechathonTopicA/actions/workflows/ci.yml)
-[![Tests](https://img.shields.io/badge/tests-391%20passing-067647)](.github/workflows/ci.yml)
+[![Tests](https://img.shields.io/badge/tests-392%20passing-067647)](.github/workflows/ci.yml)
 [![Red-team](https://img.shields.io/badge/red--team-48%2F48%20stopped-067647)](evidence/redteam.json)
 [![Python](https://img.shields.io/badge/python-3.14-101828)](requirements.txt)
 [![License](https://img.shields.io/badge/license-MIT-667085)](LICENSE)
@@ -246,7 +246,7 @@ All amounts are in US dollars. The synthetic bank was first written in rubles an
 | Static red-team: a compromised agent with a valid passport | **48 / 48** stopped, $0 lost, including 9 attacks on investment orders (S40 to S48). Without the kernel 48 / 48 succeed and **$6,546.63** is lost | [`redteam.json`](evidence/redteam.json) |
 | Retention tricks during cancellation (discount, upsell, wrong card) | **5 / 5** stopped | [`redteam.json`](evidence/redteam.json) |
 | Adaptive attacker that learns from the kernel's answers (10 rounds × 6 tries × 6 goals) | **0 / 360** attempts went outside the mandate. Without the kernel all 6 goals are reached on the first try | [`redteam.json`](evidence/redteam.json) |
-| The same adaptive attacker played by an open model, DeepSeek V4 Pro (6 goals, 5 rounds) | **0 / 156** attempts reached the goal, 0 went outside a mandate. 17 became a card for the client to sign, the rest were stopped by the kernel; the saved password went only to the merchant's own domain. Claude Sonnet 5.5 and Opus 5.5 declined this role | [`live_runs.json`](evidence/live_runs.json) |
+| The same adaptive attacker played by an open model, DeepSeek V4 Pro, in two runs | **0 / 343** attempts reached the goal, 0 went outside a mandate. Run 1: 6 goals, 5 rounds, 156 attempts. Run 2 with wider fields (its own reference strings, permission ids named directly) and the whole history: up to 8 rounds, 187 attempts. Plausible attempts became a card for the client to sign, the rest were stopped by the kernel; the saved password went only to the merchant's own domain. Claude Sonnet 5.5 and Opus 5.5 declined this role | [`live_runs.json`](evidence/live_runs.json) |
 | Attack suite of our earlier prototype, replayed | 20 / 21 prevented, 1 bounded by the limit | [`redteam.json`](evidence/redteam.json) |
 | Subscription leaks planted and found | 5 / 5, no false finds ($10.23 a month, $122.76 a year) | [`budget_report.json`](evidence/budget_report.json) |
 | Double charge planted and found | 1 / 1 | [`budget_report.json`](evidence/budget_report.json) |
@@ -259,7 +259,7 @@ All amounts are in US dollars. The synthetic bank was first written in rubles an
 | Earned trust in the demo month | 1 promotion, 1 demotion, 3 strikes, 1 quarantine with 2 passports revoked; **0 / 2** faulty agent actions executed | [`trust_report.json`](evidence/trust_report.json) |
 | Investing in the demo month | $10 SPY order signed with a monthly plan, filled at the next open; the second month's order placed alone inside the plan; an off list stock (GME) and an option stopped by the broker step | [`invest_report.json`](evidence/invest_report.json) |
 | The whole demo month | $9.63 a month saved, 13 tasks done, 13 questions, 6 actions stopped or held (2 attacks, 2 off list orders, 2 faulty agent actions), 437 signed journal entries, chain verified | [`demo_run.log`](evidence/demo_run.log) |
-| Automated tests | 391 pass in CI (unit, end to end in Chromium, red-team, evaluation, PostgreSQL, local chain) plus 5 contract tests in Foundry | [CI](.github/workflows/ci.yml) |
+| Automated tests | 392 pass in CI (unit, end to end in Chromium, red-team, evaluation, PostgreSQL, local chain) plus 5 contract tests in Foundry | [CI](.github/workflows/ci.yml) |
 
 The graph model is trained and tested on graphs from our own generator, so real bank data will score lower. The numbers show that the pipeline works, not field accuracy.
 
