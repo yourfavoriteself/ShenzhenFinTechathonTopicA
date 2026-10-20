@@ -25,6 +25,7 @@ from pathlib import Path
 os.environ.setdefault("GUARDIAN_LLM_MODE", "stub")
 
 W, H = 1440, 900
+ZOOM_OUT = 1.15       # the page is laid out on a 15% larger window and scaled down to W x H: more of the chat fits
 
 SLATE_JS = """([title, lines, fade, lead]) => {
   let s = document.getElementById('demo-slate');
@@ -36,6 +37,7 @@ SLATE_JS = """([title, lines, fade, lead]) => {
   s.style.cssText = 'position:fixed;inset:0;z-index:10000;background:#f4f5f7;color:#101828;display:flex;flex-direction:column;'
     + 'align-items:flex-start;justify-content:center;padding:0 140px;font-family:Inter,system-ui,sans-serif;text-align:left;'
     + 'transition:opacity .5s ease;opacity:' + (fade ? '0' : '1');
+  s.style.padding = '0 ' + Math.round(140 * ZOOM_OUT) + 'px';
   s.replaceChildren();
   const logo = document.createElement('div'); logo.textContent = '\u5b88';
   logo.style.cssText = 'width:84px;height:84px;display:grid;place-items:center;background:#c2361f;color:#ffffff;border-radius:20px;'
@@ -48,18 +50,53 @@ SLATE_JS = """([title, lines, fade, lead]) => {
     p.style.cssText = lead && i === 0
       ? 'font:600 31px/1.35 Inter,system-ui,sans-serif;color:#101828;margin:0 0 22px;max-width:1150px'
       : 'font:400 25px/1.45 Inter,system-ui,sans-serif;color:#475467;margin:5px 0;max-width:1100px'; s.append(p); });
+  for (const c of s.children) c.style.zoom = ZOOM_OUT;     // title cards keep their size
   if (fade) requestAnimationFrame(() => requestAnimationFrame(() => { s.style.opacity = '1'; }));
-}"""
+}""".replace("ZOOM_OUT", str(ZOOM_OUT))
 
 # Only for the recording: hide the suggestion chips, scroll smoothly and fade new messages and tabs in,
 # so that nothing on screen jumps between two frames.
 RECORDING_CSS = """
-#chips { display: none !important; } #feed { padding-bottom: 120px; scroll-behavior: smooth; }
+#chips { display: none !important; } #feed { padding-bottom: 120px; }
 #feed > * { animation: demo-in .35s ease-out both; }
 .tab.active { animation: demo-fade .35s ease-out both; }
 @keyframes demo-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
 @keyframes demo-fade { from { opacity: 0; } to { opacity: 1; } }
 """
+# Scrolling is slow enough to pause the video and read: the chat's own jumps to the newest message and
+# every "show" glide over SCROLL_MIN to SCROLL_MAX seconds, depending on the distance.
+SCROLL_JS = """() => {
+  const desc = Object.getOwnPropertyDescriptor(Element.prototype, 'scrollTop');
+  const anims = new Map();
+  window.demoScroll = (el, to) => {
+    const from = desc.get.call(el);
+    to = Math.max(0, Math.min(to, el.scrollHeight - el.clientHeight));
+    const d = Math.abs(to - from);
+    if (d < 2) return 0;
+    const ms = Math.min(SCROLL_MAX, Math.max(SCROLL_MIN, d * 2.2)), t0 = performance.now();
+    cancelAnimationFrame(anims.get(el));
+    const step = (now) => {
+      const k = Math.min(1, (now - t0) / ms), e = k < .5 ? 2 * k * k : 1 - Math.pow(2 - 2 * k, 2) / 2;
+      desc.set.call(el, from + (to - from) * e);
+      if (k < 1) anims.set(el, requestAnimationFrame(step));
+    };
+    anims.set(el, requestAnimationFrame(step));
+    return ms;
+  };
+  const feed = document.getElementById('feed');
+  Object.defineProperty(feed, 'scrollTop', {configurable: true, get() { return desc.get.call(this); },
+    set(v) { window.demoScroll(this, v); }});
+}"""
+SHOW_JS = """e => {
+  let box = e.parentElement;
+  while (box && !(/(auto|scroll)/.test(getComputedStyle(box).overflowY) && box.scrollHeight > box.clientHeight))
+    box = box.parentElement;
+  if (!box) { e.scrollIntoView({block: 'center', behavior: 'smooth'}); return 900; }
+  const r = e.getBoundingClientRect(), b = box.getBoundingClientRect();
+  return window.demoScroll(box, box.scrollTop + (r.top + r.height / 2) - (b.top + b.height / 2));
+}"""
+SCROLL_MIN, SCROLL_MAX = 900, 1600    # milliseconds
+SCROLL_JS = SCROLL_JS.replace("SCROLL_MIN", str(SCROLL_MIN)).replace("SCROLL_MAX", str(SCROLL_MAX))
 FADE = 0.5            # slate fade, seconds
 FPS = 25             # the rate Chromium's screencast delivers; a different rate repeats frames unevenly
 BAND = 110            # subtitle band under the picture in the subtitled copy
@@ -141,8 +178,8 @@ class Film:
         self.page.wait_for_selector(f"text={text}", timeout=timeout * 1000)
 
     def show(self, locator) -> None:
-        locator.evaluate("e => e.scrollIntoView({block: 'center', behavior: 'smooth'})")
-        self.pause(0.9)
+        ms = locator.evaluate(SHOW_JS)
+        self.pause(ms / 1000 + 0.5)
 
     def card(self, title: str):
         c = self.page.locator(".card", has_text=title).last
@@ -217,7 +254,7 @@ def film(f: Film, svc) -> None:
     f.say("How much can I spend today?")
     f.wait("per day", 10)
     f.tab("Budget", 0)
-    f.caption("Safe to spend today, after bills, envelopes and the goal.", "", 4)
+    f.caption("Safe to spend today, after bills, envelopes and the goal.", "", 2.5)
     f.shot("02_budget")
 
     f.say("Find leaks in my subscriptions")
@@ -300,7 +337,7 @@ def film(f: Film, svc) -> None:
     c = f.card("Possible scam call")
     f.show(c.locator(".intervention"))
     f.caption("The scam ladder rises: explain, ask, pause, hold. Even a confident 'no' and the right PIN only start a pause.",
-              "", 6)
+              "", 5)
     c.locator("input[placeholder='type the amount to confirm']").fill("4,224.48")
     for i in range(3):
         c.locator("input[type=radio][value=no]").nth(i).check()
@@ -322,11 +359,11 @@ def film(f: Film, svc) -> None:
     p.locator(".msg.phone button", has_text="Hang up").last.click()
     f.pause(1.5)
 
-    f.caption("One month later.", "", 2)
+    f.caption("One month later.", "", 1)
     p.click("header >> text=+1 month")
-    f.pause(1.5)
+    f.pause(0.8)
     p.click("header >> text=+1 day")
-    f.pause(2)
+    f.pause(1)
     f.say("Pay for Melodify")
     f.wait("within your standing permission")
     f.show(p.locator(".msg.receipt").last)
@@ -335,7 +372,7 @@ def film(f: Film, svc) -> None:
               say="Next month it runs alone, inside the standing permission. One tap undoes it.")
 
     f.slate("Earned trust", ["Agents start at level 1. Verified results raise trust; mistakes lower it at once.",
-                             "Three strikes put an agent in quarantine: passports revoked, a card for everything."], 4,
+                             "Three strikes put an agent in quarantine: passports revoked, a card for everything."], 2.5,
               say="Earned trust. Verified results raise an agent's trust; mistakes lower it at once. Three strikes mean quarantine.")
     f.say("Find leaks in my subscriptions")
     f.wait("$5.41 a month")
@@ -539,7 +576,8 @@ def main() -> None:
     from playwright.sync_api import sync_playwright
     with sync_playwright() as pw:
         browser = pw.chromium.launch()
-        ctx = browser.new_context(viewport={"width": W, "height": H}, record_video_dir=str(raw),
+        ctx = browser.new_context(viewport={"width": round(W * ZOOM_OUT), "height": round(H * ZOOM_OUT)},
+                                  record_video_dir=str(raw),
                                   record_video_size={"width": W, "height": H}, locale="en-GB")
         t0 = time.monotonic()
         page = ctx.new_page()
@@ -550,6 +588,7 @@ def main() -> None:
         page.evaluate(SLATE_JS, ["Guardian", [], False, False])     # cover the page while it loads
         lead = f.now()
         page.add_style_tag(content=RECORDING_CSS)
+        page.evaluate(SCROLL_JS)
         page.wait_for_selector("text=device key: Ed25519")
         try:
             film(f, None)

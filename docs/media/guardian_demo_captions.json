@@ -1,298 +1,298 @@
 {
- "duration_s": 290.9,
+ "duration_s": 294.8,
  "fps": 25,
  "captions": [
   {
    "t": 12.47,
-   "end": 18.4,
+   "end": 18.91,
    "title": "A month for you",
    "body": "The assistant is a chat. The kernel on the right owns every permission, every dollar and the journal.",
    "say": "The assistant is a chat. The kernel owns every permission, every dollar and the journal.",
    "text": "A month for you: The assistant is a chat. The kernel on the right owns every permission, every dollar and the journal."
   },
   {
-   "t": 18.4,
-   "end": 25.66,
+   "t": 18.91,
+   "end": 26.87,
    "title": "Cash gap",
    "body": "On the first morning Guardian sees a cash gap: the rent on 20 Oct does not fit. It offers a fix.",
    "say": "On the first morning Guardian sees a cash gap: the rent does not fit. It offers a fix.",
    "text": "Cash gap: On the first morning Guardian sees a cash gap: the rent on 20 Oct does not fit. It offers a fix."
   },
   {
-   "t": 25.66,
-   "end": 32.26,
+   "t": 26.87,
+   "end": 33.43,
    "title": "What you see is what you sign",
    "body": "Every action is a card: exact payee, amount, source, what it can and cannot do. The device key signs it.",
    "say": "Every action is a card: exact payee, amount and source. The device key signs it.",
    "text": "What you see is what you sign: Every action is a card: exact payee, amount, source, what it can and cannot do. The device key signs it."
   },
   {
-   "t": 32.26,
-   "end": 36.3,
+   "t": 33.43,
+   "end": 37.37,
    "title": "",
    "body": "Done, and the kernel checked the bank afterwards, not the assistant's word.",
    "say": "Done. The kernel checked the bank, not the assistant's word.",
    "text": "Done, and the kernel checked the bank afterwards, not the assistant's word."
   },
   {
-   "t": 36.3,
-   "end": 45.01,
+   "t": 37.37,
+   "end": 45.29,
    "title": "Budget",
    "body": "C8. A budget from twelve months of history: envelopes, bills and savings.",
    "say": "",
    "text": "Budget: C8. A budget from twelve months of history: envelopes, bills and savings."
   },
   {
-   "t": 45.01,
-   "end": 51.83,
+   "t": 45.29,
+   "end": 51.59,
    "title": "Goal",
    "body": "A goal is a plan month by month; the gym envelope is not touched.",
    "say": "",
    "text": "Goal: A goal is a plan month by month; the gym envelope is not touched."
   },
   {
-   "t": 51.83,
-   "end": 58.61,
+   "t": 51.59,
+   "end": 56.94,
    "title": "",
    "body": "Safe to spend today, after bills, envelopes and the goal.",
    "say": "",
    "text": "Safe to spend today, after bills, envelopes and the goal."
   },
   {
-   "t": 58.61,
-   "end": 66.57,
+   "t": 56.94,
+   "end": 64.94,
    "title": "Leaks",
    "body": "C3. Leaks: forgotten subscriptions, a price rise and a duplicate, $10.23 a month.",
    "say": "",
    "text": "Leaks: C3. Leaks: forgotten subscriptions, a price rise and a duplicate, $10.23 a month."
   },
   {
-   "t": 66.57,
-   "end": 71.96,
+   "t": 64.94,
+   "end": 70.64,
    "title": "Cancel a subscription",
    "body": "C2. Cancelling StreamBox through the merchant's API. The bank also blocks future charges on card *1234.",
    "say": "Cancelling StreamBox through the merchant's API. The bank also blocks the card.",
    "text": "Cancel a subscription: C2. Cancelling StreamBox through the merchant's API. The bank also blocks future charges on card *1234."
   },
   {
-   "t": 71.96,
-   "end": 80.8,
+   "t": 70.64,
+   "end": 80.36,
    "title": "Protected form",
    "body": "The password goes into the bank's protected form: the domain and certificate are checked, no model sees it.",
    "say": "",
    "text": "Protected form: The password goes into the bank's protected form: the domain and certificate are checked, no model sees it."
   },
   {
-   "t": 80.8,
-   "end": 90.05,
+   "t": 80.36,
+   "end": 89.89,
    "title": "Verified",
    "body": "Verified three ways: the merchant, the bank's card block, and no charge when time runs forward.",
    "say": "",
    "text": "Verified: Verified three ways: the merchant, the bank's card block, and no charge when time runs forward."
   },
   {
-   "t": 90.05,
-   "end": 96.68,
+   "t": 89.89,
+   "end": 96.52,
    "title": "Pay",
    "body": "C1. Pay Melodify, and allow it monthly: a standing mandate with a ceiling of $5.",
    "say": "",
    "text": "Pay: C1. Pay Melodify, and allow it monthly: a standing mandate with a ceiling of $5."
   },
   {
-   "t": 96.68,
-   "end": 101.96,
+   "t": 96.52,
+   "end": 102.87,
    "title": "Double charge",
    "body": "C4. The same FreshMart charge twice in two minutes: Guardian opens a dispute.",
    "say": "",
    "text": "Double charge: C4. The same FreshMart charge twice in two minutes: Guardian opens a dispute."
   },
   {
-   "t": 101.96,
-   "end": 113.2,
+   "t": 102.87,
+   "end": 116.69,
    "title": "Fake bill",
    "body": "C5 + C6. Two bills match the bank's records. The third imitates Mosenergo, has a wrong account, pressure and a hidden instruction for AI agents.",
    "say": "",
    "text": "Fake bill: C5 + C6. Two bills match the bank's records. The third imitates Mosenergo, has a wrong account, pressure and a hidden instruction for AI agents."
   },
   {
-   "t": 113.2,
-   "end": 120.46,
+   "t": 116.69,
+   "end": 123.93,
    "title": "Payee risk",
    "body": "C10. A new payee is scored on the bank's transfer graph. This account behaves like a money mule.",
    "say": "",
    "text": "Payee risk: C10. A new payee is scored on the bank's transfer graph. This account behaves like a money mule."
   },
   {
-   "t": 120.46,
-   "end": 128.5,
+   "t": 123.93,
+   "end": 132.55,
    "title": "Scam call",
    "body": "C9. Now a 'bank security officer' calls. The operator reports a call from a spoofed number.",
    "say": "",
    "text": "Scam call: C9. Now a 'bank security officer' calls. The operator reports a call from a spoofed number."
   },
   {
-   "t": 128.5,
-   "end": 142.64,
+   "t": 132.55,
+   "end": 147.34,
    "title": "",
    "body": "The scam ladder rises: explain, ask, pause, hold. Even a confident 'no' and the right PIN only start a pause.",
    "say": "",
    "text": "The scam ladder rises: explain, ask, pause, hold. Even a confident 'no' and the right PIN only start a pause."
   },
   {
-   "t": 142.64,
-   "end": 148.64,
+   "t": 147.34,
+   "end": 152.96,
    "title": "",
    "body": "After the pause the money is held for a person at the bank. The analyst calls back: it was a scam.",
    "say": "After the pause a bank analyst checks the transfer: it was a scam.",
    "text": "After the pause the money is held for a person at the bank. The analyst calls back: it was a scam."
   },
   {
-   "t": 148.64,
-   "end": 152.19,
+   "t": 152.96,
+   "end": 156.5,
    "title": "",
    "body": "The money stays in the account. The client hangs up.",
    "say": "",
    "text": "The money stays in the account. The client hangs up."
   },
   {
-   "t": 152.19,
-   "end": 159.85,
+   "t": 156.5,
+   "end": 161.84,
    "title": "",
    "body": "One month later.",
    "say": "",
    "text": "One month later."
   },
   {
-   "t": 159.85,
-   "end": 166.2,
+   "t": 161.84,
+   "end": 168.19,
    "title": "Next month",
    "body": "The repeat payment runs inside the standing mandate: a notification, no card, no model call. One tap undoes it, and that counts against the agent.",
    "say": "Next month it runs alone, inside the standing permission. One tap undoes it.",
    "text": "Next month: The repeat payment runs inside the standing mandate: a notification, no card, no model call. One tap undoes it, and that counts against the agent."
   },
   {
-   "t": 178.11,
-   "end": 186.28,
+   "t": 180.3,
+   "end": 188.47,
    "title": "Reward",
    "body": "The fifth verified result in a row. Subscriptions move to level 2: inside a standing permission Guardian may now act alone up to its limit.",
    "say": "Five verified results in a row raise subscriptions to level 2: Guardian may act alone up to its limit.",
    "text": "Reward: The fifth verified result in a row. Subscriptions move to level 2: inside a standing permission Guardian may now act alone up to its limit."
   },
   {
-   "t": 186.28,
-   "end": 195.43,
+   "t": 188.47,
+   "end": 197.62,
    "title": "Penalty",
    "body": "A faulty planner asks for ten times the permission. The kernel stops it, subscriptions fall straight to level 0, and the planner gets two strikes.",
    "say": "A faulty planner asks for ten times the permission. The kernel stops it, trust drops to level 0, two strikes.",
    "text": "Penalty: A faulty planner asks for ten times the permission. The kernel stops it, subscriptions fall straight to level 0, and the planner gets two strikes."
   },
   {
-   "t": 195.43,
-   "end": 204.56,
+   "t": 197.62,
+   "end": 206.75,
    "title": "Quarantine",
    "body": "Then it cites an invoice that does not exist. Strike three: 24 hours of quarantine, its passports are revoked, then probation until five clean results.",
    "say": "Then it cites an invoice that does not exist. Strike three: 24 hours of quarantine, passports revoked.",
    "text": "Quarantine: Then it cites an invoice that does not exist. Strike three: 24 hours of quarantine, its passports are revoked, then probation until five clean results."
   },
   {
-   "t": 204.56,
-   "end": 209.79,
+   "t": 206.75,
+   "end": 212.17,
    "title": "Trust",
    "body": "The Trust tab: what agents may do alone, per kind of task.",
    "say": "",
    "text": "Trust: The Trust tab: what agents may do alone, per kind of task."
   },
   {
-   "t": 209.79,
-   "end": 216.41,
+   "t": 212.17,
+   "end": 218.79,
    "title": "",
    "body": "Each agent's record, and every change with its reason. All of it is in the signed journal.",
    "say": "",
    "text": "Each agent's record, and every change with its reason. All of it is in the signed journal."
   },
   {
-   "t": 223.07,
-   "end": 231.05,
+   "t": 225.82,
+   "end": 233.97,
    "title": "Invest",
    "body": "C11. The agent proposes an order; the kernel checks it against the client's list of securities, the size and the envelope, with its own quote from the broker.",
    "say": "The agent proposes an order. The kernel checks the security, the size and the envelope, with its own quote.",
    "text": "Invest: C11. The agent proposes an order; the kernel checks it against the client's list of securities, the size and the envelope, with its own quote from the broker."
   },
   {
-   "t": 231.05,
-   "end": 239.13,
+   "t": 233.97,
+   "end": 242.46,
    "title": "Order placed",
    "body": "The order goes to the broker and the kernel reads it back: same security, side and amount. The market is closed, so it waits for the open.",
    "say": "The kernel reads the order back from the broker. The market is closed, so it waits for the open.",
    "text": "Order placed: The order goes to the broker and the kernel reads it back: same security, side and amount. The market is closed, so it waits for the open."
   },
   {
-   "t": 239.13,
-   "end": 245.08,
+   "t": 242.46,
+   "end": 248.9,
    "title": "Stopped",
    "body": "A security outside the client's list is stopped at the broker step, before any order exists.",
    "say": "A stock outside the client's list is stopped before any order exists.",
    "text": "Stopped: A security outside the client's list is stopped at the broker step, before any order exists."
   },
   {
-   "t": 245.08,
-   "end": 250.19,
+   "t": 248.9,
+   "end": 254.01,
    "title": "",
    "body": "The investment envelope: what the client set aside, what is spent, orders and positions.",
    "say": "The investment envelope: money set aside, orders and positions.",
    "text": "The investment envelope: what the client set aside, what is spent, orders and positions."
   },
   {
-   "t": 250.19,
-   "end": 254.36,
+   "t": 254.01,
+   "end": 258.25,
    "title": "Month for you",
    "body": "The month: saved per month, done, asked, stopped.",
    "say": "",
    "text": "Month for you: The month: saved per month, done, asked, stopped."
   },
   {
-   "t": 254.36,
-   "end": 258.57,
+   "t": 258.25,
+   "end": 262.46,
    "title": "Permissions",
    "body": "Every live mandate and the vault entries: revocable at any time.",
    "say": "Every live permission, revocable at any time.",
    "text": "Permissions: Every live mandate and the vault entries: revocable at any time."
   },
   {
-   "t": 258.57,
-   "end": 261.61,
+   "t": 262.46,
+   "end": 265.51,
    "title": "Agents at work",
    "body": "Each agent gets a passport with the least it needs.",
    "say": "Each agent gets a minimal passport.",
    "text": "Agents at work: Each agent gets a passport with the least it needs."
   },
   {
-   "t": 261.61,
-   "end": 266.21,
+   "t": 265.51,
+   "end": 270.11,
    "title": "Cost",
    "body": "Most work runs on levels 0 and 1: rules, templates and the small model.",
    "say": "Most work runs on rules, templates and the small model.",
    "text": "Cost: Most work runs on levels 0 and 1: rules, templates and the small model."
   },
   {
-   "t": 266.21,
-   "end": 275.13,
+   "t": 270.11,
+   "end": 279.03,
    "title": "Red-team",
    "body": "Red-team: 48 of 48 static attacks stopped; adaptive attacker 0 of 360 outside the mandate.",
    "say": "All 48 static attacks stopped; 0 of 360 adaptive attempts left the mandate.",
    "text": "Red-team: Red-team: 48 of 48 static attacks stopped; adaptive attacker 0 of 360 outside the mandate."
   },
   {
-   "t": 275.13,
-   "end": 279.16,
+   "t": 279.03,
+   "end": 283.07,
    "title": "Compliance",
    "body": "Code requirements and Verifiable Intent / AP2 mapping, with where to check each.",
    "say": "Each requirement is mapped to where you can check it.",
    "text": "Compliance: Code requirements and Verifiable Intent / AP2 mapping, with where to check each."
   },
   {
-   "t": 279.16,
-   "end": 284.12,
+   "t": 283.07,
+   "end": 288.03,
    "title": "Journal",
    "body": "Every step goes into a signed hash chain, anchored on chain.",
    "say": "Every step is in a signed hash chain, anchored on chain.",
@@ -313,93 +313,93 @@
    "end": 11.96
   },
   {
-   "t": 166.2,
+   "t": 168.19,
    "title": "Earned trust",
    "lines": [
     "Agents start at level 1. Verified results raise trust; mistakes lower it at once.",
     "Three strikes put an agent in quarantine: passports revoked, a card for everything."
    ],
    "say": "Earned trust. Verified results raise an agent's trust; mistakes lower it at once. Three strikes mean quarantine.",
-   "end": 170.71
+   "end": 171.2
   },
   {
-   "t": 216.41,
+   "t": 218.79,
    "title": "Investing on a US exchange",
    "lines": [
     "The broker works only with the client's investment envelope.",
     "A list of funds, no leverage, short selling or options, a price corridor."
    ],
    "say": "Investing on a US exchange. The broker works only with the client's investment envelope.",
-   "end": 219.92
+   "end": 222.31
   },
   {
-   "t": 284.12,
+   "t": 288.03,
    "title": "Guardian",
    "lines": [
     "Agents propose. The kernel decides, checks and records.",
     "Code, tests, logs and reports: github.com/yourfavoriteself/ShenzhenFinTechathonTopicA"
    ],
    "say": "Agents propose. The kernel decides, checks and records. Code and reports are on GitHub.",
-   "end": 291.36
+   "end": 295.03
   }
  ],
  "voice": {
   "holds": [
    {
-    "at": 6.2,
-    "seconds": 4.76
+    "at": 6.21,
+    "seconds": 4.75
    },
    {
-    "at": 60.92,
-    "seconds": 0.29
+    "at": 27.92,
+    "seconds": 0.16
    },
    {
-    "at": 66.06,
-    "seconds": 0.25
+    "at": 31.77,
+    "seconds": 0.09
    },
    {
-    "at": 90.13,
-    "seconds": 0.65
+    "at": 90.31,
+    "seconds": 0.61
    },
    {
-    "at": 158.3,
+    "at": 160.63,
     "seconds": 1.35
    },
    {
-    "at": 177.75,
-    "seconds": 0.63
+    "at": 180.41,
+    "seconds": 0.5
    },
    {
-    "at": 185.86,
-    "seconds": 1.04
+    "at": 188.91,
+    "seconds": 0.65
    },
    {
-    "at": 193.12,
-    "seconds": 1.87
+    "at": 196.15,
+    "seconds": 1.89
    },
    {
-    "at": 204.5,
-    "seconds": 0.47
+    "at": 207.69,
+    "seconds": 0.5
    },
    {
-    "at": 237.2,
+    "at": 241.83,
     "seconds": 1.08
    },
    {
-    "at": 252.82,
-    "seconds": 0.4
+    "at": 257.56,
+    "seconds": 0.37
    },
    {
-    "at": 258.0,
-    "seconds": 3.74
+    "at": 262.76,
+    "seconds": 3.72
    },
    {
-    "at": 266.04,
-    "seconds": 0.95
+    "at": 270.8,
+    "seconds": 0.96
    },
    {
-    "at": 272.7,
-    "seconds": 0.73
+    "at": 277.7,
+    "seconds": 0.49
    }
   ],
   "lines": [
@@ -411,201 +411,201 @@
    {
     "scene": "A month for you",
     "at": 12.47,
-    "tempo": 1.058
+    "tempo": 1.0
    },
    {
     "scene": "Cash gap",
-    "at": 18.4,
+    "at": 18.91,
     "tempo": 1.0
    },
    {
     "scene": "What you see is what you sign",
-    "at": 25.66,
-    "tempo": 1.054
+    "at": 26.87,
+    "tempo": 1.06
    },
    {
     "scene": "(same scene)",
-    "at": 32.26,
-    "tempo": 1.032
+    "at": 33.431,
+    "tempo": 1.06
    },
    {
     "scene": "Budget",
-    "at": 36.3,
+    "at": 37.37,
     "tempo": 1.0
    },
    {
     "scene": "Goal",
-    "at": 45.01,
+    "at": 45.29,
     "tempo": 1.0
    },
    {
     "scene": "(same scene)",
-    "at": 51.83,
+    "at": 51.59,
     "tempo": 1.0
    },
    {
     "scene": "Leaks",
-    "at": 58.61,
-    "tempo": 1.06
+    "at": 56.94,
+    "tempo": 1.054
    },
    {
     "scene": "Cancel a subscription",
-    "at": 66.57,
-    "tempo": 1.06
+    "at": 64.94,
+    "tempo": 1.0
    },
    {
     "scene": "Protected form",
-    "at": 71.962,
+    "at": 70.64,
     "tempo": 1.0
    },
    {
     "scene": "Verified",
-    "at": 80.8,
+    "at": 80.36,
     "tempo": 1.0
    },
    {
     "scene": "Pay",
-    "at": 90.05,
+    "at": 89.89,
     "tempo": 1.06
    },
    {
     "scene": "Double charge",
-    "at": 96.68,
+    "at": 96.52,
     "tempo": 1.0
    },
    {
     "scene": "Fake bill",
-    "at": 101.96,
+    "at": 102.87,
     "tempo": 1.0
    },
    {
     "scene": "Payee risk",
-    "at": 113.2,
+    "at": 116.69,
     "tempo": 1.0
    },
    {
     "scene": "Scam call",
-    "at": 120.46,
+    "at": 123.93,
     "tempo": 1.0
    },
    {
     "scene": "(same scene)",
-    "at": 128.5,
+    "at": 132.55,
     "tempo": 1.0
    },
    {
     "scene": "(same scene)",
-    "at": 142.64,
+    "at": 147.34,
     "tempo": 1.0
    },
    {
     "scene": "(same scene)",
-    "at": 148.64,
+    "at": 152.96,
     "tempo": 1.0
    },
    {
     "scene": "(same scene)",
-    "at": 152.19,
+    "at": 156.5,
     "tempo": 1.0
    },
    {
     "scene": "Next month",
-    "at": 159.85,
+    "at": 161.84,
     "tempo": 1.06
    },
    {
     "scene": "Title card: Earned trust",
-    "at": 166.204,
+    "at": 168.194,
     "tempo": 1.0
    },
    {
     "scene": "Reward",
-    "at": 178.11,
+    "at": 180.3,
     "tempo": 1.06
    },
    {
     "scene": "Penalty",
-    "at": 186.28,
+    "at": 188.47,
     "tempo": 1.06
    },
    {
     "scene": "Quarantine",
-    "at": 195.43,
+    "at": 197.62,
     "tempo": 1.06
    },
    {
     "scene": "Trust",
-    "at": 204.56,
+    "at": 206.75,
     "tempo": 1.0
    },
    {
     "scene": "(same scene) (fast)",
-    "at": 209.79,
+    "at": 212.17,
     "tempo": 1.06
    },
    {
     "scene": "Title card: Investing on a US exchange",
-    "at": 216.41,
+    "at": 218.79,
     "tempo": 1.0
    },
    {
     "scene": "Invest",
-    "at": 223.07,
+    "at": 225.82,
     "tempo": 1.0
    },
    {
     "scene": "Order placed",
-    "at": 231.05,
+    "at": 233.97,
     "tempo": 1.0
    },
    {
     "scene": "Stopped",
-    "at": 239.13,
+    "at": 242.46,
     "tempo": 1.0
    },
    {
     "scene": "(same scene)",
-    "at": 245.08,
+    "at": 248.9,
     "tempo": 1.06
    },
    {
     "scene": "Month for you",
-    "at": 250.19,
+    "at": 254.01,
     "tempo": 1.0
    },
    {
     "scene": "Permissions",
-    "at": 254.36,
+    "at": 258.25,
     "tempo": 1.0
    },
    {
     "scene": "Agents at work",
-    "at": 258.57,
+    "at": 262.46,
     "tempo": 1.0
    },
    {
     "scene": "Cost",
-    "at": 261.61,
+    "at": 265.51,
     "tempo": 1.06
    },
    {
     "scene": "Red-team",
-    "at": 266.21,
+    "at": 270.11,
     "tempo": 1.06
    },
    {
     "scene": "Compliance",
-    "at": 275.13,
-    "tempo": 1.06
+    "at": 279.03,
+    "tempo": 1.058
    },
    {
     "scene": "Journal",
-    "at": 279.163,
+    "at": 283.07,
     "tempo": 1.06
    },
    {
     "scene": "Title card: Guardian",
-    "at": 284.121,
+    "at": 288.03,
     "tempo": 1.06
    }
   ]
