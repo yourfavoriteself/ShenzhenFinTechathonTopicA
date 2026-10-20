@@ -13,7 +13,7 @@ The six materials of the submission, all generated from this repository.
 
 The demo video plays on GitHub:
 
-https://github.com/user-attachments/assets/28c5fc72-b9a7-47b7-a26e-88833357c1fc
+https://github.com/user-attachments/assets/54a6586a-e7c8-4b47-ba3f-fa48f4331cf4
 
 Also here: [`DESIGN_DECISIONS.md`](DESIGN_DECISIONS.md), the choices behind the design and what each one cost us.
 

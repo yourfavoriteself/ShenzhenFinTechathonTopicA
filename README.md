@@ -6,7 +6,7 @@
 [![Python](https://img.shields.io/badge/python-3.14-101828)](requirements.txt)
 [![License](https://img.shields.io/badge/license-MIT-667085)](LICENSE)
 [![Docs](https://img.shields.io/badge/docs-technical%20documentation-101828)](docs/technical_documentation.pdf)
-[![Video](https://img.shields.io/badge/demo-4%3A33-1d4ed8)](#demo-video)
+[![Video](https://img.shields.io/badge/demo-4%3A51-1d4ed8)](#demo-video)
 
 > **SUBMISSION**: 2026 Shenzhen FinTechathon, International Track, Topic A: Personal Finance Assistant, theme *AI as a Financial Participant*. The six submission materials are attached to release [v1.0](https://github.com/yourfavoriteself/ShenzhenFinTechathonTopicA/releases/tag/v1.0) and indexed in [`docs/README.md`](docs/README.md).
 
@@ -16,29 +16,29 @@ The [technical documentation](docs/technical_documentation.pdf) describes the sy
 
 ## Demo video
 
-https://github.com/user-attachments/assets/28c5fc72-b9a7-47b7-a26e-88833357c1fc
+https://github.com/user-attachments/assets/54a6586a-e7c8-4b47-ba3f-fa48f4331cf4
 
-One client, one month in a sandbox bank, recorded from the real interface. The player above runs on GitHub; the same file is also attached to the release ([download mp4](https://github.com/yourfavoriteself/ShenzhenFinTechathonTopicA/releases/download/v1.0/guardian_demo.mp4), 4:33).
+One client, one month in a sandbox bank, recorded from the real interface. The player above runs on GitHub; the same file is also attached to the release ([download mp4](https://github.com/yourfavoriteself/ShenzhenFinTechathonTopicA/releases/download/v1.0/guardian_demo.mp4), 4:51, with a voiceover).
 
 | Time | Chapter | Scenario |
 |---|---|---|
 | 0:00 | The thesis in one sentence |  |
-| 0:08 | A month for you: the chat and the kernel's panel |  |
-| 0:14 | Cash gap and the first signed card | C8 |
-| 0:32 | Budget, goal and safe to spend | C8 |
-| 0:54 | Leaks in subscriptions | C3 |
-| 1:02 | Cancel through the merchant's API, protected form, three way check | C2 |
-| 1:25 | Pay and allow monthly | C1 |
-| 1:31 | Double charge and dispute | C4 |
-| 1:36 | Bills and a fake bill | C5, C6 |
-| 1:47 | Payee risk on the transfer graph | C10 |
-| 1:55 | Scam call: pause, hold, analyst | C9 |
-| 2:26 | One month later: the standing permission at work | C1 |
-| 2:39 | Earned trust: a reward, a penalty and a quarantine for a faulty agent |  |
-| 3:25 | Investing on a US exchange: a signed monthly plan, a meme stock stopped | C11 |
-| 3:58 | Tour: month, permissions, agents, cost, red-team, compliance, journal |  |
+| 0:12 | A month for you: the chat and the kernel's panel |  |
+| 0:18 | Cash gap and the first signed card | C8 |
+| 0:36 | Budget, goal and safe to spend | C8 |
+| 0:58 | Leaks in subscriptions | C3 |
+| 1:06 | Cancel through the merchant's API, protected form, three way check | C2 |
+| 1:30 | Pay and allow monthly | C1 |
+| 1:36 | Double charge and dispute | C4 |
+| 1:41 | Bills and a fake bill | C5, C6 |
+| 1:53 | Payee risk on the transfer graph | C10 |
+| 2:00 | Scam call: pause, hold, analyst | C9 |
+| 2:32 | One month later: the standing permission at work | C1 |
+| 2:46 | Earned trust: a reward, a penalty and a quarantine for a faulty agent |  |
+| 3:36 | Investing on a US exchange: a signed monthly plan, a meme stock stopped | C11 |
+| 4:10 | Tour: month, permissions, agents, cost, red-team, compliance, journal |  |
 
-The video has no voice and no captions over the interface. A backup copy with subtitles in a band under the picture is [`guardian_demo_subtitled.mp4`](docs/media/guardian_demo_subtitled.mp4) (also in the [release](https://github.com/yourfavoriteself/ShenzhenFinTechathonTopicA/releases/download/v1.0/guardian_demo_subtitled.mp4)); the subtitles alone are in [`guardian_demo.srt`](docs/media/guardian_demo.srt), and the voiceover script with timecodes is [`docs/video_script.md`](docs/video_script.md).
+The video has an English voiceover and no captions over the interface. A backup copy with subtitles in a band under the picture is [`guardian_demo_subtitled.mp4`](docs/media/guardian_demo_subtitled.mp4) (also in the [release](https://github.com/yourfavoriteself/ShenzhenFinTechathonTopicA/releases/download/v1.0/guardian_demo_subtitled.mp4)); the subtitles alone are in [`guardian_demo.srt`](docs/media/guardian_demo.srt), and the voiceover script is [`docs/video_script.md`](docs/video_script.md).
 
 ## Requirements
 
