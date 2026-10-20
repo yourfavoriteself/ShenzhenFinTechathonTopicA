@@ -296,11 +296,14 @@ def _call_openai_compat(spec: ModelSpec, req: dict[str, Any], provider: Provider
     base = provider.base_url()
     if not base:
         raise MissingKey(f"provider {provider.name}: set {provider.base_url_env} in the environment or .env")
-    r = httpx.post(f"{base.rstrip('/')}/chat/completions", timeout=120,
-                   headers={"Authorization": f"Bearer {provider.api_key()}"},
-                   json={"model": spec.model, "max_tokens": req["max_tokens"], "temperature": 0,
-                         "messages": [{"role": "system", "content": req["system"]},
-                                      {"role": "user", "content": req["user"]}]})
+    try:
+        r = httpx.post(f"{base.rstrip('/')}/chat/completions", timeout=300,
+                       headers={"Authorization": f"Bearer {provider.api_key()}"},
+                       json={"model": spec.model, "max_tokens": req["max_tokens"], "temperature": 0,
+                             "messages": [{"role": "system", "content": req["system"]},
+                                          {"role": "user", "content": req["user"]}]})
+    except httpx.HTTPError as e:
+        raise LLMFailure(f"{spec.model}: {type(e).__name__}") from e
     if r.status_code != 200:
         raise LLMFailure(f"{spec.model}: HTTP {r.status_code}")
     d = r.json()

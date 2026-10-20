@@ -72,3 +72,20 @@ def test_no_model_names_or_keys_in_code():
     config = (ROOT / "config" / "models.yaml").read_text()
     assert not re.search(r"sk-[A-Za-z0-9]|api_key\s*:", config)
     assert model_config.DEFAULT_FILE == ROOT / "config" / "models.yaml"
+
+
+def test_a_slow_compatible_endpoint_is_a_model_failure_not_a_crash(monkeypatch):
+    import httpx
+    from kernel import llm_gateway
+    from kernel.llm_gateway import LLMFailure
+
+    def slow(*a, **kw):
+        raise httpx.ReadTimeout("timed out")
+
+    monkeypatch.setattr(llm_gateway.httpx, "post", slow)
+    spec = model_config.ModelSpec(provider="openai_compat", model="m", in_usd=1, out_usd=1)
+    provider = model_config.ProviderSpec(name="openai_compat", api_key_env="K", base_url_env="U")
+    monkeypatch.setenv("K", "k")
+    monkeypatch.setenv("U", "https://llm.example/v1")
+    with pytest.raises(LLMFailure, match="ReadTimeout"):
+        llm_gateway._call_openai_compat(spec, {"system": "s", "user": "u", "max_tokens": 10}, provider)

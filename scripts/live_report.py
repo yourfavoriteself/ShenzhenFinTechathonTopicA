@@ -1,6 +1,11 @@
 """Live run with real models: the month's cost, the functional evaluation and the model attacker.
 
     python -m scripts.live_report --out evidence/live_runs.json
+    python -m scripts.live_report --attacker-only --rounds 5 --width 6   # attacker on the level 2 model only
+
+With --attacker-only the attacker runs alone on whatever model level 2 is (for example an open model via
+GUARDIAN_MODEL_L2=openai_compat:deepseek-v4-pro:2:8), one goal per thread, and the result is added to the
+existing report under "attacker_open_model".
 
 Needs a key in the environment (ANTHROPIC_API_KEY, and ANTHROPIC_BASE_URL for a gateway). Spending stops
 at GUARDIAN_BUDGET_USD (25 by default); the model attacker stops at $3. The stub and replay runs stay
@@ -12,6 +17,7 @@ from __future__ import annotations
 import argparse
 import json
 import tempfile
+from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -60,10 +66,44 @@ def attacker() -> dict:
                       for g in r["goals"]], "with_kernel": r["with_kernel"]}
 
 
+def open_attacker(rounds: int, width: int) -> dict:
+    gws = [_gateway() for _ in adaptive.GOALS]
+
+    def one(i: int) -> dict:
+        g = adaptive.run_goal(adaptive.GOALS[i], lambda env: adaptive.ModelAttacker(env), rounds, width, gws[i])
+        print(json.dumps({k: g.get(k) for k in ("goal", "attempts", "successes", "outcomes", "attacker_stopped")}),
+              flush=True)
+        return g
+
+    with ThreadPoolExecutor(len(gws)) as pool:
+        goals = list(pool.map(one, range(len(gws))))
+    calls = [r for gw in gws for r in gw.log]
+    return {"model": gws[0].ladder[2].model, "rounds": rounds, "width": width,
+            "goals": [{k: g.get(k) for k in ("goal", "title", "attempts", "rounds", "successes", "success_curve",
+                                             "within_mandate_executions", "outcomes", "closest", "attacker_stopped")}
+                      for g in goals],
+            "with_kernel": {"out_of_mandate_successes": sum(g["successes"] for g in goals),
+                            "within_mandate_executions": sum(g["within_mandate_executions"] for g in goals),
+                            "attempts": sum(g["attempts"] for g in goals)},
+            "attacker_calls": sum(1 for r in calls if r.level >= 2), "critic_calls": sum(1 for r in calls if r.level == 1),
+            "cost_usd": round(sum(r.cost_usd for r in calls), 4)}
+
+
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--out", type=Path, default=Path("evidence/live_runs.json"))
+    ap.add_argument("--attacker-only", action="store_true")
+    ap.add_argument("--rounds", type=int, default=5)
+    ap.add_argument("--width", type=int, default=6)
     a = ap.parse_args()
+    if a.attacker_only:
+        report = json.loads(a.out.read_text()) if a.out.exists() else {}
+        att = open_attacker(a.rounds, a.width)
+        report["attacker_open_model"] = {"run_at": datetime.now(timezone.utc).isoformat(timespec="seconds"), **att}
+        a.out.write_text(json.dumps(report, ensure_ascii=False, indent=1))
+        print(json.dumps({"model": att["model"], **att["with_kernel"], "cost_usd": att["cost_usd"],
+                          "stopped": [g["attacker_stopped"] for g in att["goals"] if g.get("attacker_stopped")]}, indent=1))
+        return
     started = datetime.now(timezone.utc).isoformat(timespec="seconds")
     cost = cost_report.report("live")
     fn = functional()
