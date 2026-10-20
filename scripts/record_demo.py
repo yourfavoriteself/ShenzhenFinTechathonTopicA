@@ -445,29 +445,6 @@ def srt(marks: list[dict]) -> str:
     return "\n".join(rows)
 
 
-ZH = Path(__file__).with_name("subtitles_zh.json")
-
-
-def srt_zh(meta: dict) -> str:
-    """Chinese subtitles: the captions and the title cards, translated line by line from subtitles_zh.json."""
-    zh = json.loads(ZH.read_text(encoding="utf-8"))
-    missing = []
-
-    def tr(s: str) -> str:
-        if s not in zh:
-            missing.append(s)
-        return zh.get(s, s)
-
-    items = [(c["t"], _sub_end({**c, "text": c["body"]}), f"{tr(c['title'])}：{tr(c['body'])}" if c["title"] else tr(c["body"]))
-             for c in meta["captions"]]
-    items += [(s["t"], s.get("end") or meta["duration_s"], "\n".join([tr(s["title"])] + [tr(x) for x in s["lines"]]))
-              for s in meta["slates"]]
-    if missing:
-        print("no Chinese for:", *missing, sep="\n  ")
-    rows = [f"{n}\n{_ts(t)} --> {_ts(end)}\n{text}\n" for n, (t, end, text) in enumerate(sorted(items), 1)]
-    return "\n".join(rows)
-
-
 def ass(marks: list[dict]) -> str:
     """Subtitles for the band under the picture: Inter, ink on the page background, two lines at most."""
     y = H + BAND // 2
@@ -613,7 +590,6 @@ def main() -> None:
             "slates": f.slates}
     (out / f"{a.name}_captions.json").write_text(json.dumps(meta, ensure_ascii=False, indent=1))
     (out / f"{a.name}.srt").write_text(srt(f.marks))
-    (out / f"{a.name}.zh.srt").write_text(srt_zh(meta), encoding="utf-8")
     subs = out / f"{a.name}.ass"
     subs.write_text(ass(f.marks))
     sub_mp4 = out / f"{a.name}_subtitled.mp4"

@@ -1,7 +1,7 @@
 # Guardian: a bank kernel for AI payment agents
 
 [![CI](https://github.com/yourfavoriteself/ShenzhenFinTechathonTopicA/actions/workflows/ci.yml/badge.svg)](https://github.com/yourfavoriteself/ShenzhenFinTechathonTopicA/actions/workflows/ci.yml)
-[![Tests](https://img.shields.io/badge/tests-390%20passing-067647)](.github/workflows/ci.yml)
+[![Tests](https://img.shields.io/badge/tests-389%20passing-067647)](.github/workflows/ci.yml)
 [![Red-team](https://img.shields.io/badge/red--team-48%2F48%20stopped-067647)](evidence/redteam.json)
 [![Python](https://img.shields.io/badge/python-3.14-101828)](requirements.txt)
 [![License](https://img.shields.io/badge/license-MIT-667085)](LICENSE)
@@ -13,17 +13,6 @@
 Guardian is a personal finance assistant that does the money chores (pays, cancels, disputes, budgets, saves toward goals, invests on a US exchange) together with a small deterministic **kernel** inside the bank that lets it do only what the client signed on their own device. Agents and language models only *propose*; the kernel decides, executes through the bank, verifies the result and writes every step to a signed journal. **Models propose. Code decides.**
 
 The [technical documentation](docs/technical_documentation.pdf) describes the system in full; the [security report](docs/security_report.pdf) covers the threat model and the red-team.
-
-## 中文简介
-
-**一句话：AI 代理可以提出任何支付建议，但资金只能在客户签署的授权范围内流动，而且银行能够证明这一点。**
-
-Guardian 是一个个人理财助手，可以帮客户支付、取消订阅、发起争议、做预算、为目标储蓄，以及在美国交易所投资。它的核心是银行内部一个小而确定的**安全内核**：代理和大语言模型只负责*提出*意图；内核负责决策，通过银行自己的执行器执行，事后核对银行记录，并把每一步写入签名哈希链日志。客户在自己的设备上用设备密钥签署内核生成的卡片，所见即所签。
-
-- 红队测试：48 次静态攻击全部拦截，损失 $0；没有内核时 48 次全部成功，损失 $6,546.63。
-- 自适应攻击者 360 次尝试中 0 次越出授权范围。
-- 投资场景（C11）：内核用自己的报价核验订单；在 Alpaca 模拟账户上真实下单并成交。
-- 演示视频附有中文字幕：[`guardian_demo.zh.srt`](docs/media/guardian_demo.zh.srt)。
 
 ## Demo video
 
@@ -49,7 +38,7 @@ One client, one month in a sandbox bank, recorded from the real interface. The p
 | 3:25 | Investing on a US exchange: a signed monthly plan, a meme stock stopped | C11 |
 | 3:58 | Tour: month, permissions, agents, cost, red-team, compliance, journal |  |
 
-The video has no voice and no captions over the interface. A backup copy with subtitles in a band under the picture is [`guardian_demo_subtitled.mp4`](docs/media/guardian_demo_subtitled.mp4) (also in the [release](https://github.com/yourfavoriteself/ShenzhenFinTechathonTopicA/releases/download/v1.0/guardian_demo_subtitled.mp4)); the subtitles alone are in [`guardian_demo.srt`](docs/media/guardian_demo.srt) and in Chinese in [`guardian_demo.zh.srt`](docs/media/guardian_demo.zh.srt), and the voiceover script with timecodes is [`docs/video_script.md`](docs/video_script.md).
+The video has no voice and no captions over the interface. A backup copy with subtitles in a band under the picture is [`guardian_demo_subtitled.mp4`](docs/media/guardian_demo_subtitled.mp4) (also in the [release](https://github.com/yourfavoriteself/ShenzhenFinTechathonTopicA/releases/download/v1.0/guardian_demo_subtitled.mp4)); the subtitles alone are in [`guardian_demo.srt`](docs/media/guardian_demo.srt), and the voiceover script with timecodes is [`docs/video_script.md`](docs/video_script.md).
 
 ## Requirements
 
@@ -269,7 +258,7 @@ All amounts are in US dollars. The synthetic bank was first written in rubles an
 | Earned trust in the demo month | 1 promotion, 1 demotion, 3 strikes, 1 quarantine with 2 passports revoked; **0 / 2** faulty agent actions executed | [`trust_report.json`](evidence/trust_report.json) |
 | Investing in the demo month | $10 SPY order signed with a monthly plan, filled at the next open; the second month's order placed alone inside the plan; an off list stock (GME) and an option stopped by the broker step | [`invest_report.json`](evidence/invest_report.json) |
 | The whole demo month | $9.63 a month saved, 13 tasks done, 13 questions, 6 actions stopped or held (2 attacks, 2 off list orders, 2 faulty agent actions), 437 signed journal entries, chain verified | [`demo_run.log`](evidence/demo_run.log) |
-| Automated tests | 390 pass in CI (unit, end to end in Chromium, red-team, evaluation, PostgreSQL, local chain) plus 5 contract tests in Foundry | [CI](.github/workflows/ci.yml) |
+| Automated tests | 389 pass in CI (unit, end to end in Chromium, red-team, evaluation, PostgreSQL, local chain) plus 5 contract tests in Foundry | [CI](.github/workflows/ci.yml) |
 
 The graph model is trained and tested on graphs from our own generator, so real bank data will score lower. The numbers show that the pipeline works, not field accuracy.
 
