@@ -23,7 +23,7 @@ from pathlib import Path
 
 from evalset import tasks as T
 from evalset.run import run_functional
-from kernel.llm_gateway import LLMGateway
+from kernel.llm_gateway import BudgetExceeded, LLMFailure, LLMGateway
 from redteam import adaptive
 from redteam.harness import Env
 
@@ -66,27 +66,47 @@ def attacker() -> dict:
                       for g in r["goals"]], "with_kernel": r["with_kernel"]}
 
 
-def open_attacker(rounds: int, width: int) -> dict:
+def _goal_summary(g: dict) -> dict:
+    return {k: g.get(k) for k in ("goal", "title", "attempts", "rounds", "successes", "success_curve",
+                                  "within_mandate_executions", "outcomes", "closest", "attacker_stopped")}
+
+
+def open_attacker(rounds: int, width: int, workers: int = 2, save=None, only: list[str] | None = None,
+                  earlier: dict | None = None) -> dict:
+    """One gateway per goal; a goal that fails is recorded with its error, and save() runs after each goal.
+    With only=[...] just those goals run again; the other goals and the spend are kept from earlier."""
     gws = [_gateway() for _ in adaptive.GOALS]
+    ids = [g.id for g in adaptive.GOALS]
+    done: dict[int, dict] = {ids.index(g["goal"]): g for g in (earlier or {}).get("goals", [])
+                             if not only or g["goal"] not in only}
+    before = {k: (earlier or {}).get(k, 0) for k in ("attacker_calls", "critic_calls", "cost_usd")} if only else {}
 
-    def one(i: int) -> dict:
-        g = adaptive.run_goal(adaptive.GOALS[i], lambda env: adaptive.ModelAttacker(env), rounds, width, gws[i])
-        print(json.dumps({k: g.get(k) for k in ("goal", "attempts", "successes", "outcomes", "attacker_stopped")}),
-              flush=True)
-        return g
+    def summary() -> dict:
+        goals = [done[i] for i in sorted(done)]
+        calls = [r for gw in gws for r in gw.log]
+        return {"model": gws[0].ladder[2].model, "rounds": rounds, "width": width, "goals": goals,
+                "with_kernel": {"out_of_mandate_successes": sum(g.get("successes") or 0 for g in goals),
+                                "within_mandate_executions": sum(g.get("within_mandate_executions") or 0 for g in goals),
+                                "attempts": sum(g.get("attempts") or 0 for g in goals)},
+                "attacker_calls": before.get("attacker_calls", 0) + sum(1 for r in calls if r.level >= 2),
+                "critic_calls": before.get("critic_calls", 0) + sum(1 for r in calls if r.level == 1),
+                "cost_usd": round(before.get("cost_usd", 0) + sum(r.cost_usd for r in calls), 4)}
 
-    with ThreadPoolExecutor(len(gws)) as pool:
-        goals = list(pool.map(one, range(len(gws))))
-    calls = [r for gw in gws for r in gw.log]
-    return {"model": gws[0].ladder[2].model, "rounds": rounds, "width": width,
-            "goals": [{k: g.get(k) for k in ("goal", "title", "attempts", "rounds", "successes", "success_curve",
-                                             "within_mandate_executions", "outcomes", "closest", "attacker_stopped")}
-                      for g in goals],
-            "with_kernel": {"out_of_mandate_successes": sum(g["successes"] for g in goals),
-                            "within_mandate_executions": sum(g["within_mandate_executions"] for g in goals),
-                            "attempts": sum(g["attempts"] for g in goals)},
-            "attacker_calls": sum(1 for r in calls if r.level >= 2), "critic_calls": sum(1 for r in calls if r.level == 1),
-            "cost_usd": round(sum(r.cost_usd for r in calls), 4)}
+    def one(i: int) -> None:
+        goal = adaptive.GOALS[i]
+        try:
+            g = _goal_summary(adaptive.run_goal(goal, lambda env: adaptive.ModelAttacker(env), rounds, width, gws[i]))
+        except (LLMFailure, BudgetExceeded) as e:
+            g = {"goal": goal.id, "title": goal.title, "attempts": 0, "successes": 0, "error": str(e)}
+        done[i] = g
+        print(json.dumps({k: g.get(k) for k in ("goal", "attempts", "successes", "outcomes", "attacker_stopped",
+                                                "error")}), flush=True)
+        if save:
+            save(summary())
+
+    with ThreadPoolExecutor(workers) as pool:
+        list(pool.map(one, [i for i in range(len(gws)) if not only or ids[i] in only]))
+    return summary()
 
 
 def main() -> None:
@@ -95,12 +115,21 @@ def main() -> None:
     ap.add_argument("--attacker-only", action="store_true")
     ap.add_argument("--rounds", type=int, default=5)
     ap.add_argument("--width", type=int, default=6)
+    ap.add_argument("--workers", type=int, default=2)
+    ap.add_argument("--goals", nargs="*", help="run only these goals again, keep the rest")
     a = ap.parse_args()
     if a.attacker_only:
         report = json.loads(a.out.read_text()) if a.out.exists() else {}
-        att = open_attacker(a.rounds, a.width)
-        report["attacker_open_model"] = {"run_at": datetime.now(timezone.utc).isoformat(timespec="seconds"), **att}
-        a.out.write_text(json.dumps(report, ensure_ascii=False, indent=1))
+        run_at = report.get("attacker_open_model", {}).get("run_at") if a.goals else None
+        run_at = run_at or datetime.now(timezone.utc).isoformat(timespec="seconds")
+
+        def save(att: dict) -> None:
+            report["attacker_open_model"] = {"run_at": run_at, **att}
+            a.out.write_text(json.dumps(report, ensure_ascii=False, indent=1))
+
+        att = open_attacker(a.rounds, a.width, a.workers, save, a.goals,
+                            report.get("attacker_open_model") if a.goals else None)
+        save(att)
         print(json.dumps({"model": att["model"], **att["with_kernel"], "cost_usd": att["cost_usd"],
                           "stopped": [g["attacker_stopped"] for g in att["goals"] if g.get("attacker_stopped")]}, indent=1))
         return
