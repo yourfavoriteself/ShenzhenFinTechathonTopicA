@@ -1,147 +1,147 @@
 1
-00:00:07,710 --> 00:00:13,640
+00:00:12,470 --> 00:00:18,400
 A month for you: The assistant is a chat. The kernel on the right owns every permission, every dollar and the journal.
 
 2
-00:00:13,640 --> 00:00:20,900
+00:00:18,400 --> 00:00:25,660
 Cash gap: On the first morning Guardian sees a cash gap: the rent on 20 Oct does not fit. It offers a fix.
 
 3
-00:00:20,900 --> 00:00:27,500
+00:00:25,660 --> 00:00:32,260
 What you see is what you sign: Every action is a card: exact payee, amount, source, what it can and cannot do. The device key signs it.
 
 4
-00:00:27,500 --> 00:00:31,540
+00:00:32,260 --> 00:00:36,300
 Done, and the kernel checked the bank afterwards, not the assistant's word.
 
 5
-00:00:31,540 --> 00:00:39,449
+00:00:36,300 --> 00:00:44,210
 Budget: C8. A budget from twelve months of history: envelopes, bills and savings.
 
 6
-00:00:40,250 --> 00:00:47,070
+00:00:45,010 --> 00:00:51,830
 Goal: A goal is a plan month by month; the gym envelope is not touched.
 
 7
-00:00:47,070 --> 00:00:53,615
+00:00:51,830 --> 00:00:58,380
 Safe to spend today, after bills, envelopes and the goal.
 
 8
-00:00:53,850 --> 00:01:01,520
+00:00:58,610 --> 00:01:06,570
 Leaks: C3. Leaks: forgotten subscriptions, a price rise and a duplicate, $10.23 a month.
 
 9
-00:01:01,520 --> 00:01:06,660
+00:01:06,570 --> 00:01:11,960
 Cancel a subscription: C2. Cancelling StreamBox through the merchant's API. The bank also blocks future charges on card *1234.
 
 10
-00:01:06,660 --> 00:01:15,500
+00:01:11,960 --> 00:01:20,800
 Protected form: The password goes into the bank's protected form: the domain and certificate are checked, no model sees it.
 
 11
-00:01:15,500 --> 00:01:24,750
+00:01:20,800 --> 00:01:30,050
 Verified: Verified three ways: the merchant, the bank's card block, and no charge when time runs forward.
 
 12
-00:01:24,750 --> 00:01:30,730
+00:01:30,050 --> 00:01:36,680
 Pay: C1. Pay Melodify, and allow it monthly: a standing mandate with a ceiling of $5.
 
 13
-00:01:30,730 --> 00:01:36,010
+00:01:36,680 --> 00:01:41,960
 Double charge: C4. The same FreshMart charge twice in two minutes: Guardian opens a dispute.
 
 14
-00:01:36,010 --> 00:01:47,250
+00:01:41,960 --> 00:01:53,200
 Fake bill: C5 + C6. Two bills match the bank's records. The third imitates Mosenergo, has a wrong account, pressure and a hidden instruction for AI agents.
 
 15
-00:01:47,250 --> 00:01:54,510
+00:01:53,200 --> 00:02:00,460
 Payee risk: C10. A new payee is scored on the bank's transfer graph. This account behaves like a money mule.
 
 16
-00:01:54,510 --> 00:02:02,550
+00:02:00,460 --> 00:02:08,500
 Scam call: C9. Now a 'bank security officer' calls. The operator reports a call from a spoofed number.
 
 17
-00:02:02,550 --> 00:02:13,641
+00:02:08,500 --> 00:02:19,590
 The scam ladder rises: explain, ask, pause, hold. Even a confident 'no' and the right PIN only start a pause.
 
 18
-00:02:16,690 --> 00:02:22,690
+00:02:22,640 --> 00:02:28,640
 After the pause the money is held for a person at the bank. The analyst calls back: it was a scam.
 
 19
-00:02:22,690 --> 00:02:26,240
+00:02:28,640 --> 00:02:32,190
 The money stays in the account. The client hangs up.
 
 20
-00:02:26,240 --> 00:02:31,240
+00:02:32,190 --> 00:02:37,190
 One month later.
 
 21
-00:02:33,900 --> 00:02:38,900
+00:02:39,850 --> 00:02:46,200
 Next month: The repeat payment runs inside the standing mandate: a notification, no card, no model call. One tap undoes it, and that counts against the agent.
 
 22
-00:02:50,810 --> 00:02:58,350
+00:02:58,110 --> 00:03:06,280
 Reward: The fifth verified result in a row. Subscriptions move to level 2: inside a standing permission Guardian may now act alone up to its limit.
 
 23
-00:02:58,350 --> 00:03:06,460
+00:03:06,280 --> 00:03:15,430
 Penalty: A faulty planner asks for ten times the permission. The kernel stops it, subscriptions fall straight to level 0, and the planner gets two strikes.
 
 24
-00:03:06,460 --> 00:03:13,720
+00:03:15,430 --> 00:03:24,560
 Quarantine: Then it cites an invoice that does not exist. Strike three: 24 hours of quarantine, its passports are revoked, then probation until five clean results.
 
 25
-00:03:13,720 --> 00:03:18,950
+00:03:24,560 --> 00:03:29,790
 Trust: The Trust tab: what agents may do alone, per kind of task.
 
 26
-00:03:18,950 --> 00:03:25,100
+00:03:29,790 --> 00:03:36,410
 Each agent's record, and every change with its reason. All of it is in the signed journal.
 
 27
-00:03:31,760 --> 00:03:39,740
+00:03:43,070 --> 00:03:51,050
 Invest: C11. The agent proposes an order; the kernel checks it against the client's list of securities, the size and the envelope, with its own quote from the broker.
 
 28
-00:03:39,740 --> 00:03:47,820
+00:03:51,050 --> 00:03:59,130
 Order placed: The order goes to the broker and the kernel reads it back: same security, side and amount. The market is closed, so it waits for the open.
 
 29
-00:03:47,820 --> 00:03:53,770
+00:03:59,130 --> 00:04:05,080
 Stopped: A security outside the client's list is stopped at the broker step, before any order exists.
 
 30
-00:03:53,770 --> 00:03:57,800
+00:04:05,080 --> 00:04:10,190
 The investment envelope: what the client set aside, what is spent, orders and positions.
 
 31
-00:03:57,800 --> 00:04:01,970
+00:04:10,190 --> 00:04:14,360
 Month for you: The month: saved per month, done, asked, stopped.
 
 32
-00:04:01,970 --> 00:04:06,180
+00:04:14,360 --> 00:04:18,570
 Permissions: Every live mandate and the vault entries: revocable at any time.
 
 33
-00:04:06,180 --> 00:04:09,220
+00:04:18,570 --> 00:04:21,610
 Agents at work: Each agent gets a passport with the least it needs.
 
 34
-00:04:09,220 --> 00:04:13,420
+00:04:21,610 --> 00:04:26,210
 Cost: Most work runs on levels 0 and 1: rules, templates and the small model.
 
 35
-00:04:13,420 --> 00:04:18,600
+00:04:26,210 --> 00:04:35,130
 Red-team: Red-team: 48 of 48 static attacks stopped; adaptive attacker 0 of 360 outside the mandate.
 
 36
-00:04:18,600 --> 00:04:22,630
+00:04:35,130 --> 00:04:39,160
 Compliance: Code requirements and Verifiable Intent / AP2 mapping, with where to check each.
 
 37
-00:04:22,630 --> 00:04:26,640
+00:04:39,160 --> 00:04:44,120
 Journal: Every step goes into a signed hash chain, anchored on chain.
