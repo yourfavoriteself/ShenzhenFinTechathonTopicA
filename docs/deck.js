@@ -7,6 +7,7 @@ const pptxgen = require("pptxgenjs");
 const root = path.resolve(__dirname, "..");
 const ev = (f) => JSON.parse(fs.readFileSync(path.join(root, "evidence", f), "utf8"));
 const rt = ev("redteam.json"), evl = ev("eval_report.json"), cost = fs.existsSync(path.join(root, "evidence", "costs_live.json")) ? ev("costs_live.json") : ev("costs.json"), demo = ev("demo_summary.json");
+const liveRuns = fs.existsSync(path.join(root, "evidence", "live_runs.json")) ? ev("live_runs.json") : {}, om = liveRuns.attacker_open_model;
 const bud = ev("budget_report.json"), graph = ev("risk_graph.json"), tr = ev("trust_report.json"), inv = ev("invest_report.json");
 const media = (f) => path.join(root, "docs", "media", f);
 const num = (n) => String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
@@ -317,6 +318,7 @@ const st = rt.static, ad = rt.adaptive, lg = rt.legacy_prototype, rr = rt.retent
     `We attacked the kernel four ways. ${st.attacks} static attacks: fake bills, injected instructions, swapped payees, look-alike merchants, replayed signatures, over-limit requests, off-list investment orders. All ${st.blocked} stopped. `
     + `${rr.attacks} attacks that try to plant something in the assistant's memory for later: all stopped. `
     + `An adaptive attacker that learns from the kernel's answers, ${ad.rounds} rounds, ${ad.with_kernel.attempts} attempts: zero payments outside the mandate. `
+    + (om ? `We also let an open model, ${om.model === "deepseek-v4-pro" ? "DeepSeek V4 Pro" : om.model}, play that attacker: ${om.with_kernel.attempts} attempts, none reached its goal. ` : "")
     + `And the earlier prototype's suite: ${lg.prevented} of ${lg.attacks} prevented, one bounded by the limit. Without the kernel the same static set lost ${usd(st.without_kernel.lost_cents)}.`);
   stat(s, 0.5, 1.3, 2.1, `${st.blocked}/${st.attacks}`, "static attacks stopped");
   stat(s, 2.8, 1.3, 2.1, `${rr.blocked}/${rr.attacks}`, "memory-planting attacks stopped");
