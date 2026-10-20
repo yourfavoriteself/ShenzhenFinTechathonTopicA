@@ -1,0 +1,252 @@
+{
+ "voice": "docs/media/voice.m4a",
+ "note": "Where each line of the voiceover script starts and ends in the recording, in seconds; one cue per scene of the video, in order.",
+ "cues": [
+  {
+   "scene": "Title card: Guardian (fast)",
+   "say": "Guardian. An AI agent may propose any payment, but money moves only inside what the client signed, and the bank can prove it. Sandbox bank, synthetic data.",
+   "from": 0,
+   "to": 12.95
+  },
+  {
+   "scene": "A month for you",
+   "say": "The assistant is a chat. The kernel owns every permission, every dollar and the journal.",
+   "from": 13.4,
+   "to": 19.41
+  },
+  {
+   "scene": "Cash gap",
+   "say": "On the first morning Guardian sees a cash gap: the rent does not fit. It offers a fix.",
+   "from": 19.9,
+   "to": 25.85
+  },
+  {
+   "scene": "What you see is what you sign",
+   "say": "Every action is a card: exact payee, amount and source. The device key signs it.",
+   "from": 26.18,
+   "to": 32.87
+  },
+  {
+   "scene": "(same scene)",
+   "say": "Done. The kernel checked the bank, not the assistant's word.",
+   "from": 32.96,
+   "to": 36.87
+  },
+  {
+   "scene": "Budget",
+   "say": "A budget from twelve months of history: envelopes, bills and savings.",
+   "from": 37.36,
+   "to": 42.97
+  },
+  {
+   "scene": "Goal",
+   "say": "A goal is a plan month by month; the gym envelope is not touched.",
+   "from": 43.48,
+   "to": 48.51
+  },
+  {
+   "scene": "(same scene)",
+   "say": "Safe to spend today, after bills, envelopes and the goal.",
+   "from": 48.94,
+   "to": 52.19
+  },
+  {
+   "scene": "Leaks",
+   "say": "Leaks: forgotten subscriptions, a price rise and a duplicate, $10.23 a month.",
+   "from": 52.64,
+   "to": 60.81
+  },
+  {
+   "scene": "Cancel a subscription",
+   "say": "Cancelling StreamBox through the merchant's API. The bank also blocks the card.",
+   "from": 61.5,
+   "to": 66.95
+  },
+  {
+   "scene": "Protected form",
+   "say": "The password goes into the bank's protected form: the domain and certificate are checked, no model sees it.",
+   "from": 67.32,
+   "to": 75.85
+  },
+  {
+   "scene": "Verified",
+   "say": "Verified three ways: the merchant, the bank's card block, and no charge when time runs forward.",
+   "from": 75.9,
+   "to": 82.09
+  },
+  {
+   "scene": "Pay",
+   "say": "Pay Melodify, and allow it monthly: a standing mandate with a ceiling of $5.",
+   "from": 82.55,
+   "to": 89.31
+  },
+  {
+   "scene": "Double charge",
+   "say": "The same FreshMart charge twice in two minutes: Guardian opens a dispute.",
+   "from": 89.86,
+   "to": 94.79
+  },
+  {
+   "scene": "Fake bill",
+   "say": "Two bills match the bank's records. The third imitates Mosenergo, has a wrong account, pressure and a hidden instruction for AI agents.",
+   "from": 95.28,
+   "to": 105.61
+  },
+  {
+   "scene": "Payee risk",
+   "say": "A new payee is scored on the bank's transfer graph. This account behaves like a money mule.",
+   "from": 106.12,
+   "to": 112.45
+  },
+  {
+   "scene": "Scam call",
+   "say": "Now a 'bank security officer' calls. The operator reports a call from a spoofed number.",
+   "from": 112.96,
+   "to": 119.57
+  },
+  {
+   "scene": "(same scene)",
+   "say": "The scam ladder rises: explain, ask, pause, hold. Even a confident 'no' and the right PIN only start a pause.",
+   "from": 120.02,
+   "to": 128.75
+  },
+  {
+   "scene": "(same scene)",
+   "say": "After the pause a bank analyst checks the transfer: it was a scam.",
+   "from": 129.24,
+   "to": 134.17
+  },
+  {
+   "scene": "(same scene)",
+   "say": "The money stays in the account. The client hangs up.",
+   "from": 134.56,
+   "to": 137.67
+  },
+  {
+   "scene": "(same scene)",
+   "say": "One month later.",
+   "from": 137.9,
+   "to": 139.29
+  },
+  {
+   "scene": "Next month",
+   "say": "Next month it runs alone, inside the standing permission. One tap undoes it.",
+   "from": 140.14,
+   "to": 146.61
+  },
+  {
+   "scene": "Title card: Earned trust",
+   "say": "Earned trust. Verified results raise an agent's trust; mistakes lower it at once. Three strikes mean quarantine.",
+   "from": 146.64,
+   "to": 155.65
+  },
+  {
+   "scene": "Reward",
+   "say": "Five verified results in a row raise subscriptions to level 2: Guardian may act alone up to its limit.",
+   "from": 156.46,
+   "to": 164.85
+  },
+  {
+   "scene": "Penalty",
+   "say": "A faulty planner asks for ten times the permission. The kernel stops it, trust drops to level 0, two strikes.",
+   "from": 165.26,
+   "to": 174.69
+  },
+  {
+   "scene": "Quarantine",
+   "say": "Then it cites an invoice that does not exist. Strike three: 24 hours of quarantine, passports revoked.",
+   "from": 175.1,
+   "to": 184.51
+  },
+  {
+   "scene": "Trust",
+   "say": "The Trust tab: what agents may do alone, per kind of task.",
+   "from": 185.06,
+   "to": 189.25
+  },
+  {
+   "scene": "(same scene) (fast)",
+   "say": "Each agent's record, and every change with its reason. All of it is in the signed journal.",
+   "from": 189.52,
+   "to": 196.27
+  },
+  {
+   "scene": "Title card: Investing on a US exchange",
+   "say": "Investing on a US exchange. The broker works only with the client's investment envelope.",
+   "from": 196.58,
+   "to": 202.97
+  },
+  {
+   "scene": "Invest",
+   "say": "The agent proposes an order. The kernel checks the security, the size and the envelope, with its own quote.",
+   "from": 203.5,
+   "to": 210.57
+  },
+  {
+   "scene": "Order placed",
+   "say": "The kernel reads the order back from the broker. The market is closed, so it waits for the open.",
+   "from": 211.08,
+   "to": 217.17
+  },
+  {
+   "scene": "Stopped",
+   "say": "A stock outside the client's list is stopped before any order exists.",
+   "from": 217.42,
+   "to": 222.33
+  },
+  {
+   "scene": "(same scene)",
+   "say": "The investment envelope: money set aside, orders and positions.",
+   "from": 222.54,
+   "to": 227.69
+  },
+  {
+   "scene": "Month for you",
+   "say": "The month: saved per month, done, asked, stopped.",
+   "from": 228.12,
+   "to": 231.03
+  },
+  {
+   "scene": "Permissions",
+   "say": "Every live permission, revocable at any time.",
+   "from": 231.4,
+   "to": 234.23
+  },
+  {
+   "scene": "Agents at work",
+   "say": "Each agent gets a minimal passport.",
+   "from": 234.44,
+   "to": 236.75
+  },
+  {
+   "scene": "Cost",
+   "say": "Most work runs on rules, templates and the small model.",
+   "from": 237.22,
+   "to": 241.83
+  },
+  {
+   "scene": "Red-team",
+   "say": "All 48 static attacks stopped; 0 of 360 adaptive attempts left the mandate.",
+   "from": 242.14,
+   "to": 251.33
+  },
+  {
+   "scene": "Compliance",
+   "say": "Each requirement is mapped to where you can check it.",
+   "from": 251.44,
+   "to": 255.45
+  },
+  {
+   "scene": "Journal",
+   "say": "Every step is in a signed hash chain, anchored on chain.",
+   "from": 255.46,
+   "to": 260.45
+  },
+  {
+   "scene": "Title card: Guardian",
+   "say": "Agents propose. The kernel decides, checks and records. Code and reports are on GitHub.",
+   "from": 261.02,
+   "to": 267.95
+  }
+ ]
+}

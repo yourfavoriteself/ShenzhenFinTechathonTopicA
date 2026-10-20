@@ -493,10 +493,10 @@ def voiceover(meta: dict, video: str) -> str:
     mins, secs = divmod(round(meta["duration_s"]), 60)
     return f"""# Demo video: voiceover script
 
-The demo video [`{video}`](media/{video}) ({mins}:{secs:02d}) has no voice and no captions, so that
-we can record a narration track over it. Each row below is one scene: when it starts and ends, what
-is on screen, and what to say. The text fits the scene at about {WPS:g} words per second; rows marked
-"fast" need a quicker pace or a shorter sentence. The same lines are the subtitles of the backup copy
+The recorder writes the demo video [`{video}`](media/{video}) ({mins}:{secs:02d}) without voice and
+without captions. Each row below is one scene of that recording: when it starts and ends, what is on
+screen, and what to say. The text fits the scene at about {WPS:g} words per second; rows marked "fast"
+need a quicker pace or a shorter sentence. The same lines are the subtitles of the backup copy
 [`guardian_demo_subtitled.mp4`](media/guardian_demo_subtitled.mp4) and of
 [`guardian_demo.srt`](media/guardian_demo.srt).
 
@@ -509,22 +509,14 @@ recording.
 
 ## Recording and adding the voice
 
-1. Play the video muted and read the "Say" column; start each row when the time in the first column
-   comes up. A plain phone or headset microphone in a quiet room is enough.
-2. Save the recording as `voice.m4a` (or `voice.wav`), trimmed so that it starts at 00:00 of the video.
-3. Put the voice on the video without re-encoding the picture:
-
-```bash
-ffmpeg -i docs/media/guardian_demo.mp4 -i voice.m4a -c:v copy -c:a aac -b:a 160k -shortest guardian_demo_voice.mp4
-```
-
-4. If the voice runs early or late by a constant amount, shift it with `-itsoffset` (seconds) before the
-   second input, for example `ffmpeg -i docs/media/guardian_demo.mp4 -itsoffset 0.5 -i voice.m4a ...`.
-5. To keep the subtitles as a track that viewers can switch on, add the SRT as a third input:
-
-```bash
-ffmpeg -i guardian_demo_voice.mp4 -i docs/media/guardian_demo.srt -c copy -c:s mov_text guardian_demo_voice_cc.mp4
-```
+1. Read the "Say" column in one take, row after row, with the video playing muted for the pace. A plain
+   phone or headset microphone in a quiet room is enough. Save it as `docs/media/voice.m4a`.
+2. Write down where each line starts and ends in the recording, in seconds, in
+   `docs/media/voice_cues.json` (one cue per row of the table, in order).
+3. Run `python -m scripts.add_voice`. It places each line at the start of its scene, speeds a line up
+   by at most 6 % when it does not fit, and otherwise holds the picture for the missing time before the
+   next scene. The subtitled copy, `guardian_demo.srt` and the caption timeline get the same holds, so
+   the published video is a little longer than the times above.
 """
 
 

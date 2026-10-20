@@ -47,8 +47,10 @@ diagram:
 	pdftoppm -r 150 -png -singlefile /tmp/architecture.pdf docs/diagrams/architecture
 
 # Demo video recorded from the UI (Playwright + ffmpeg); also refreshes the screenshots in docs/media.
-# guardian_demo.mp4 (no captions), guardian_demo_subtitled.mp4, guardian_demo.srt, docs/video_script.md
+# guardian_demo.mp4 (no captions), guardian_demo_subtitled.mp4, guardian_demo.srt, docs/video_script.md,
+# then the recorded voice (docs/media/voice.m4a) placed scene by scene
 video:
 	GUARDIAN_LLM_MODE=stub $(PY) -m scripts.record_demo --out docs/media
+	$(PY) -m scripts.add_voice
 	$(PY) docs/brand.py
 	$(PY) docs/brand.py --clips
