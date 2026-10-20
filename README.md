@@ -7,6 +7,7 @@
 [![License](https://img.shields.io/badge/license-MIT-667085)](LICENSE)
 [![Docs](https://img.shields.io/badge/docs-technical%20documentation-101828)](docs/technical_documentation.pdf)
 [![Video](https://img.shields.io/badge/demo-4%3A55-1d4ed8)](#demo-video)
+[![Blockchain](https://img.shields.io/badge/blockchain-journal%20anchored%20on%20chain-6d28d9)](#blockchain-anchoring)
 
 > **SUBMISSION**: 2026 Shenzhen FinTechathon, International Track, Topic A: Personal Finance Assistant, theme *AI as a Financial Participant*. The six submission materials are attached to release [v1.0](https://github.com/yourfavoriteself/ShenzhenFinTechathonTopicA/releases/tag/v1.0) and indexed in [`docs/README.md`](docs/README.md).
 
@@ -210,6 +211,16 @@ The first order is a card signed on the device, with an optional monthly plan (u
 Replay and tests use a deterministic sandbox broker with US market hours. `GUARDIAN_BROKER=alpaca` switches to [Alpaca](https://alpaca.markets) paper trading, with keys in `ALPACA_API_KEY_ID` and `ALPACA_API_SECRET_KEY` or `~/.alpaca_keys`. `python -m scripts.alpaca_check` reads the account, the market clock and a SPY quote without placing orders; `python -m scripts.alpaca_live` runs the same chat, card and broker step against the paper account and writes `evidence/alpaca_paper.json` (order ids, statuses and the broker call log without keys or the account number). Alpaca's API is not reachable from some networks; a VPN helps.
 
 On 19 October 2026 at 18:22 New York time (after hours) we ran it on a real Alpaca paper account: the client's "Invest $10 a month in SPY" became a limit order for 0.012977406 shares at up to $770.57 (the kernel's IEX quote plus 0.5%), filled at $767.57; the kernel read the order back by its grant id before reporting it. GME, an option contract, BTC/USD and a $45 order stopped at the broker step with no order sent. The first attempts that night got `504 request timed out` from Alpaca's order endpoint; the adapter then looks the order up by its grant id instead of sending it again, and no duplicate was created. See [`alpaca_paper.json`](evidence/alpaca_paper.json).
+
+### Blockchain anchoring
+
+The kernel's journal is also anchored on a blockchain, so that nobody, the bank included, can quietly rewrite what the agents did.
+
+- **What goes on chain.** After each step the kernel computes the Merkle root of its signed journal and writes it, with the hash of the newest entry and its sequence number, to the [`AuditAnchor`](chain/src/AuditAnchor.sol) smart contract (Solidity, Foundry). Only hashes go on chain: no client data, amounts or payees.
+- **Who can write.** Only the bank's anchoring key, and the sequence number must grow, so an old checkpoint cannot be replaced.
+- **What it proves.** Anyone with a copy of the journal recomputes the root and compares it with the contract. In our run (89 journal entries, 4 checkpoints) the original copy matches; a copy with one entry rewritten and its hash recomputed does not; a copy with the last 5 entries cut off does not ([`anchors.json`](evidence/anchors.json)).
+- **Try it.** `make anchor` deploys the contract on a local anvil chain, anchors a short demo month and runs the three checks. `forge test` in [`chain/`](chain) runs the 5 contract tests, which also run in CI.
+- **Where it runs.** The run above is on a local devnet. A public test network such as Sepolia needs only an RPC endpoint and a funded test key: `GUARDIAN_ANCHOR_RPC=<rpc> python -m scripts.anchor_journal --network sepolia`.
 
 ### Supported LLMs
 
